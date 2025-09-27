@@ -6,7 +6,7 @@ export default function MainLayout() {
     <div className="w-[420px] mx-auto bg-gray-50 min-h-screen relative">
       {/* 헤더 */}
       <header
-        className="fixed top-0 w-[420px] h-[50px] bg-white flex items-center justify-between px-4 shadow z-50 cursor-pointer"
+        className="fixed px-[24px] top-0 w-[420px] h-[50px] bg-white flex items-center justify-between px-4 shadow z-50 cursor-pointer"
         onClick={() => window.location.reload()}
       >
         <div className="text-[20px] font-bold font-sans">Tech Letter</div>
