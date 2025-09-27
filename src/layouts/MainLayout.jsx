@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import ScrollToTopButton from "../components/ScrollToTopButton";
 
 export default function MainLayout() {
   return (
@@ -26,6 +27,7 @@ export default function MainLayout() {
         <div className="w-[10px] h-[10px] bg-gray-300 rounded-full"></div>
         <div className="w-[10px] h-[10px] bg-gray-300 rounded-full"></div>
       </footer> */}
+      <ScrollToTopButton />
     </div>
   );
 }
