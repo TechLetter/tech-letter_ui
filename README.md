@@ -1,16 +1,22 @@
-# React + Vite
+# Tech Letter UI (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Set Up Guide
 
-Currently, two official plugins are available:
+### Environment Variables
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+create `.env` file in the project root directory.
 
-## React Compiler
+```sh
+VITE_API_BASE_URL=http(s)://<api-server>:<port>
+```
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Node.js
 
-## Expanding the ESLint configuration
+```sh
+node --version # Node.js version: 20.12
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```sh
+npm run dev # development mode
+npm run build # production mode build
+```
