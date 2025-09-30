@@ -8,14 +8,16 @@ on:
 jobs:
   deploy:
     runs-on: [self-hosted, Linux, ARM64, techletter-prod]
-    # environment: production # (선택 사항: 환경 정의)
+    environment: production
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Stop existing application and Run new version
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_PROD }}
+
         run: |
-          ls -al
           docker-compose down
           docker-compose up -d --build
