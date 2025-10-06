@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PostCard from "../components/PostCard";
 import { IoChevronDown, IoChevronUp } from "react-icons/io5";
+import postsApi from "../api/postsApi";
 
 const PAGE_SIZE = 10;
 const CATEGORIES = [
@@ -28,15 +29,13 @@ export default function Home() {
   const fetchPosts = async (pageNum = 1, resetPosts = false) => {
     setLoading(true);
     try {
-      const categoryParam = selectedCategory
-        ? `&categories=${selectedCategory}`
-        : "";
-      const res = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL
-        }/api/v1/posts?page=${pageNum}&page_size=${PAGE_SIZE}${categoryParam}`
-      );
-      const data = await res.json();
+      const res = await postsApi.getPosts({
+        page: pageNum,
+        page_size: PAGE_SIZE,
+        categories: selectedCategory,
+      });
+      const data = res.data;
+
       if (data.data.length < PAGE_SIZE) setHasMore(false);
 
       if (resetPosts) {
