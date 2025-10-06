@@ -133,6 +133,7 @@ export default function Home() {
       {posts.map((post, index) => (
         <PostCard
           key={`${post.id}-${index}`}
+          post_id={post.id}
           blogName={post.blog_name}
           postTitle={post.title}
           postSummary={post.summary}

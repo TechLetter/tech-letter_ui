@@ -2,8 +2,10 @@ import timeutils from "../utils/timeutils";
 import { GrView } from "react-icons/gr";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { showModal } from "../provider/ModalProvider";
+import postsApi from "../api/postsApi";
 
 export default function PostCard({
+  post_id,
   blogName,
   postTitle,
   postSummary,
@@ -13,6 +15,11 @@ export default function PostCard({
   postPublishedAt,
   postViewCount = 0,
 }) {
+  const handleClickView = () => {
+    postsApi.incrementViewCount(post_id);
+    window.open(postUrl, "_blank");
+  };
+
   return (
     <div className="rounded-xl overflow-hidden shadow-md relative w-[348px]">
       {/* 썸네일 백그라운드 */}
@@ -30,7 +37,7 @@ export default function PostCard({
       {/* 포스트 정보 */}
       <div
         className="relative z-1 p-[12px] cursor-pointer"
-        onClick={() => window.open(postUrl, "_blank")}
+        onClick={handleClickView}
       >
         <div className="">
           <span className="text-white text-[16px] font-bold">{blogName}</span>
