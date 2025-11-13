@@ -116,7 +116,7 @@ export default function Home() {
                   setSelectedCategory(category);
                   setCategoryOpen(false);
                 }}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition hover:bg-gray-200 ${
                   selectedCategory === category
                     ? "outline outline-[#1E3A8A] shadow-md"
                     : ""
