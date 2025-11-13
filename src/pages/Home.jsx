@@ -100,6 +100,15 @@ export default function Home() {
        grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 border border-gray-200
        rounded-2xl bg-white shadow-lg animate-fadeIn"
           >
+             <button
+              onClick={() => {
+                setSelectedCategory("");
+                setCategoryOpen(false);
+              }}
+              className="px-3 py-2 rounded-lg text-sm font-medium text-gray-400 transition bg-gray-100 hover:bg-gray-200"
+            >
+              All
+            </button>
             {CATEGORIES.map((category) => (
               <button
                 key={category}
@@ -107,7 +116,7 @@ export default function Home() {
                   setSelectedCategory(category);
                   setCategoryOpen(false);
                 }}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition hover:bg-gray-200 ${
                   selectedCategory === category
                     ? "outline outline-[#1E3A8A] shadow-md"
                     : ""
@@ -116,15 +125,7 @@ export default function Home() {
                 {category}
               </button>
             ))}
-            <button
-              onClick={() => {
-                setSelectedCategory("");
-                setCategoryOpen(false);
-              }}
-              className="px-3 py-2 rounded-lg text-sm font-medium text-gray-400 transition bg-gray-100 hover:bg-gray-200"
-            >
-              None
-            </button>
+           
           </div>
         )}
       </div>
