@@ -57,7 +57,7 @@ export default function PostCard({
 
           <div className="flex flex-row justify-between">
             <div className="flex flex-row gap-[12px] text-[14px]">
-              <span>{timeutils.formatLocalDate(postPublishedAt)}</span>
+              {/* <span>{timeutils.formatLocalDate(postPublishedAt)}</span> */}
               <span>{timeutils.timeDifferenceFromNow(postPublishedAt)}</span>
             </div>
 
