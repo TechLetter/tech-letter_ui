@@ -52,7 +52,7 @@ export default function PostCard({
           </p>
 
           <div className="flex flex-wrap gap-2 mb-[12px]">
-            {postTags.map((tag, tagIndex) => (
+            {postTags?.map((tag, tagIndex) => (
               <span
                 key={`${tag}-${tagIndex}`}
                 className="text-[11px] bg-white/20 px-[4px] py-[2px] rounded"
