@@ -1,7 +1,7 @@
 import apiClient from "./client";
 
 const postsApi = {
-  getPosts: ({ page, page_size, categories, tags, blog_id, blog_name }) =>
+  getPosts: ({ page, page_size, categories, tags, blog_id, blog_name, status_ai_summarized = true }) =>
     apiClient.get("/api/v1/posts", {
       params: {
         page,
@@ -10,6 +10,7 @@ const postsApi = {
         tags,
         blog_id,
         blog_name,
+        status_ai_summarized,
       },
     }),
   getPost: (id) => apiClient.get(`/api/v1/posts/${id}`),
