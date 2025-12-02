@@ -3,33 +3,25 @@ import ScrollToTopButton from "../components/ScrollToTopButton";
 
 export default function MainLayout() {
   return (
-    <div className="w-[420px] mx-auto bg-gray-50 min-h-screen relative">
+    <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen relative">
       {/* 헤더 */}
       <header
-        className="fixed px-[24px] top-0 w-[420px] h-[50px] bg-white flex items-center justify-between px-4 shadow z-50 cursor-pointer"
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/80 border-b border-gray-200 shadow-sm cursor-pointer"
         onClick={() => window.location.reload()}
       >
-        <div className="text-[20px] font-bold font-sans">Tech Letter</div>
-        {/* <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-            <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
+        <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+          <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Tech Letter
           </div>
-          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-        </div> */}
+          {/* 필요시 우측 메뉴 추가 가능 */}
+        </div>
       </header>
 
       {/* 메인 컨텐츠 */}
-      <main className="pt-[65px] pb-[20px] px-4">
+      <main className="pt-16 pb-8 px-4 sm:px-6 lg:px-8">
         <Outlet />
       </main>
 
-      {/* 푸터 */}
-      {/* <footer className="fixed bottom-0 w-[420px] h-[30px] bg-white flex justify-around items-center border-t border-gray-300 z-50">
-        <div className="w-[10px] h-[10px] bg-gray-300 rounded-full"></div>
-        <div className="w-[10px] h-[10px] bg-gray-300 rounded-full"></div>
-        <div className="w-[10px] h-[10px] bg-gray-300 rounded-full"></div>
-      </footer> */}
       <ScrollToTopButton />
     </div>
   );

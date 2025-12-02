@@ -21,7 +21,7 @@ export default function PostCard({
   };
 
   return (
-    <div className="rounded-xl overflow-hidden shadow-md relative w-[348px]">
+    <div className="rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 relative w-full">
       {/* 썸네일 백그라운드 */}
       {postThumbnailUrl ? (
         <div
