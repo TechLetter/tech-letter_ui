@@ -1,9 +1,16 @@
 import axios from "axios";
+import qs from 'qs';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
+  },
+  paramsSerializer: params => {
+    return qs.stringify(params, {
+      arrayFormat: 'repeat',
+      skipNulls: true,
+    });
   },
 });
 
