@@ -3,7 +3,7 @@ import ScrollToTopButton from "../components/ScrollToTopButton";
 
 export default function MainLayout() {
   return (
-    <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen relative">
+    <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto min-h-screen relative">
       {/* 헤더 */}
       <header
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/80 border-b border-gray-200 shadow-sm cursor-pointer"

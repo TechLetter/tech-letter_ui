@@ -4,7 +4,7 @@ import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 import postsApi from "../api/postsApi";
 import blogsApi from "../api/blogsApi";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 const CATEGORIES = [
   "Backend",
   "Frontend",
@@ -143,7 +143,7 @@ export default function Home() {
         {categoryOpen && (
           <div
             className="absolute top-full mt-2 z-20 w-[90vw] max-w-md sm:max-w-lg left-1/2 -translate-x-1/2
-       grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 p-4 border border-gray-200
+       grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 p-2 border border-gray-200
        rounded-2xl bg-white/95 backdrop-blur-sm shadow-xl animate-fadeIn"
           >
             <button
@@ -178,7 +178,7 @@ export default function Home() {
         {blogOpen && (
           <div
             className="absolute top-full mt-2 z-20 w-[90vw] max-w-md sm:max-w-lg left-1/2 -translate-x-1/2
-       max-h-96 overflow-y-auto p-4 border border-gray-200
+       max-h-96 overflow-y-auto p-2 border border-gray-200
        rounded-2xl bg-white/95 backdrop-blur-sm shadow-xl animate-fadeIn
        grid grid-cols-1 sm:grid-cols-2 gap-2"
           >
