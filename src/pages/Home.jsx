@@ -60,7 +60,9 @@ export default function Home() {
         blog_id: selectedBlogId,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
       });
-      setCategoryFilters(res?.data?.items.filter((item) => item.count > 0) || []);
+      setCategoryFilters(
+        res?.data?.items.filter((item) => item.count > 0) || []
+      );
     } catch (err) {
       console.log("Failed to fetch category filters:", err);
       setCategoryFilters([]);
@@ -114,7 +116,7 @@ export default function Home() {
     const handleScroll = () => {
       if (
         window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 200 &&
+          document.body.offsetHeight - 200 &&
         hasMore &&
         !loading
       ) {
@@ -164,7 +166,8 @@ export default function Home() {
        shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
           >
             <span className="text-gray-800 font-semibold text-sm truncate">
-              {blogFilters.find((b) => b.id === selectedBlogId)?.name || "블로그"}
+              {blogFilters.find((b) => b.id === selectedBlogId)?.name ||
+                "블로그"}
             </span>
             {blogOpen ? (
               <IoChevronUp size={20} className="text-gray-600" />
@@ -185,7 +188,9 @@ export default function Home() {
        shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
           >
             <span className="text-gray-800 font-semibold text-sm truncate">
-              {selectedTags.length > 0 ? `태그 (${selectedTags.length})` : "태그"}
+              {selectedTags.length > 0
+                ? `태그 (${selectedTags.length})`
+                : "태그"}
             </span>
             {tagOpen ? (
               <IoChevronUp size={20} className="text-gray-600" />
@@ -202,7 +207,6 @@ export default function Home() {
         border border-gray-200 p-2 rounded-2xl bg-white/95 backdrop-blur-sm shadow-xl animate-fadeIn"
           >
             <div className="max-h-96 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 p-2 overflow-y-auto">
-
               <button
                 onClick={() => {
                   setSelectedCategory("");
@@ -220,15 +224,16 @@ export default function Home() {
                     setSelectedCategory(category.name);
                     setCategoryOpen(false);
                   }}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 ${selectedCategory === category.name
-                    ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
-                    : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
-                    }`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 ${
+                    selectedCategory === category.name
+                      ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
+                      : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
+                  }`}
                 >
-                  {category.name} <span className="text-xs opacity-75">({category.count})</span>
+                  {category.name}{" "}
+                  <span className="text-xs opacity-75">({category.count})</span>
                 </button>
               ))}
-
             </div>
           </div>
         )}
@@ -257,12 +262,14 @@ export default function Home() {
                     setSelectedBlogId(blog.id);
                     setBlogOpen(false);
                   }}
-                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] text-left ${selectedBlogId === blog.id
-                    ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
-                    : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
-                    }`}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] text-left ${
+                    selectedBlogId === blog.id
+                      ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
+                      : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
+                  }`}
                 >
-                  {blog.name} <span className="text-xs opacity-75">({blog.count})</span>
+                  {blog.name}{" "}
+                  <span className="text-xs opacity-75">({blog.count})</span>
                 </button>
               ))}
             </div>
@@ -276,24 +283,37 @@ export default function Home() {
         border border-gray-200 p-2 rounded-2xl bg-white/95 backdrop-blur-sm shadow-xl animate-fadeIn"
           >
             <div className=" max-h-96 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 p-2 gap-2 overflow-y-auto">
+              <button
+                onClick={() => {
+                  setSelectedTags([]);
+                  setTagOpen(false);
+                }}
+                className="w-full px-3 py-2 rounded-lg text-sm font-semibold text-gray-500 transition-all 
+              bg-gradient-to-br from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300"
+              >
+                All
+              </button>
               {tagFilters.map((tag) => (
                 <button
                   key={tag.name}
                   onClick={() => {
                     if (selectedTags.includes(tag.name)) {
-                      setSelectedTags(selectedTags.filter((t) => t !== tag.name));
+                      setSelectedTags(
+                        selectedTags.filter((t) => t !== tag.name)
+                      );
                     } else {
                       setSelectedTags([...selectedTags, tag.name]);
                     }
                     setTagOpen(false);
                   }}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 
-                      ${selectedTags.includes(tag.name)
-                      ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
-                      : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
-                    } 
+                      ${
+                        selectedTags.includes(tag.name)
+                          ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
+                          : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
+                      } 
                       text-center overflow-hidden h-full flex items-center justify-center`}
-                /* 버튼 전체에 flex를 사용하여 내부 콘텐츠 중앙 정렬 보장 */
+                  /* 버튼 전체에 flex를 사용하여 내부 콘텐츠 중앙 정렬 보장 */
                 >
                   {/* tag.name에만 말줄임표 적용 */}
                   <span className="truncate whitespace-nowrap max-w-full">
@@ -328,20 +348,16 @@ export default function Home() {
         ))}
       </div>
 
-      {
-        loading && (
-          <div className="text-center my-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
-          </div>
-        )
-      }
-      {
-        !hasMore && (
-          <div className="text-center my-8 text-gray-500 font-medium">
-            모든 포스트를 불러왔습니다
-          </div>
-        )
-      }
-    </div >
+      {loading && (
+        <div className="text-center my-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+        </div>
+      )}
+      {!hasMore && (
+        <div className="text-center my-8 text-gray-500 font-medium">
+          모든 포스트를 불러왔습니다
+        </div>
+      )}
+    </div>
   );
 }
