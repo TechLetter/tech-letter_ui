@@ -15,42 +15,40 @@ export default function PostCard({
   postPublishedAt,
   postViewCount = 0,
 }) {
-
   const handleClickView = () => {
     postsApi.incrementViewCount(post_id);
     window.open(postUrl, "_blank");
   };
 
-
   const handleCopyToClipboard = (text) => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text);
     } else {
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = text;
 
-      textArea.style.position = 'fixed';
+      textArea.style.position = "fixed";
       textArea.style.opacity = 0;
 
       document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
     }
-  }
+  };
 
   return (
-    <div className="rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 relative w-full">
+    <div className="group rounded-xl overflow-hidden shadow-lg relative w-full transform transition-transform transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl">
       {/* 썸네일 백그라운드 */}
       {postThumbnailUrl ? (
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center transform transition-transform duration-500 ease-out group-hover:scale-110"
           style={{ backgroundImage: `url(${postThumbnailUrl})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/40"></div>
         </div>
       ) : (
-        <div className="absolute inset-0 bg-black"></div>
+        <div className="absolute inset-0 bg-black transform transition-transform duration-500 ease-out group-hover:scale-105"></div>
       )}
 
       {/* 포스트 정보 */}
@@ -66,9 +64,7 @@ export default function PostCard({
         </div>
 
         <div className="flex flex-col justify-end text-white">
-          <span className="text-sm line-clamp-7">
-            {postSummary}
-          </span>
+          <span className="text-sm line-clamp-7">{postSummary}</span>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -109,4 +105,3 @@ export default function PostCard({
     </div>
   );
 }
-
