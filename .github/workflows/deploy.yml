@@ -20,4 +20,4 @@ jobs:
 
         run: |
           docker-compose down -f docker-compose.prod.yml
-          docker-compose up -d --build -f docker-compose.prod.yml
+          docker-compose -f docker-compose.prod.yml up -d --build
