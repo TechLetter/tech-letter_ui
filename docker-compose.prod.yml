@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  nginx:
+    build:
+      context: .
+      args:
+        # prod에서는 Traefik 뒤의 API 서브도메인 사용
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    container_name: techletter_nginx
+    restart: unless-stopped
+    networks:
+      - tech-letter_default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ui.rule=Host(`tech-letter.duckdns.org`)"
+      - "traefik.http.routers.ui.entrypoints=websecure"
+      - "traefik.http.routers.ui.tls=true"
+      - "traefik.http.routers.ui.tls.certresolver=duckdns"
+      - "traefik.http.services.ui.loadbalancer.server.port=80"
+
+networks:
+  tech-letter_default:
+    external: true
