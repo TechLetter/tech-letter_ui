@@ -3,6 +3,7 @@ import postsApi from "../api/postsApi";
 import filtersApi from "../api/filtersApi";
 import HomeFilterSection from "../components/home/HomeFilterSection";
 import HomePostListSection from "../components/home/HomePostListSection";
+import { mergeUniqueByKey } from "../utils/arrayUtils";
 
 const PAGE_SIZE = 12;
 
@@ -36,11 +37,12 @@ export default function Home() {
 
       if (data.data.length < PAGE_SIZE) setHasMore(false);
 
-      if (resetPosts) {
-        setPosts(data.data);
-      } else {
-        setPosts((prev) => [...prev, ...data.data]);
-      }
+      setPosts((prevPosts) => {
+        if (resetPosts) {
+          return mergeUniqueByKey([], data.data, "id");
+        }
+        return mergeUniqueByKey(prevPosts, data.data, "id");
+      });
     } catch (err) {
       console.log(err);
     } finally {
