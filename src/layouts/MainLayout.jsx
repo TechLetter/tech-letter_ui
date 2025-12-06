@@ -25,9 +25,9 @@ export default function MainLayout() {
   const isGuest = initialized && !isAuthenticated;
 
   return (
-    <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto min-h-screen relative">
+    <div className="relative mx-auto min-h-screen w-full max-w-full sm:max-w-2xl lg:max-w-7xl">
       {/* 헤더 */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/80 border-b border-gray-200 shadow-xs">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80 bg-slate-50/95 backdrop-blur-lg">
         <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
           <button
             type="button"
