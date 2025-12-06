@@ -24,7 +24,7 @@ export default function HomePostListSection({ posts, loading, hasMore }) {
 
       {loading && (
         <div className="text-center my-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
         </div>
       )}
       {!hasMore && (
