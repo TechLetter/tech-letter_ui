@@ -2,12 +2,14 @@ import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import { Suspense } from "react";
 import { ROUTES } from "./routes/router";
-import { ModalProvider } from "./provider/ModalProvider";
+import { ToastModalProvider } from "./provider/ToastModalProvider";
+import { LoginRequiredModalProvider } from "./provider/LoginRequiredModalProvider";
 
 function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ModalProvider />
+      <ToastModalProvider />
+      <LoginRequiredModalProvider />
       <Routes>
         <Route element={<MainLayout />}>
           {ROUTES.map(({ path, element }) => (

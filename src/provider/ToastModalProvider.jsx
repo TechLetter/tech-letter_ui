@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 let showInternal = null;
 
-export function ModalProvider() {
+export function ToastModalProvider() {
   const [visible, setVisible] = useState(false);
   const [content, setContent] = useState("");
 
@@ -27,6 +27,6 @@ export function ModalProvider() {
   ) : null;
 }
 
-export function showModal(message) {
+export function showToast(message) {
   if (showInternal) showInternal(message);
 }
