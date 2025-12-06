@@ -52,7 +52,7 @@ export default function BookmarkToggleButton({
       onClick={handleToggleBookmark}
       disabled={loading}
       className={`flex items-center justify-center rounded-full p-1.5 transition-colors ${
-        isBookmarked ? "text-indigo-400" : "text-gray-300"
+        isBookmarked ? "text-indigo-600" : "text-gray-300"
       }`}
     >
       <Icon size={18} />
