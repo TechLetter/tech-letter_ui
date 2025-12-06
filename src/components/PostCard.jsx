@@ -79,9 +79,7 @@ export default function PostCard({
           <h2 className="text-base font-semibold sm:text-lg leading-snug line-clamp-2">
             {postTitle}
           </h2>
-          <p className="text-xs text-slate-700 sm:text-sm line-clamp-4">
-            {postSummary}
-          </p>
+          <p className="text-xs text-slate-700 sm:text-sm">{postSummary}</p>
         </div>
 
         {/* 하단: 태그 + 메타 정보 */}
