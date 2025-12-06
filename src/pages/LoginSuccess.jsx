@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../routes/path";
 import { useAuth } from "../provider/AuthProvider";
+import authApi from "../api/authApi";
 
 export default function LoginSuccess() {
   const [searchParams] = useSearchParams();
@@ -9,25 +10,31 @@ export default function LoginSuccess() {
   const { loginWithToken } = useAuth();
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("로그인 처리 중입니다...");
-  const handledTokenRef = useRef(null);
+  const handledSessionRef = useRef(null);
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const session = searchParams.get("session");
 
-    if (!token) {
+    if (!session) {
       setStatus("error");
       setMessage("유효하지 않은 로그인 요청입니다. 다시 시도해 주세요.");
       return;
     }
 
-    if (handledTokenRef.current === token) {
+    if (handledSessionRef.current === session) {
       return;
     }
-    handledTokenRef.current = token;
+    handledSessionRef.current = session;
 
     const handleLogin = async () => {
       try {
-        await loginWithToken(token);
+        const response = await authApi.exchangeSession(session);
+        const accessToken = response?.data?.access_token;
+        if (!accessToken) {
+          throw new Error("액세스 토큰이 응답에 없습니다.");
+        }
+
+        await loginWithToken(accessToken);
         setStatus("success");
         setMessage("로그인에 성공했어요. 잠시 후 홈으로 이동합니다.");
         setTimeout(() => {

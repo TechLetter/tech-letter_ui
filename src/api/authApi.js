@@ -9,6 +9,8 @@ const buildGoogleLoginUrl = () => {
 const authApi = {
   getProfile: () => apiClient.get("/api/v1/users/profile"),
   getGoogleLoginUrl: () => buildGoogleLoginUrl(),
+  exchangeSession: (session) =>
+    apiClient.post("/api/v1/auth/session/exchange", { session }),
 };
 
 export default authApi;
