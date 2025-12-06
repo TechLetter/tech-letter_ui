@@ -40,7 +40,7 @@ export default function PostCard({
   };
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-indigo-700/40 bg-slate-950/95 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-indigo-500/70">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:border-indigo-300/80 hover:shadow-md">
       {/* 썸네일 이미지 */}
       <div className="relative h-36 sm:h-40 md:h-40 overflow-hidden">
         {postThumbnailUrl ? (
@@ -51,7 +51,7 @@ export default function PostCard({
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950" />
+          <div className="h-full w-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400" />
         )}
 
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between px-3 pt-3">
@@ -66,7 +66,7 @@ export default function PostCard({
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
       </div>
 
       {/* 포스트 정보 */}
@@ -75,22 +75,22 @@ export default function PostCard({
         onClick={handleClickView}
       >
         {/* 상단: 제목 + 본문 요약 */}
-        <div className="flex flex-col gap-1 text-white">
-          <h2 className="text-base font-semibold sm:text-lg line-clamp-2">
+        <div className="flex flex-col gap-1 text-slate-900">
+          <h2 className="text-base font-semibold sm:text-lg leading-snug line-clamp-2">
             {postTitle}
           </h2>
-          <p className="text-xs text-slate-200/85 sm:text-sm line-clamp-5">
+          <p className="text-xs text-slate-700 sm:text-sm line-clamp-4">
             {postSummary}
           </p>
         </div>
 
         {/* 하단: 태그 + 메타 정보 */}
-        <div className="flex flex-col gap-2 text-xs text-slate-400 sm:text-sm">
+        <div className="flex flex-col gap-2 text-xs text-slate-500 sm:text-sm">
           <div className="flex flex-wrap gap-1.5">
             {postTags?.slice(0, 3).map((tag, tagIndex) => (
               <span
                 key={`${tag}-${tagIndex}`}
-                className="rounded-full bg-indigo-500/20 px-2 py-[3px] text-[11px] text-indigo-200"
+                className="rounded-full border border-indigo-100 bg-indigo-50 px-2 py-[3px] text-[11px] text-indigo-700"
               >
                 {tag}
               </span>
@@ -113,7 +113,7 @@ export default function PostCard({
                 {postViewCount}
               </span>
               <button
-                className="flex flex-row items-center justify-center rounded-full p-1.5 text-indigo-300 hover:bg-indigo-700/80 hover:text-white"
+                className="flex flex-row items-center justify-center rounded-full p-1.5 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCopyToClipboard(postUrl);

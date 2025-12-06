@@ -98,8 +98,8 @@ export default function HomeFilterSection({
               onClick={() => handleSelectBlog(blog.id)}
               className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] text-left ${
                 selectedBlogId === blog.id
-                  ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
-                  : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200 border border-indigo-600"
+                  : "bg-white hover:bg-slate-50 text-slate-700 border border-slate-200"
               }`}
             >
               {blog.name}{" "}
@@ -119,8 +119,8 @@ export default function HomeFilterSection({
               onClick={() => handleSelectCategory(category.name)}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 ${
                 selectedCategory === category.name
-                  ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
-                  : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200 border border-indigo-600"
+                  : "bg-white hover:bg-slate-50 text-slate-700 border border-slate-200"
               }`}
             >
               {category.name}{" "}
@@ -141,11 +141,10 @@ export default function HomeFilterSection({
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 
                       ${
                         selectedTags.includes(tag.name)
-                          ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
-                          : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-200 border border-indigo-600"
+                          : "bg-white hover:bg-slate-50 text-slate-700 border border-slate-200"
                       } 
                       text-center overflow-hidden h-full flex items-center justify-center`}
-              /* 버튼 전체에 flex를 사용하여 내부 콘텐츠 중앙 정렬 보장 */
             >
               {/* tag.name에만 말줄임표 적용 */}
               <span className="truncate whitespace-nowrap max-w-full">
