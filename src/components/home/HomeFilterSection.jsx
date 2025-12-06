@@ -55,35 +55,37 @@ export default function HomeFilterSection({
   };
 
   return (
-    <div className="w-full relative flex flex-col items-center gap-3 mb-4">
+    <div className="relative mb-6 w-full">
       {/* 필터 영역 - 카테고리 & 블로그 */}
-      {/* 필터 버튼들 */}
-      <div className="flex gap-2 sm:gap-3">
-        {/* 블로그 필터 */}
-        <FilterToggleButton
-          label={
-            blogFilters.find((blog) => blog.id === selectedBlogId)?.name ||
-            "블로그"
-          }
-          isOpen={openFilter === "blog"}
-          onClick={() => handleToggleFilter("blog")}
-        />
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
+        {/* 필터 버튼들 */}
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          {/* 블로그 필터 */}
+          <FilterToggleButton
+            label={
+              blogFilters.find((blog) => blog.id === selectedBlogId)?.name ||
+              "블로그"
+            }
+            isOpen={openFilter === "blog"}
+            onClick={() => handleToggleFilter("blog")}
+          />
 
-        {/* 카테고리 필터 */}
-        <FilterToggleButton
-          label={selectedCategory || "카테고리"}
-          isOpen={openFilter === "category"}
-          onClick={() => handleToggleFilter("category")}
-        />
+          {/* 카테고리 필터 */}
+          <FilterToggleButton
+            label={selectedCategory || "카테고리"}
+            isOpen={openFilter === "category"}
+            onClick={() => handleToggleFilter("category")}
+          />
 
-        {/* 태그 필터 */}
-        <FilterToggleButton
-          label={
-            selectedTags.length > 0 ? `태그 (${selectedTags.length})` : "태그"
-          }
-          isOpen={openFilter === "tag"}
-          onClick={() => handleToggleFilter("tag")}
-        />
+          {/* 태그 필터 */}
+          <FilterToggleButton
+            label={
+              selectedTags.length > 0 ? `태그 (${selectedTags.length})` : "태그"
+            }
+            isOpen={openFilter === "tag"}
+            onClick={() => handleToggleFilter("tag")}
+          />
+        </div>
       </div>
 
       {/* 블로그 드롭다운 */}
