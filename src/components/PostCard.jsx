@@ -1,8 +1,9 @@
 import timeutils from "../utils/timeutils";
 import { GrView } from "react-icons/gr";
 import { IoShareSocialOutline } from "react-icons/io5";
-import { showModal } from "../provider/ModalProvider";
+import { showToast } from "../provider/ToastModalProvider";
 import postsApi from "../api/postsApi";
+import BookmarkToggleButton from "./bookmark/BookmarkToggleButton";
 
 export default function PostCard({
   post_id,
@@ -14,6 +15,7 @@ export default function PostCard({
   postUrl,
   postPublishedAt,
   postViewCount = 0,
+  isBookmarked = false,
 }) {
   const handleClickView = () => {
     postsApi.incrementViewCount(post_id);
@@ -39,6 +41,12 @@ export default function PostCard({
 
   return (
     <div className="group rounded-xl overflow-hidden shadow-lg relative w-full transform transition-transform transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl">
+      <div className="absolute top-2 right-2 z-10">
+        <BookmarkToggleButton
+          postId={post_id}
+          initialIsBookmarked={isBookmarked}
+        />
+      </div>
       {/* 썸네일 백그라운드 */}
       {postThumbnailUrl ? (
         <div
@@ -94,7 +102,7 @@ export default function PostCard({
               onClick={(e) => {
                 e.stopPropagation();
                 handleCopyToClipboard(postUrl);
-                showModal("URL이 클립보드에 복사되었습니다.");
+                showToast("URL이 클립보드에 복사되었습니다.");
               }}
             >
               <IoShareSocialOutline size={20} />

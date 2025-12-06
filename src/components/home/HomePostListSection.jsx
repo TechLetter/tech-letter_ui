@@ -18,6 +18,7 @@ export default function HomePostListSection({ posts, loading, hasMore }) {
             postUrl={post.link}
             postPublishedAt={post.published_at}
             postViewCount={post.view_count}
+            isBookmarked={post.is_bookmarked}
           />
         ))}
       </div>

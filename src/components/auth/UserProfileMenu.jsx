@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../routes/path";
 
 export default function UserProfileMenu({ user, isAdmin, onLogout }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleToggleOpen = () => {
     setOpen((prev) => !prev);
@@ -26,6 +29,11 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
 
   const handleLogoutClick = () => {
     onLogout();
+    setOpen(false);
+  };
+
+  const handleClickBookmarks = () => {
+    navigate(PATHS.BOOKMARKS);
     setOpen(false);
   };
 
@@ -74,7 +82,15 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
             </div>
           </div>
 
-          <div className="mt-4 border-t border-gray-100 pt-3">
+          <div className="mt-4 border-t border-gray-100 pt-3 space-y-1">
+            <button
+              type="button"
+              onClick={handleClickBookmarks}
+              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <span>내 북마크</span>
+              <span className="text-[13px]">⟶</span>
+            </button>
             <button
               type="button"
               onClick={handleLogoutClick}
