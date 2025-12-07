@@ -6,11 +6,15 @@ export default function Login() {
       <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white/90 p-8 shadow-lg">
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Tech Letter 로그인
+            <span className="block sm:inline">Tech Letter</span>
+            <span className="block sm:inline"> 로그인</span>
           </h1>
-          <p className="text-sm text-gray-600">
-            Google 계정으로 간편하게 로그인하고, 개인화된 구독 경험을
-            즐겨보세요.
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Google 계정으로 간편하게 로그인하고,
+            <span className="hidden sm:inline">&nbsp;</span>
+            <span className="block sm:inline">
+              개인화된 구독 경험을 즐겨보세요.
+            </span>
           </p>
         </div>
         <div className="space-y-4">
