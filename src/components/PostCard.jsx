@@ -42,7 +42,7 @@ export default function PostCard({
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:border-indigo-300/80 hover:shadow-md">
       {/* 썸네일 이미지 */}
-      <div className="relative h-36 sm:h-40 md:h-40 overflow-hidden">
+      <div className="relative h-32 sm:h-40 md:h-40 overflow-hidden">
         {postThumbnailUrl ? (
           <img
             src={postThumbnailUrl}
@@ -54,15 +54,9 @@ export default function PostCard({
           <div className="h-full w-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400" />
         )}
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between px-3 pt-3">
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start px-3 pt-3">
           <div className="pointer-events-auto inline-flex max-w-[70%] items-center rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-indigo-50 backdrop-blur">
             <span className="truncate">{blogName}</span>
-          </div>
-          <div className="pointer-events-auto">
-            <BookmarkToggleButton
-              postId={post_id}
-              initialIsBookmarked={isBookmarked}
-            />
           </div>
         </div>
 
@@ -71,15 +65,15 @@ export default function PostCard({
 
       {/* 포스트 정보 */}
       <div
-        className="flex h-full cursor-pointer flex-col justify-between gap-3 px-4 py-3 text-left"
+        className="flex h-full cursor-pointer flex-col justify-between gap-2 px-4 py-3 text-left"
         onClick={handleClickView}
       >
         {/* 상단: 제목 + 본문 요약 */}
-        <div className="flex flex-col gap-1 text-slate-900">
-          <h2 className="text-base font-semibold sm:text-lg leading-snug line-clamp-2">
+        <div className="flex flex-col gap-4 text-slate-900">
+          <h2 className="text-lg sm:text-xl font-semibold leading-snug line-clamp-2">
             {postTitle}
           </h2>
-          <p className="text-xs text-slate-700 sm:text-sm">{postSummary}</p>
+          <p className="text-sm text-slate-700 sm:text-base">{postSummary}</p>
         </div>
 
         {/* 하단: 태그 + 메타 정보 */}
@@ -120,6 +114,10 @@ export default function PostCard({
               >
                 <IoShareSocialOutline size={18} />
               </button>
+              <BookmarkToggleButton
+                postId={post_id}
+                initialIsBookmarked={isBookmarked}
+              />
             </div>
           </div>
         </div>
