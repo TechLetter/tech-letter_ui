@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes/path";
+import SettingsModal from "../account/SettingsModal";
 
 export default function UserProfileMenu({ user, isAdmin, onLogout }) {
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const containerRef = useRef(null);
   const navigate = useNavigate();
 
@@ -30,6 +32,21 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
   const handleLogoutClick = () => {
     onLogout();
     setOpen(false);
+  };
+
+  const handleOpenSettings = () => {
+    setSettingsOpen(true);
+    setOpen(false);
+  };
+
+  const handleCloseSettings = () => {
+    setSettingsOpen(false);
+  };
+
+  const handleAccountDeleted = () => {
+    onLogout();
+    setSettingsOpen(false);
+    navigate(PATHS.HOME);
   };
 
   const handleClickBookmarks = () => {
@@ -93,6 +110,14 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
             </button>
             <button
               type="button"
+              onClick={handleOpenSettings}
+              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <span>설정</span>
+              <span className="text-[13px]">⟶</span>
+            </button>
+            <button
+              type="button"
               onClick={handleLogoutClick}
               className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700"
             >
@@ -102,6 +127,12 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
           </div>
         </div>
       )}
+      <SettingsModal
+        open={settingsOpen}
+        onClose={handleCloseSettings}
+        onDeleted={handleAccountDeleted}
+        user={user}
+      />
     </div>
   );
 }
