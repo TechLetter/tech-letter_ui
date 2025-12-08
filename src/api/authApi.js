@@ -11,6 +11,7 @@ const authApi = {
   getGoogleLoginUrl: () => buildGoogleLoginUrl(),
   exchangeSession: (session) =>
     apiClient.post("/api/v1/auth/session/exchange", { session }),
+  deleteMe: () => apiClient.delete("/api/v1/users/me"),
 };
 
 export default authApi;
