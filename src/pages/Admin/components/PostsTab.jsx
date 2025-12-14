@@ -30,11 +30,20 @@ export default function PostsTab() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // { id, action } 형태
 
+  // 필터 상태: undefined는 전체, true/false는 해당 상태
+  const [filterSummarized, setFilterSummarized] = useState(undefined);
+  const [filterEmbedded, setFilterEmbedded] = useState(undefined);
+
   // 포스트 목록 조회
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getPosts({ page, page_size: pageSize });
+      const data = await getPosts({
+        page,
+        page_size: pageSize,
+        status_ai_summarized: filterSummarized,
+        status_embedded: filterEmbedded,
+      });
       setPosts(data.data || []);
       setTotalPages(Math.ceil((data.total || 0) / pageSize));
     } catch (error) {
@@ -42,7 +51,7 @@ export default function PostsTab() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, filterSummarized, filterEmbedded]);
 
   useEffect(() => {
     fetchPosts();
@@ -213,9 +222,40 @@ export default function PostsTab() {
   return (
     <div className="space-y-4">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-slate-900">포스트 관리</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 필터 드롭다운들 */}
+          <select
+            value={
+              filterSummarized === undefined ? "" : filterSummarized.toString()
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              setFilterSummarized(val === "" ? undefined : val === "true");
+              setPage(1); // 필터 변경 시 첫 페이지로
+            }}
+            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">요약 상태: 전체</option>
+            <option value="true">요약 완료</option>
+            <option value="false">요약 대기</option>
+          </select>
+          <select
+            value={
+              filterEmbedded === undefined ? "" : filterEmbedded.toString()
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              setFilterEmbedded(val === "" ? undefined : val === "true");
+              setPage(1); // 필터 변경 시 첫 페이지로
+            }}
+            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">임베딩 상태: 전체</option>
+            <option value="true">임베딩 완료</option>
+            <option value="false">임베딩 대기</option>
+          </select>
           <button
             onClick={fetchPosts}
             disabled={loading}
