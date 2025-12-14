@@ -1,5 +1,7 @@
 import { lazy } from "react";
+import { Navigate } from "react-router-dom";
 import { PATHS } from "./path";
+import AdminRouteProvider from "../provider/AdminRouteProvider";
 
 const Home = lazy(() => import("../pages/Home"));
 const Login = lazy(() => import("../pages/Login"));
@@ -14,5 +16,14 @@ export const ROUTES = [
   { path: PATHS.LOGIN_SUCCESS, element: <LoginSuccess /> },
   { path: PATHS.BOOKMARKS, element: <Bookmarks /> },
   { path: PATHS.CHATBOT, element: <Chatbot /> },
-  { path: PATHS.ADMIN, element: <Admin /> },
+  {
+    path: PATHS.ADMIN,
+    element: (
+      <AdminRouteProvider>
+        <Admin />
+      </AdminRouteProvider>
+    ),
+  },
+  // Catch-all: 정의되지 않은 모든 경로는 홈으로 리다이렉트
+  { path: "*", element: <Navigate to={PATHS.HOME} replace /> },
 ];
