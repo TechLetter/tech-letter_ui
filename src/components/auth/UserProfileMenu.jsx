@@ -100,6 +100,19 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
           </div>
 
           <div className="mt-4 border-t border-gray-100 pt-3 space-y-1">
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(PATHS.ADMIN);
+                  setOpen(false);
+                }}
+                className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100"
+              >
+                <span>관리자 페이지</span>
+                <span className="text-[13px]">⟶</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={handleClickBookmarks}

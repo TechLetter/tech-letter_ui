@@ -12,6 +12,19 @@ function formatLocalDate(isoString) {
   return `${yyyy}.${mm}.${dd}`;
 }
 
+// 클라이언트 시간대 기준 YYYY. MM. DD. HH:MM 문자열 반환
+export function formatKSTDateTime(isoString) {
+  if (!isoString) return "-";
+  const date = new Date(isoString);
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 // 클라이언트 시간 기준으로 N시간 전/후인지 계산
 export function timeDifferenceFromNow(isoString) {
   const date = new Date(isoString);
@@ -41,6 +54,7 @@ export function timeDifferenceFromNow(isoString) {
 const timeutils = {
   toLocalDate,
   formatLocalDate,
+  formatDateTime: formatKSTDateTime,
   timeDifferenceFromNow,
 };
 

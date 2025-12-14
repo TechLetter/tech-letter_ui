@@ -1,8 +1,10 @@
 import { Outlet, useNavigate } from "react-router-dom";
+import { RiRobot2Line } from "react-icons/ri";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { PATHS } from "../routes/path";
 import { useAuth } from "../provider/AuthProvider";
 import UserProfileMenu from "../components/auth/UserProfileMenu";
+import { showLoginRequiredModal } from "../provider/LoginRequiredModalProvider";
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ export default function MainLayout() {
   return (
     <div className="relative mx-auto min-h-screen w-full max-w-full sm:max-w-2xl lg:max-w-7xl">
       {/* 헤더 */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80 bg-slate-50/95 backdrop-blur-lg">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80 bg-white backdrop-blur-lg">
         <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
           <button
             type="button"
@@ -38,8 +40,24 @@ export default function MainLayout() {
               Tech Letter
             </div>
           </button>
-          {/* 우측 인증 영역 */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (!isAuthenticatedUser) {
+                  showLoginRequiredModal();
+                } else {
+                  navigate(PATHS.CHATBOT);
+                }
+              }}
+              className="group mr-2 focus:outline-none"
+            >
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 group-hover:from-indigo-100 group-hover:to-purple-100 transition-colors border border-indigo-100/50 shadow-sm">
+                <RiRobot2Line className="text-lg group-hover:rotate-12 transition-transform" />
+                <span className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  AI 챗봇
+                </span>
+              </div>
+            </button>
             {isLoadingUser && (
               <div className="h-8 w-24 rounded-full bg-gray-200 animate-pulse" />
             )}
@@ -64,7 +82,7 @@ export default function MainLayout() {
       </header>
 
       {/* 메인 컨텐츠 */}
-      <main className="pt-16 pb-8 px-4 sm:px-6 lg:px-8">
+      <main className="pt-14 pb-6 px-2 sm:px-6 lg:px-8">
         <Outlet />
       </main>
 
