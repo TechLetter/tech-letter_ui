@@ -3,6 +3,7 @@ import ScrollToTopButton from "../components/ScrollToTopButton";
 import { PATHS } from "../routes/path";
 import { useAuth } from "../provider/AuthProvider";
 import UserProfileMenu from "../components/auth/UserProfileMenu";
+import { showLoginRequiredModal } from "../provider/LoginRequiredModalProvider";
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -38,8 +39,19 @@ export default function MainLayout() {
               Tech Letter
             </div>
           </button>
-          {/* 우측 인증 영역 */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (!isAuthenticatedUser) {
+                  showLoginRequiredModal();
+                } else {
+                  navigate(PATHS.CHATBOT);
+                }
+              }}
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors mr-2"
+            >
+              챗봇
+            </button>
             {isLoadingUser && (
               <div className="h-8 w-24 rounded-full bg-gray-200 animate-pulse" />
             )}
@@ -64,7 +76,7 @@ export default function MainLayout() {
       </header>
 
       {/* 메인 컨텐츠 */}
-      <main className="pt-16 pb-8 px-4 sm:px-6 lg:px-8">
+      <main className="pt-14 pb-6 px-2 sm:px-6 lg:px-8">
         <Outlet />
       </main>
 
