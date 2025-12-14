@@ -4,4 +4,5 @@ export const PATHS = {
   LOGIN_SUCCESS: "/login/success",
   BOOKMARKS: "/bookmarks",
   CHATBOT: "/chatbot",
+  ADMIN: "/admin",
 };
