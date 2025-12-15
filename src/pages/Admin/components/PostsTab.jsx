@@ -27,6 +27,7 @@ export default function PostsTab() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(20);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // { id, action } 형태
@@ -65,6 +66,7 @@ export default function PostsTab() {
       });
       setPosts(data.data || []);
       setTotalPages(Math.ceil((data.total || 0) / pageSize));
+      setTotalCount(data.total || 0);
     } catch (error) {
       showToast(handleAdminError(error), "error");
     } finally {
@@ -155,14 +157,22 @@ export default function PostsTab() {
     {
       key: "status",
       label: "상태",
-      width: "140px",
-      render: (status) => (
-        <div className="flex flex-col gap-1">
+      width: "250px",
+      render: (status, row) => (
+        <div className="flex flex-col gap-1.5">
           <Badge variant={status?.ai_summarized ? "success" : "warning"}>
-            {status?.ai_summarized ? "요약 완료" : "요약 대기"}
+            {status?.ai_summarized ? (
+              <span>요약 완료 {row.aisummary.model_name}</span>
+            ) : (
+              "요약 대기"
+            )}
           </Badge>
           <Badge variant={status?.embedded ? "success" : "warning"}>
-            {status?.embedded ? "임베딩 완료" : "임베딩 대기"}
+            {status?.embedded ? (
+              <span>임베딩 완료 {row.embedding.model_name}</span>
+            ) : (
+              "임베딩 대기"
+            )}
           </Badge>
         </div>
       ),
@@ -170,7 +180,7 @@ export default function PostsTab() {
     {
       key: "timestamps",
       label: "시간 정보",
-      width: "200px",
+      width: "180px",
       render: (_, row) => (
         <div className="text-xs text-slate-500 space-y-0.5">
           <div>생성: {formatKSTDateTime(row.created_at)}</div>
@@ -183,13 +193,7 @@ export default function PostsTab() {
         </div>
       ),
     },
-    {
-      key: "view_count",
-      label: "조회수",
-      width: "80px",
-      align: "center",
-      render: (count) => <span className="text-slate-600">{count || 0}</span>,
-    },
+
     {
       key: "actions",
       label: "",
@@ -242,7 +246,16 @@ export default function PostsTab() {
     <div className="space-y-4">
       {/* 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold text-slate-900">포스트 관리</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-slate-900">포스트 관리</h2>
+          <span className="text-sm text-slate-500">
+            총{" "}
+            <span className="font-medium text-slate-700">
+              {totalCount.toLocaleString()}
+            </span>
+            건
+          </span>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* 블로그 필터 */}
           <select
