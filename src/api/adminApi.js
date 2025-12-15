@@ -13,7 +13,7 @@ const ADMIN_BASE = "/api/v1/admin";
 
 /**
  * 포스트 목록 조회
- * @param {Object} params - { page, page_size, status_ai_summarized, status_embedded }
+ * @param {Object} params - { page, page_size, status_ai_summarized, status_embedded, blog_id }
  */
 export async function getPosts(params = {}) {
   const {
@@ -21,6 +21,7 @@ export async function getPosts(params = {}) {
     page_size = 20,
     status_ai_summarized,
     status_embedded,
+    blog_id,
   } = params;
 
   const queryParams = { page, page_size };
@@ -28,6 +29,7 @@ export async function getPosts(params = {}) {
     queryParams.status_ai_summarized = status_ai_summarized;
   if (status_embedded !== undefined)
     queryParams.status_embedded = status_embedded;
+  if (blog_id) queryParams.blog_id = blog_id;
 
   const response = await client.get(`${ADMIN_BASE}/posts`, {
     params: queryParams,

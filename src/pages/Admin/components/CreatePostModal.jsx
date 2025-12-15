@@ -8,6 +8,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
   const [blogs, setBlogs] = useState([]);
   const [blogsLoading, setBlogsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(""); // 인라인 에러 메시지
 
   const [formData, setFormData] = useState({
     blog_id: "",
@@ -26,6 +27,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
   useEffect(() => {
     if (!open) {
       setFormData({ blog_id: "", title: "", link: "" });
+      setError("");
     }
   }, [open]);
 
@@ -44,23 +46,53 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError(""); // 입력 시 에러 초기화
+  };
+
+  // URL에서 도메인 추출
+  const getDomain = (url) => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return null;
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     // 유효성 검사
     if (!formData.blog_id) {
-      showToast("블로그를 선택해주세요.", "error");
+      setError("블로그를 선택해주세요.");
       return;
     }
     if (!formData.title.trim()) {
-      showToast("제목을 입력해주세요.", "error");
+      setError("제목을 입력해주세요.");
       return;
     }
     if (!formData.link.trim()) {
-      showToast("링크를 입력해주세요.", "error");
+      setError("링크를 입력해주세요.");
       return;
+    }
+
+    // 도메인 일치 검사
+    const selectedBlog = blogs.find((b) => b.id === formData.blog_id);
+    if (selectedBlog) {
+      const blogDomain = getDomain(selectedBlog.url);
+      const linkDomain = getDomain(formData.link.trim());
+
+      if (!linkDomain) {
+        setError("유효한 링크 URL을 입력해주세요.");
+        return;
+      }
+
+      if (blogDomain && linkDomain && blogDomain !== linkDomain) {
+        setError(
+          `링크 도메인(${linkDomain})이 블로그 도메인(${blogDomain})과 일치하지 않습니다.`
+        );
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -107,6 +139,13 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
 
         {/* 폼 */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* 에러 메시지 */}
+          {error && (
+            <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
+              {error}
+            </div>
+          )}
+
           {/* 블로그 선택 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
