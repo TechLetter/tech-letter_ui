@@ -20,22 +20,31 @@ import {
 } from "../../../api/adminApi";
 import { showToast } from "../../../provider/ToastModalProvider";
 import { formatKSTDateTime } from "../../../utils/timeutils";
+import { useUrlState, parseBool } from "../../../hooks/useUrlState";
 import CreatePostModal from "./CreatePostModal";
 
 export default function PostsTab() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(20);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [actionLoading, setActionLoading] = useState(null); // { id, action } 형태
+  const [actionLoading, setActionLoading] = useState(null);
 
-  // 필터 상태
-  const [filterSummarized, setFilterSummarized] = useState(undefined);
-  const [filterEmbedded, setFilterEmbedded] = useState(undefined);
-  const [filterBlogId, setFilterBlogId] = useState("");
+  // URL 동기화되는 필터/페이지 상태
+  const [page, setPage] = useUrlState("page", 1, { parse: Number });
+  const [filterSummarized, setFilterSummarized] = useUrlState(
+    "summarized",
+    undefined,
+    { parse: parseBool }
+  );
+  const [filterEmbedded, setFilterEmbedded] = useUrlState(
+    "embedded",
+    undefined,
+    { parse: parseBool }
+  );
+  const [filterBlogId, setFilterBlogId] = useUrlState("blog", "");
 
   // 블로그 목록 (필터 드롭다운용)
   const [blogs, setBlogs] = useState([]);

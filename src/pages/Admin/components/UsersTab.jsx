@@ -6,13 +6,16 @@ import Pagination from "../../../components/common/Pagination";
 import { getUsers, handleAdminError } from "../../../api/adminApi";
 import { showToast } from "../../../provider/ToastModalProvider";
 import timeutils from "../../../utils/timeutils";
+import { useUrlState } from "../../../hooks/useUrlState";
 
 export default function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(20);
+
+  // URL 동기화되는 페이지 상태
+  const [page, setPage] = useUrlState("userPage", 1, { parse: Number });
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);

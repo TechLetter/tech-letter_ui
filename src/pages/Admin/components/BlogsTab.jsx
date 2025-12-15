@@ -4,13 +4,16 @@ import Table from "../../../components/common/Table";
 import Pagination from "../../../components/common/Pagination";
 import { getBlogs, handleAdminError } from "../../../api/adminApi";
 import { showToast } from "../../../provider/ToastModalProvider";
+import { useUrlState } from "../../../hooks/useUrlState";
 
 export default function BlogsTab() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(20);
+
+  // URL 동기화되는 페이지 상태
+  const [page, setPage] = useUrlState("blogPage", 1, { parse: Number });
 
   const fetchBlogs = useCallback(async () => {
     setLoading(true);

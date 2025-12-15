@@ -4,6 +4,7 @@ import filtersApi from "../api/filtersApi";
 import HomeFilterSection from "../components/home/HomeFilterSection";
 import HomePostListSection from "../components/home/HomePostListSection";
 import { mergeUniqueByKey } from "../utils/arrayUtils";
+import { useUrlState } from "../hooks/useUrlState";
 
 const PAGE_SIZE = 12;
 
@@ -18,10 +19,13 @@ export default function Home() {
   const [blogFilters, setBlogFilters] = useState([]);
   const [tagFilters, setTagFilters] = useState([]);
 
-  // Selected filter states
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedBlogId, setSelectedBlogId] = useState("");
-  const [selectedTags, setSelectedTags] = useState([]);
+  // URL 동기화되는 필터 상태
+  const [selectedCategory, setSelectedCategory] = useUrlState("category", "");
+  const [selectedBlogId, setSelectedBlogId] = useUrlState("blog", "");
+  const [selectedTags, setSelectedTags] = useUrlState("tags", [], {
+    parse: (v) => (v ? v.split(",") : []),
+    serialize: (v) => (Array.isArray(v) && v.length > 0 ? v.join(",") : ""),
+  });
 
   const fetchPosts = async (pageNum = 1, resetPosts = false) => {
     setLoading(true);
