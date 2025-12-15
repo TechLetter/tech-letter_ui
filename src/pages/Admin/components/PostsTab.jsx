@@ -12,6 +12,7 @@ import Badge from "../../../components/common/Badge";
 import Pagination from "../../../components/common/Pagination";
 import {
   getPosts,
+  getBlogs,
   deletePost,
   triggerSummarize,
   triggerEmbed,
@@ -30,9 +31,26 @@ export default function PostsTab() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // { id, action } 형태
 
-  // 필터 상태: undefined는 전체, true/false는 해당 상태
+  // 필터 상태
   const [filterSummarized, setFilterSummarized] = useState(undefined);
   const [filterEmbedded, setFilterEmbedded] = useState(undefined);
+  const [filterBlogId, setFilterBlogId] = useState("");
+
+  // 블로그 목록 (필터 드롭다운용)
+  const [blogs, setBlogs] = useState([]);
+
+  // 블로그 목록 로드 (최초 1회)
+  useEffect(() => {
+    const loadBlogs = async () => {
+      try {
+        const data = await getBlogs({ page: 1, page_size: 100 });
+        setBlogs(data.data || []);
+      } catch (error) {
+        // 블로그 로드 실패 시 무시 (필터만 비활성화됨)
+      }
+    };
+    loadBlogs();
+  }, []);
 
   // 포스트 목록 조회
   const fetchPosts = useCallback(async () => {
@@ -43,6 +61,7 @@ export default function PostsTab() {
         page_size: pageSize,
         status_ai_summarized: filterSummarized,
         status_embedded: filterEmbedded,
+        blog_id: filterBlogId || undefined,
       });
       setPosts(data.data || []);
       setTotalPages(Math.ceil((data.total || 0) / pageSize));
@@ -51,7 +70,7 @@ export default function PostsTab() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, filterSummarized, filterEmbedded]);
+  }, [page, pageSize, filterSummarized, filterEmbedded, filterBlogId]);
 
   useEffect(() => {
     fetchPosts();
@@ -225,7 +244,23 @@ export default function PostsTab() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-slate-900">포스트 관리</h2>
         <div className="flex flex-wrap items-center gap-2">
-          {/* 필터 드롭다운들 */}
+          {/* 블로그 필터 */}
+          <select
+            value={filterBlogId}
+            onChange={(e) => {
+              setFilterBlogId(e.target.value);
+              setPage(1);
+            }}
+            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">블로그: 전체</option>
+            {blogs.map((blog) => (
+              <option key={blog.id} value={blog.id}>
+                {blog.name} ({blog.url})
+              </option>
+            ))}
+          </select>
+          {/* 요약/임베딩 필터 */}
           <select
             value={
               filterSummarized === undefined ? "" : filterSummarized.toString()
