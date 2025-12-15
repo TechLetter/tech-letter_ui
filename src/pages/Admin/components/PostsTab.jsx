@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   RiRefreshLine,
   RiDeleteBinLine,
@@ -24,6 +25,7 @@ import { useUrlState, parseBool } from "../../../hooks/useUrlState";
 import CreatePostModal from "./CreatePostModal";
 
 export default function PostsTab() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
@@ -45,6 +47,26 @@ export default function PostsTab() {
     { parse: parseBool }
   );
   const [filterBlogId, setFilterBlogId] = useUrlState("blog", "");
+
+  // 필터 변경 + 페이지 리셋을 한번에 처리하는 헬퍼
+  const handleFilterChange = useCallback(
+    (key, value) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("page"); // 페이지 리셋
+          if (value === undefined || value === null || value === "") {
+            next.delete(key);
+          } else {
+            next.set(key, String(value));
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
   // 블로그 목록 (필터 드롭다운용)
   const [blogs, setBlogs] = useState([]);
@@ -269,10 +291,7 @@ export default function PostsTab() {
           {/* 블로그 필터 */}
           <select
             value={filterBlogId}
-            onChange={(e) => {
-              setFilterBlogId(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => handleFilterChange("blog", e.target.value)}
             className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">블로그: 전체</option>
@@ -289,8 +308,7 @@ export default function PostsTab() {
             }
             onChange={(e) => {
               const val = e.target.value;
-              setFilterSummarized(val === "" ? undefined : val === "true");
-              setPage(1); // 필터 변경 시 첫 페이지로
+              handleFilterChange("summarized", val === "" ? undefined : val);
             }}
             className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
@@ -304,8 +322,7 @@ export default function PostsTab() {
             }
             onChange={(e) => {
               const val = e.target.value;
-              setFilterEmbedded(val === "" ? undefined : val === "true");
-              setPage(1); // 필터 변경 시 첫 페이지로
+              handleFilterChange("embedded", val === "" ? undefined : val);
             }}
             className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >

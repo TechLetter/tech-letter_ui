@@ -23,28 +23,36 @@ export function useUrlState(key, defaultValue, options = {}) {
   parseRef.current = options.parse || ((v) => v);
   serializeRef.current = options.serialize || ((v) => String(v));
 
-  // 이전 값을 저장하여 불필요한 리렌더 방지
-  const prevValueRef = useRef();
-  const prevParamRef = useRef();
+  // 배열 안정화를 위한 캐시 (UNINITIALIZED로 초기 상태 구분)
+  const UNINITIALIZED = useRef(Symbol("uninitialized"));
+  const cacheRef = useRef({ param: UNINITIALIZED.current, value: null });
 
   // URL에서 값 읽기
   const value = useMemo(() => {
     const param = searchParams.get(key);
 
-    // 파라미터가 변경되지 않았으면 이전 값 반환 (배열 안정화)
-    if (param === prevParamRef.current && prevValueRef.current !== undefined) {
-      return prevValueRef.current;
+    // 배열인 경우 동일한 param이면 캐시된 값 반환 (초기 상태 제외)
+    if (
+      Array.isArray(defaultValue) &&
+      cacheRef.current.param !== UNINITIALIZED.current &&
+      param === cacheRef.current.param
+    ) {
+      return cacheRef.current.value;
     }
-    prevParamRef.current = param;
 
+    let result;
     if (param === null || param === "") {
-      prevValueRef.current = defaultValue;
-      return defaultValue;
+      result = defaultValue;
+    } else {
+      result = parseRef.current(param);
     }
 
-    const parsed = parseRef.current(param);
-    prevValueRef.current = parsed;
-    return parsed;
+    // 배열인 경우 캐시 업데이트
+    if (Array.isArray(defaultValue)) {
+      cacheRef.current = { param, value: result };
+    }
+
+    return result;
   }, [searchParams, key, defaultValue]);
 
   // URL에 값 쓰기
@@ -53,14 +61,30 @@ export function useUrlState(key, defaultValue, options = {}) {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          const serialized = serializeRef.current(newValue);
 
-          // 기본값이거나 빈 값이면 삭제
+          // undefined/null이면 URL에서 삭제
+          if (newValue === undefined || newValue === null) {
+            next.delete(key);
+            return next;
+          }
+
+          // 기본값이면 URL에서 삭제
           const isDefault = Array.isArray(defaultValue)
             ? JSON.stringify(newValue) === JSON.stringify(defaultValue)
             : newValue === defaultValue;
 
-          if (isDefault || newValue === undefined || serialized === "") {
+          if (isDefault) {
+            next.delete(key);
+            return next;
+          }
+
+          // 값 직렬화 후 설정
+          const serialized = serializeRef.current(newValue);
+          if (
+            serialized === "" ||
+            serialized === "undefined" ||
+            serialized === "null"
+          ) {
             next.delete(key);
           } else {
             next.set(key, serialized);
@@ -77,64 +101,60 @@ export function useUrlState(key, defaultValue, options = {}) {
 }
 
 /**
- * 여러 URL 상태를 한번에 관리하는 훅
+ * 여러 URL 파라미터를 한번에 업데이트하는 훅
+ * 연속된 setSearchParams 호출 시 발생하는 batching 문제 해결
  *
- * @param {Object} schema - { key: { default, parse?, serialize? } }
- * @returns {[values, setters, resetAll]}
+ * @returns {{ updateParams, resetParams }}
  *
  * @example
- * const [values, setters, reset] = useUrlStates({
- *   page: { default: 1, parse: Number },
- *   filter: { default: "" },
- * });
+ * const { updateParams, resetParams } = useUrlParams();
+ * // 한번에 여러 파라미터 업데이트 (필터 변경 + 페이지 리셋)
+ * updateParams({ summarized: "true", page: null });
  */
-export function useUrlStates(schema) {
-  const [searchParams, setSearchParams] = useSearchParams();
+export function useUrlParams() {
+  const [, setSearchParams] = useSearchParams();
 
-  const values = useMemo(() => {
-    const result = {};
-    for (const [key, config] of Object.entries(schema)) {
-      const param = searchParams.get(key);
-      const parse = config.parse || ((v) => v);
-      result[key] =
-        param === null || param === "" ? config.default : parse(param);
-    }
-    return result;
-  }, [searchParams, schema]);
-
-  const setters = useMemo(() => {
-    const result = {};
-    for (const [key, config] of Object.entries(schema)) {
-      const serialize = config.serialize || ((v) => String(v));
-      result[`set${key.charAt(0).toUpperCase() + key.slice(1)}`] = (
-        newValue
-      ) => {
-        setSearchParams(
-          (prev) => {
-            const next = new URLSearchParams(prev);
-            if (
-              newValue === config.default ||
-              newValue === undefined ||
-              newValue === ""
-            ) {
+  // 여러 파라미터를 한번에 업데이트
+  const updateParams = useCallback(
+    (updates, options = {}) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [key, value] of Object.entries(updates)) {
+            if (value === undefined || value === null || value === "") {
               next.delete(key);
             } else {
-              next.set(key, serialize(newValue));
+              next.set(key, String(value));
             }
-            return next;
-          },
-          { replace: true }
-        );
-      };
-    }
-    return result;
-  }, [schema, setSearchParams]);
+          }
+          return next;
+        },
+        { replace: options.replace !== false }
+      );
+    },
+    [setSearchParams]
+  );
 
-  const resetAll = useCallback(() => {
-    setSearchParams({}, { replace: true });
-  }, [setSearchParams]);
+  // 모든 파라미터 초기화
+  const resetParams = useCallback(
+    (keysToReset) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (keysToReset) {
+            keysToReset.forEach((key) => next.delete(key));
+          } else {
+            return new URLSearchParams();
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
-  return [values, setters, resetAll];
+  return { updateParams, resetParams };
 }
 
 /**
