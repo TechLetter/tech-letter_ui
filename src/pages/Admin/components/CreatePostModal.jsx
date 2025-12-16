@@ -125,13 +125,15 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
       />
 
       {/* 모달 */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden dark:bg-slate-800 dark:shadow-slate-900/50">
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900">포스트 추가</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            포스트 추가
+          </h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-700"
           >
             <RiCloseLine className="text-xl" />
           </button>
@@ -141,14 +143,14 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* 에러 메시지 */}
           {error && (
-            <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
               {error}
             </div>
           )}
 
           {/* 블로그 선택 */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5 dark:text-slate-300">
               블로그 <span className="text-red-500">*</span>
             </label>
             <select
@@ -156,7 +158,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
               value={formData.blog_id}
               onChange={handleChange}
               disabled={blogsLoading}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-slate-50"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:disabled:bg-slate-800"
             >
               <option value="">
                 {blogsLoading ? "로딩 중..." : "블로그를 선택하세요"}
@@ -171,7 +173,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
 
           {/* 제목 */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5 dark:text-slate-300">
               제목 <span className="text-red-500">*</span>
             </label>
             <input
@@ -180,13 +182,13 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
               value={formData.title}
               onChange={handleChange}
               placeholder="포스트 제목을 입력하세요"
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder:text-slate-400"
             />
           </div>
 
           {/* 링크 */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5 dark:text-slate-300">
               링크 <span className="text-red-500">*</span>
             </label>
             <input
@@ -195,7 +197,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
               value={formData.link}
               onChange={handleChange}
               placeholder="https://example.com/post"
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder:text-slate-400"
             />
           </div>
 
@@ -204,14 +206,14 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-indigo-500 dark:hover:bg-indigo-600"
             >
               {submitting ? "생성 중..." : "생성"}
             </button>

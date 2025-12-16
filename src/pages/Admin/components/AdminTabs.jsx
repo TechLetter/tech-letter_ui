@@ -12,7 +12,7 @@ const TABS = [
 
 export default function AdminTabs({ activeTab, onTabChange }) {
   return (
-    <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+    <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl dark:bg-slate-800">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -23,8 +23,8 @@ export default function AdminTabs({ activeTab, onTabChange }) {
             onClick={() => onTabChange(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               isActive
-                ? "bg-white text-indigo-600 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
             <Icon className="text-base" />
