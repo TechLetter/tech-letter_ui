@@ -45,73 +45,73 @@ function SettingsModalContent({ open, onClose, onDeleted, user }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-3 sm:px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-3 sm:px-4 backdrop-blur-sm"
       onClick={handleOverlayClick}
     >
-      <div className="flex w-full max-w-md sm:max-w-3xl max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:flex-row">
+      <div className="flex w-full max-w-md sm:max-w-3xl max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:flex-row dark:bg-slate-800 dark:shadow-slate-900/50">
         {/* 사이드 네비 (향후 확장용) */}
-        <aside className="hidden w-48 border-r border-gray-100 bg-slate-50/80 px-3 py-4 text-sm sm:block">
-          <div className="mb-4 px-2 text-xs font-semibold text-gray-500">
+        <aside className="hidden w-48 border-r border-gray-100 bg-slate-50/80 px-3 py-4 text-sm sm:block dark:border-slate-700 dark:bg-slate-900/50">
+          <div className="mb-4 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
             설정
           </div>
           <button
             type="button"
-            className="flex w-full items-center rounded-lg hover:bg-gray-100 px-3 py-2 text-xs font-medium text-gray-900"
+            className="flex w-full items-center rounded-lg hover:bg-gray-100 px-3 py-2 text-xs font-medium text-gray-900 dark:text-gray-200 dark:hover:bg-slate-700"
           >
             <span>계정 설정</span>
           </button>
         </aside>
 
         {/* 메인 컨텐츠 */}
-        <section className="flex-1 overflow-y-auto p-4 text-sm text-gray-900 sm:p-6">
+        <section className="flex-1 overflow-y-auto p-4 text-sm text-gray-900 sm:p-6 dark:text-gray-100">
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg dark:text-white">
                 계정 설정
               </h2>
-              <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+              <p className="mt-1 text-xs text-gray-500 sm:text-sm dark:text-gray-400">
                 프로필과 계정 관련 설정을 관리할 수 있어요.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="ml-2 text-base text-gray-400 hover:text-gray-600"
+              className="ml-2 text-base text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
             >
               ✕
             </button>
           </div>
 
-          <div className="mb-6 flex items-center gap-3 rounded-xl border border-gray-100 bg-slate-50/60 px-4 py-3">
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-gray-100 bg-slate-50/60 px-4 py-3 dark:border-slate-700 dark:bg-slate-700/50">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-semibold text-white">
               {userName ? userName.charAt(0).toUpperCase() : ""}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-100">
                 {userName}
               </p>
               {userEmail && (
-                <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+                <p className="text-xs text-gray-500 truncate dark:text-gray-400">{userEmail}</p>
               )}
             </div>
           </div>
 
           {/* 위험 영역 */}
-          <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-4">
-            <h3 className="text-sm font-semibold text-red-700 sm:text-base">
+          <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-4 dark:border-red-900/30 dark:bg-red-900/20">
+            <h3 className="text-sm font-semibold text-red-700 sm:text-base dark:text-red-400">
               회원 탈퇴
             </h3>
-            <p className="mt-1 text-xs text-red-600 sm:text-sm">
+            <p className="mt-1 text-xs text-red-600 sm:text-sm dark:text-red-300">
               회원을 탈퇴하면 Tech Letter 에 저장된 프로필과 북마크 정보가 모두
               삭제되며, 다시 복구할 수 없습니다.
             </p>
-            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
             <div className="mt-3 flex justify-end">
               <button
                 type="button"
                 onClick={handleDeleteAccount}
                 disabled={submitting}
-                className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600"
               >
                 {submitting ? "삭제 중..." : "계정 삭제"}
               </button>

@@ -85,7 +85,7 @@ export default function Chatbot() {
   }
   return (
     // All devices: Fixed positioning to guarantee full screen (ignoring parent padding & max-width)
-    <div className="fixed inset-x-0 bottom-0 top-12 flex flex-col w-full bg-white overflow-hidden z-0">
+    <div className="fixed inset-x-0 bottom-0 top-12 flex flex-col w-full bg-white overflow-hidden z-0 dark:bg-slate-900 transition-colors duration-300">
       {/* Chat Window */}
       <ChatWindow
         messages={messages}
