@@ -53,8 +53,8 @@ export default function BookmarkToggleButton({
       disabled={loading}
       className={`flex items-center justify-center rounded-full p-1.5 transition-colors ${
         isBookmarked
-          ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-          : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+          : "text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
       } ${loading ? "opacity-60" : ""}`}
     >
       <Icon size={18} />
