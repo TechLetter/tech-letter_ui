@@ -56,26 +56,28 @@ export default function LoginSuccess() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white/90 p-6 text-center shadow-lg">
+      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white/90 p-6 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800/90 dark:shadow-slate-900/50">
         <div className="mb-4">
           <div
             className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${
               isSuccess
-                ? "bg-green-100 text-green-600"
+                ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
                 : isError
-                ? "bg-red-100 text-red-600"
-                : "bg-indigo-100 text-indigo-600"
+                ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                : "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
             }`}
           >
             {isSuccess ? "✔" : isError ? "!" : "…"}
           </div>
         </div>
-        <p className="text-sm text-gray-700 whitespace-pre-line">{message}</p>
+        <p className="text-sm text-gray-700 whitespace-pre-line dark:text-slate-300">
+          {message}
+        </p>
         {isError && (
           <button
             type="button"
             onClick={() => navigate(PATHS.LOGIN)}
-            className="mt-4 inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="mt-4 inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-600"
           >
             다시 로그인하기
           </button>

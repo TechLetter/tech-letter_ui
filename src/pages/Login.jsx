@@ -3,13 +3,13 @@ import GoogleLoginButton from "../components/auth/GoogleLoginButton";
 export default function Login() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white/90 p-8 shadow-lg">
+      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white/90 p-8 shadow-lg dark:border-slate-700 dark:bg-slate-800/90 dark:shadow-slate-900/50">
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             <span className="block sm:inline">Tech Letter</span>
             <span className="block sm:inline"> 로그인</span>
           </h1>
-          <p className="text-sm text-gray-600 leading-relaxed">
+          <p className="text-sm text-gray-600 leading-relaxed dark:text-slate-400">
             Google 계정으로 간편하게 로그인하고,
             <span className="hidden sm:inline">&nbsp;</span>
             <span className="block sm:inline">
@@ -19,7 +19,7 @@ export default function Login() {
         </div>
         <div className="space-y-4">
           <GoogleLoginButton />
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-gray-400 text-center dark:text-slate-500">
             로그인 시 서비스 이용 약관 및 개인정보 처리방침에 동의하게 됩니다.
           </p>
         </div>
