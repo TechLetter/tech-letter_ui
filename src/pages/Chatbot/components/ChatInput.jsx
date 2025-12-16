@@ -48,16 +48,17 @@ export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
   const isSendable = query.trim().length > 0 && !isOverLimit && !isLoading;
 
   return (
-    <div className="w-full bg-white p-2 sm:pb-8">
+    <div className="w-full bg-white p-2 sm:pb-8 dark:bg-slate-900 transition-colors duration-300">
       <div className="mx-auto max-w-full sm:max-w-2xl lg:max-w-4xl">
         <form
           onSubmit={handleSubmit}
           className={`
             relative flex items-end gap-2 w-full px-4 py-2.5 rounded-[26px] bg-[#f4f4f4] transition-colors duration-200
+            dark:bg-slate-800
             ${
               isOverLimit
-                ? "ring-2 ring-red-400 bg-red-50"
-                : "focus-within:bg-[#eaeaea]"
+                ? "ring-2 ring-red-400 bg-red-50 dark:bg-red-900/20 dark:ring-red-500"
+                : "focus-within:bg-[#eaeaea] dark:focus-within:bg-slate-700"
             }
           `}
         >
@@ -75,7 +76,8 @@ export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
             className={`
               flex-1 w-full bg-transparent border-0 p-1 text-slate-800 placeholder:text-slate-500 
               focus:ring-0 focus:outline-none resize-none text-[16px] leading-6 max-h-[150px]
-              ${isOverLimit ? "text-red-700" : ""}
+              dark:text-slate-100 dark:placeholder:text-slate-400
+              ${isOverLimit ? "text-red-700 dark:text-red-400" : ""}
             `} // text-[16px]는 iOS에서 줌인 방지
             style={{ minHeight: "24px" }}
           />

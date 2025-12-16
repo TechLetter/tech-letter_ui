@@ -24,7 +24,7 @@ export default function MessageBubble({ message }) {
           className={`text-base leading-relaxed overflow-hidden max-w-full lg:max-w-4xl ${
             isUser
               ? "bg-indigo-600 text-white rounded-[2rem] rounded-tr-sm px-5 py-3" // 유저: 보라색 물방울(상단 꼬리)
-              : "bg-transparent text-slate-900 prose prose-slate max-w-none" // 어시스턴트: 배경 없음, 순수 텍스트
+              : "bg-transparent text-slate-900 prose prose-slate dark:prose-invert max-w-none" // 어시스턴트: 배경 없음, 순수 텍스트 (dark:prose-invert adds dark mode support for typography)
           }`}
         >
           {isUser ? (
@@ -38,7 +38,7 @@ export default function MessageBubble({ message }) {
                     {...props}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-600 hover:underline dark:text-blue-400"
                   />
                 ),
                 // 모바일에서 너무 큰 제목 방지
@@ -58,6 +58,22 @@ export default function MessageBubble({ message }) {
                   <ol {...props} className="list-decimal pl-5 my-2" />
                 ),
                 p: ({ node, ...props }) => <p {...props} className="my-2" />,
+                code: ({ node, inline, className, children, ...props }) => {
+                  return (
+                    <code
+                      className={`${className} bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5`}
+                      {...props}
+                    >
+                      {children}
+                    </code>
+                  );
+                },
+                pre: ({ node, ...props }) => (
+                  <pre
+                    {...props}
+                    className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto my-4"
+                  />
+                ),
               }}
             >
               {message.content}

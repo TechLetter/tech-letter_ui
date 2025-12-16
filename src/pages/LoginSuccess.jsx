@@ -61,10 +61,10 @@ export default function LoginSuccess() {
           <div
             className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${
               isSuccess
-                ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300"
                 : isError
-                ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                : "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300"
+                : "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300"
             }`}
           >
             {isSuccess ? "✔" : isError ? "!" : "…"}
