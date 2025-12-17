@@ -24,7 +24,7 @@ export default function MessageBubble({ message }) {
           className={`text-base leading-relaxed overflow-hidden max-w-full lg:max-w-4xl ${
             isUser
               ? "bg-indigo-600 text-white rounded-[2rem] rounded-tr-sm px-5 py-3" // 유저: 보라색 물방울(상단 꼬리)
-              : "bg-transparent text-slate-900 prose prose-slate dark:prose-invert max-w-none" // 어시스턴트: 배경 없음, 순수 텍스트 (dark:prose-invert adds dark mode support for typography)
+              : "bg-transparent text-slate-900 dark:text-slate-100 prose prose-slate dark:prose-invert max-w-none" // 어시스턴트: 배경 없음, 순수 텍스트 (dark:prose-invert adds dark mode support for typography)
           }`}
         >
           {isUser ? (
