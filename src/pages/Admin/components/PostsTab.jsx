@@ -292,7 +292,7 @@ export default function PostsTab() {
           <select
             value={filterBlogId}
             onChange={(e) => handleFilterChange("blog", e.target.value)}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
           >
             <option value="">블로그: 전체</option>
             {blogs.map((blog) => (
