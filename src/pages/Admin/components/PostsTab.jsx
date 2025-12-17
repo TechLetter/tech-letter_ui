@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
 import {
   RiRefreshLine,
   RiDeleteBinLine,
@@ -25,7 +24,6 @@ import { useUrlState, parseBool } from "../../../hooks/useUrlState";
 import CreatePostModal from "./CreatePostModal";
 
 export default function PostsTab() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
@@ -36,37 +34,13 @@ export default function PostsTab() {
 
   // URL 동기화되는 필터/페이지 상태
   const [page, setPage] = useUrlState("page", 1, { parse: Number });
-  const [filterSummarized, setFilterSummarized] = useUrlState(
-    "summarized",
-    undefined,
-    { parse: parseBool }
-  );
-  const [filterEmbedded, setFilterEmbedded] = useUrlState(
-    "embedded",
-    undefined,
-    { parse: parseBool }
-  );
+  const [filterSummarized] = useUrlState("summarized", undefined, {
+    parse: parseBool,
+  });
+  const [filterEmbedded] = useUrlState("embedded", undefined, {
+    parse: parseBool,
+  });
   const [filterBlogId, setFilterBlogId] = useUrlState("blog", "");
-
-  // 필터 변경 + 페이지 리셋을 한번에 처리하는 헬퍼
-  const handleFilterChange = useCallback(
-    (key, value) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.delete("page"); // 페이지 리셋
-          if (value === undefined || value === null || value === "") {
-            next.delete(key);
-          } else {
-            next.set(key, String(value));
-          }
-          return next;
-        },
-        { replace: true }
-      );
-    },
-    [setSearchParams]
-  );
 
   // 블로그 목록 (필터 드롭다운용)
   const [blogs, setBlogs] = useState([]);
@@ -161,7 +135,7 @@ export default function PostsTab() {
       label: "ID",
       width: "180px",
       render: (id) => (
-        <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded truncate block max-w-[160px]">
+        <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded truncate block max-w-[160px] dark:bg-slate-800 dark:text-slate-400">
           {id}
         </code>
       ),
@@ -176,12 +150,14 @@ export default function PostsTab() {
             href={row.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-slate-900 hover:text-indigo-600 flex items-center gap-1 group"
+            className="font-medium text-slate-900 hover:text-indigo-600 flex items-center gap-1 group dark:text-slate-100 dark:hover:text-indigo-400"
           >
             <span className="line-clamp-1">{title}</span>
-            <RiExternalLinkLine className="text-slate-400 group-hover:text-indigo-600 flex-shrink-0" />
+            <RiExternalLinkLine className="text-slate-400 group-hover:text-indigo-600 flex-shrink-0 dark:text-slate-500 dark:group-hover:text-indigo-400" />
           </a>
-          <div className="text-xs text-slate-500">{row.blog_name || "-"}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            {row.blog_name || "-"}
+          </div>
         </div>
       ),
     },
@@ -213,7 +189,7 @@ export default function PostsTab() {
       label: "시간 정보",
       width: "180px",
       render: (_, row) => (
-        <div className="text-xs text-slate-500 space-y-0.5">
+        <div className="text-xs text-slate-500 space-y-0.5 dark:text-slate-400">
           <div>생성: {formatKSTDateTime(row.created_at)}</div>
           {row.aisummary?.generated_at && (
             <div>요약: {formatKSTDateTime(row.aisummary.generated_at)}</div>
@@ -240,7 +216,7 @@ export default function PostsTab() {
                 handleSummarize(row);
               }}
               disabled={isThisRowLoading}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-900/30"
               title="AI 요약 트리거"
             >
               <RiSparklingLine className="text-base" />
@@ -251,7 +227,7 @@ export default function PostsTab() {
                 handleEmbed(row);
               }}
               disabled={isThisRowLoading}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
               title="임베딩 트리거"
             >
               <RiDatabase2Line className="text-base" />
@@ -262,7 +238,7 @@ export default function PostsTab() {
                 handleDelete(row);
               }}
               disabled={isThisRowLoading}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
               title="삭제"
             >
               <RiDeleteBinLine className="text-base" />
@@ -278,10 +254,12 @@ export default function PostsTab() {
       {/* 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-slate-900">포스트 관리</h2>
-          <span className="text-sm text-slate-500">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            포스트 관리
+          </h2>
+          <span className="text-sm text-slate-500 dark:text-slate-400">
             총{" "}
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-slate-700 dark:text-slate-200">
               {totalCount.toLocaleString()}
             </span>
             건
@@ -291,7 +269,10 @@ export default function PostsTab() {
           {/* 블로그 필터 */}
           <select
             value={filterBlogId}
-            onChange={(e) => handleFilterChange("blog", e.target.value)}
+            onChange={(e) => {
+              setFilterBlogId(e.target.value);
+              setPage(1);
+            }}
             className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">블로그: 전체</option>
@@ -310,7 +291,7 @@ export default function PostsTab() {
               const val = e.target.value;
               handleFilterChange("summarized", val === "" ? undefined : val);
             }}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
           >
             <option value="">요약 상태: 전체</option>
             <option value="true">요약 완료</option>
@@ -324,7 +305,7 @@ export default function PostsTab() {
               const val = e.target.value;
               handleFilterChange("embedded", val === "" ? undefined : val);
             }}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
           >
             <option value="">임베딩 상태: 전체</option>
             <option value="true">임베딩 완료</option>
@@ -333,14 +314,14 @@ export default function PostsTab() {
           <button
             onClick={fetchPosts}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <RiRefreshLine className={loading ? "animate-spin" : ""} />
             새로고침
           </button>
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors dark:bg-indigo-500 dark:hover:bg-indigo-600"
           >
             <RiAddLine />
             포스트 추가
@@ -349,7 +330,7 @@ export default function PostsTab() {
       </div>
 
       {/* 테이블 */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
         <Table
           columns={columns}
           data={posts}

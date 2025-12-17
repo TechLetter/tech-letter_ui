@@ -49,7 +49,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(1)}
         disabled={!canGoFirst}
-        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
         aria-label="첫 페이지"
       >
         <RiArrowLeftDoubleLine className="text-xl" />
@@ -59,7 +59,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={!canGoPrev}
-        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
         aria-label="이전 페이지"
       >
         <RiArrowLeftSLine className="text-xl" />
@@ -73,7 +73,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
           className={`min-w-[2.5rem] h-10 rounded-lg text-sm font-medium transition-colors ${
             page === currentPage
               ? "bg-indigo-600 text-white"
-              : "text-slate-600 hover:bg-slate-100"
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
           }`}
         >
           {page}
@@ -84,7 +84,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={!canGoNext}
-        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
         aria-label="다음 페이지"
       >
         <RiArrowRightSLine className="text-xl" />
@@ -94,7 +94,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(totalPages)}
         disabled={!canGoLast}
-        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
         aria-label="마지막 페이지"
       >
         <RiArrowRightDoubleLine className="text-xl" />

@@ -40,14 +40,18 @@ export default function UsersTab() {
       label: "이름",
       width: "150px",
       render: (name) => (
-        <span className="font-medium text-slate-900">{name || "-"}</span>
+        <span className="font-medium text-slate-900 dark:text-slate-100">
+          {name || "-"}
+        </span>
       ),
     },
     {
       key: "email",
       label: "이메일",
       width: "200px",
-      render: (email) => <span className="text-slate-600">{email}</span>,
+      render: (email) => (
+        <span className="text-slate-600 dark:text-slate-300">{email}</span>
+      ),
     },
     { key: "user_code", label: "사용자코드" },
     {
@@ -66,7 +70,7 @@ export default function UsersTab() {
       label: "가입일",
       width: "120px",
       render: (date) => (
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-slate-500 dark:text-slate-400">
           {timeutils.formatLocalDate(date)}
         </span>
       ),
@@ -76,7 +80,7 @@ export default function UsersTab() {
       label: "수정일",
       width: "120px",
       render: (date) => (
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-slate-500 dark:text-slate-400">
           {timeutils.formatLocalDate(date)}
         </span>
       ),
@@ -87,11 +91,13 @@ export default function UsersTab() {
     <div className="space-y-4">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">사용자 관리</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          사용자 관리
+        </h2>
         <button
           onClick={fetchUsers}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           <RiRefreshLine className={loading ? "animate-spin" : ""} />
           새로고침
@@ -99,7 +105,7 @@ export default function UsersTab() {
       </div>
 
       {/* 테이블 */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
         <Table
           columns={columns}
           data={users}
