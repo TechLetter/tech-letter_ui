@@ -34,13 +34,30 @@ export default function PostsTab() {
 
   // URL 동기화되는 필터/페이지 상태
   const [page, setPage] = useUrlState("page", 1, { parse: Number });
-  const [filterSummarized] = useUrlState("summarized", undefined, {
-    parse: parseBool,
-  });
-  const [filterEmbedded] = useUrlState("embedded", undefined, {
-    parse: parseBool,
-  });
+  const [filterSummarized, setFilterSummarized] = useUrlState(
+    "summarized",
+    undefined,
+    {
+      parse: parseBool,
+    }
+  );
+  const [filterEmbedded, setFilterEmbedded] = useUrlState(
+    "embedded",
+    undefined,
+    {
+      parse: parseBool,
+    }
+  );
   const [filterBlogId, setFilterBlogId] = useUrlState("blog", "");
+
+  const handleFilterChange = (key, value) => {
+    if (key === "summarized") {
+      setFilterSummarized(value);
+    } else if (key === "embedded") {
+      setFilterEmbedded(value);
+    }
+    setPage(1);
+  };
 
   // 블로그 목록 (필터 드롭다운용)
   const [blogs, setBlogs] = useState([]);
@@ -51,7 +68,7 @@ export default function PostsTab() {
       try {
         const data = await getBlogs({ page: 1, page_size: 100 });
         setBlogs(data.data || []);
-      } catch (error) {
+      } catch {
         // 블로그 로드 실패 시 무시 (필터만 비활성화됨)
       }
     };
