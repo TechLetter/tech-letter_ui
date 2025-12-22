@@ -10,9 +10,9 @@ import InsufficientCreditsModal from "../../components/chatbot/InsufficientCredi
 
 // 추천 질문 목록
 const SUGGESTED_QUESTIONS = [
-  "쿠버네티스가 무엇인지 설명하고 실제 기업들의 활용 사례를 알려줘.",
+  "쿠버네티스가 무엇인지 설명하고 실제 활용 사례를 찾아줘.",
   "RAG를 활용해서 문제를 해결한 사례를 알려줘.",
-  "시스템 모니터링 개선 사례 알려줘.",
+  "시스템 모니터링 개선 사례를 알려줘.",
 ];
 
 export default function Chatbot() {
