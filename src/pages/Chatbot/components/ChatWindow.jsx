@@ -1,14 +1,21 @@
 import { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
-import { RiRobot2Line, RiRefreshLine } from "react-icons/ri";
+import { RiRobot2Line, RiRefreshLine, RiLightbulbLine } from "react-icons/ri";
 
 /**
  * ChatWindow 컴포넌트
- * 불필요한 컨테이너 패딩 제거, 시원한 뷰 제공.
+ * 메시지 목록, 빈 상태, 추천 질문 표시
  *
  * @param {Object} props
  */
-export default function ChatWindow({ messages, isLoading, error, onRetry }) {
+export default function ChatWindow({
+  messages,
+  isLoading,
+  error,
+  onRetry,
+  suggestedQuestions,
+  onSuggestedQuestion,
+}) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -23,7 +30,7 @@ export default function ChatWindow({ messages, isLoading, error, onRetry }) {
         {/* 빈 상태 */}
         {showEmptyState && (
           <div
-            className="flex-5 flex flex-col items-center justify-center text-center opacity-0 animate-fadeIn"
+            className="flex-1 flex flex-col items-center justify-center text-center px-4 opacity-0 animate-fadeIn"
             style={{ animationFillMode: "forwards" }}
           >
             <div className="mb-6 rounded-full bg-slate-100 p-6 shadow-inner dark:bg-slate-800 dark:shadow-slate-900/50">
@@ -32,19 +39,40 @@ export default function ChatWindow({ messages, isLoading, error, onRetry }) {
             <h2 className="text-xl font-bold text-slate-800 mb-2 dark:text-slate-200">
               무엇을 도와드릴까요?
             </h2>
-            <p className="text-slate-500 max-w-xs text-sm sm:text-base dark:text-slate-400">
+            <p className="text-slate-500 max-w-xs text-sm sm:text-base dark:text-slate-400 mb-6">
               궁금한 내용을 입력하시면 AI가 답변해 드립니다.
             </p>
+
+            {/* 추천 질문 */}
+            {suggestedQuestions && suggestedQuestions.length > 0 && (
+              <div className="w-full max-w-md">
+                <div className="flex items-center justify-center gap-1.5 mb-3 text-slate-400 dark:text-slate-500">
+                  <RiLightbulbLine className="text-amber-500" />
+                  <span className="text-xs font-medium">추천 질문</span>
+                </div>
+                <div className="space-y-2">
+                  {suggestedQuestions.map((question, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => onSuggestedQuestion?.(question)}
+                      className="w-full text-left px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm hover:shadow"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* 메시지 목록 (여기서 개별 메시지에 패딩이나 max-width 적용) */}
+        {/* 메시지 목록 */}
         <div className="flex-1 flex flex-col px-4">
           {messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} />
           ))}
 
-          {/* 로딩 표시 (심플하게) */}
+          {/* 로딩 표시 */}
           {isLoading && (
             <div className="w-full mb-6">
               <div className="flex gap-1 pl-1">

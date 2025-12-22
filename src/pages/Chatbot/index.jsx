@@ -5,34 +5,145 @@ import { PATHS } from "../../routes/path";
 import chatbotApi from "../../api/chatbotApi";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
+import SessionSidebar from "./components/SessionSidebar";
+import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
+
+// 추천 질문 목록
+const SUGGESTED_QUESTIONS = [
+  "쿠버네티스가 무엇인지 설명하고 실제 활용 사례를 찾아줘.",
+  "RAG를 활용해서 문제를 해결한 사례를 알려줘.",
+  "시스템 모니터링 개선 사례를 알려줘.",
+];
 
 export default function Chatbot() {
   const navigate = useNavigate();
-  const { isAuthenticated, initialized } = useAuth();
+  const { isAuthenticated, initialized, user, updateCredits } = useAuth();
 
+  // 사이드바 토글 상태
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // 세션 상태
+  const [sessions, setSessions] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+
+  // 채팅 상태
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Optional: Keep track of last query for retry
   const [lastQuery, setLastQuery] = useState("");
 
-  // Redirect if not logged in
+  // 입력창 제어
+  const [inputValue, setInputValue] = useState("");
+
+  // 모달 상태
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
+
+  // 세션 로드 상태
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
+
+  // 로그인 체크
   useEffect(() => {
     if (initialized && !isAuthenticated) {
       navigate(PATHS.LOGIN);
     }
   }, [initialized, isAuthenticated, navigate]);
 
+  // 세션 목록 로드 콜백
+  const handleSessionsLoaded = useCallback((loadedSessions) => {
+    setSessions(loadedSessions);
+  }, []);
+
+  // 빈 세션 찾기 (메시지가 없는 세션)
+  const findEmptySession = useCallback(() => {
+    return sessions.find((s) => !s.messages || s.messages.length === 0);
+  }, [sessions]);
+
+  // 현재 세션이 빈 세션인지 확인
+  const isCurrentSessionEmpty = messages.length === 0;
+
+  // 세션 선택 시 메시지 로드
+  const handleSelectSession = useCallback(
+    async (sessionId) => {
+      if (sessionId === currentSessionId) return;
+
+      setCurrentSessionId(sessionId);
+      setMessages([]);
+      setError(null);
+      setIsLoadingSession(true);
+
+      try {
+        const session = await chatbotApi.getSessionDetail(sessionId);
+        const formattedMessages = (session.messages || []).map((msg, idx) => ({
+          id: `${sessionId}-${idx}`,
+          role: msg.role,
+          content: msg.content,
+          createdAt: msg.created_at,
+        }));
+        setMessages(formattedMessages);
+      } catch (err) {
+        console.error("세션 로드 실패:", err);
+        setError(err);
+      } finally {
+        setIsLoadingSession(false);
+      }
+    },
+    [currentSessionId]
+  );
+
+  // 새 채팅 시작 - 빈 세션이 있으면 재사용
+  const handleNewChat = useCallback(async () => {
+    // 이미 빈 세션을 보고 있다면 아무것도 하지 않음
+    if (currentSessionId && isCurrentSessionEmpty) {
+      return;
+    }
+
+    // 기존 빈 세션 찾기
+    const emptySession = findEmptySession();
+    if (emptySession) {
+      setCurrentSessionId(emptySession.id);
+      setMessages([]);
+      setError(null);
+      return;
+    }
+
+    // 빈 세션이 없으면 새로 생성
+    try {
+      const newSession = await chatbotApi.createSession();
+      setSessions((prev) => [newSession, ...prev]);
+      setCurrentSessionId(newSession.id);
+      setMessages([]);
+      setError(null);
+    } catch (err) {
+      console.error("세션 생성 실패:", err);
+    }
+  }, [currentSessionId, isCurrentSessionEmpty, findEmptySession]);
+
+  // 세션 삭제
+  const handleDeleteSession = useCallback(
+    (sessionId) => {
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+      if (currentSessionId === sessionId) {
+        setCurrentSessionId(null);
+        setMessages([]);
+      }
+    },
+    [currentSessionId]
+  );
+
+  // 추천 질문 선택
+  const handleSuggestedQuestion = useCallback((question) => {
+    setInputValue(question);
+  }, []);
+
+  // 메시지 전송
   const handleSend = useCallback(
     async (query) => {
       if (!query.trim()) return;
 
-      // Reset error on new attempt
       setError(null);
       setLastQuery(query);
+      setInputValue(""); // 입력창 초기화
 
-      // Optimistic UI: Add user message immediately
       const userMsg = {
         id: Date.now().toString(),
         role: "user",
@@ -43,8 +154,25 @@ export default function Chatbot() {
       setMessages((prev) => [...prev, userMsg]);
       setIsLoading(true);
 
+      // 세션이 없으면 새 세션 생성
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        try {
+          const newSession = await chatbotApi.createSession();
+          setSessions((prev) => [newSession, ...prev]);
+          setCurrentSessionId(newSession.id);
+          sessionId = newSession.id;
+        } catch (err) {
+          console.error("세션 생성 실패:", err);
+          setError(new Error("세션 생성에 실패했습니다. 다시 시도해 주세요."));
+          setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+          setIsLoading(false);
+          return;
+        }
+      }
+
       try {
-        const data = await chatbotApi.sendChatRequest(query);
+        const data = await chatbotApi.sendChatRequest(query, sessionId);
 
         const botMsg = {
           id: (Date.now() + 1).toString(),
@@ -52,23 +180,48 @@ export default function Chatbot() {
           content: data.answer,
           createdAt: new Date().toISOString(),
         };
-
         setMessages((prev) => [...prev, botMsg]);
+
+        if (data.remaining_credits !== undefined) {
+          updateCredits(data.remaining_credits);
+        }
+
+        if (currentSessionId) {
+          setSessions((prev) =>
+            prev.map((s) =>
+              s.id === currentSessionId
+                ? {
+                    ...s,
+                    title:
+                      query.slice(0, 30) + (query.length > 30 ? "..." : ""),
+                  }
+                : s
+            )
+          );
+        }
       } catch (err) {
         console.error("Chatbot Error:", err);
-        // If auth error, redirect might be handled by interceptors or here
+
         if (err.status === 401) {
           navigate(PATHS.LOGIN);
           return;
         }
+
+        if (err.code === "insufficient_credits" || err.status === 402) {
+          setShowCreditsModal(true);
+          setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+          return;
+        }
+
         setError(err);
       } finally {
         setIsLoading(false);
       }
     },
-    [navigate]
+    [currentSessionId, navigate, updateCredits]
   );
 
+  // 재시도
   const handleRetry = useCallback(() => {
     if (lastQuery) {
       handleSend(lastQuery);
@@ -76,25 +229,66 @@ export default function Chatbot() {
   }, [handleSend, lastQuery]);
 
   if (!initialized) {
-    return null; // Or a full page loader
+    return null;
   }
 
-  // Double check to prevent flash before redirect
   if (!isAuthenticated) {
     return null;
   }
+
   return (
-    // All devices: Fixed positioning to guarantee full screen (ignoring parent padding & max-width)
-    <div className="fixed inset-x-0 bottom-0 top-12 flex flex-col w-full bg-white overflow-hidden z-0 dark:bg-slate-900 transition-colors duration-300">
-      {/* Chat Window */}
-      <ChatWindow
-        messages={messages}
-        isLoading={isLoading}
-        error={error}
-        onRetry={handleRetry}
+    <div className="fixed inset-x-0 bottom-0 top-12 flex w-full bg-white dark:bg-slate-900 transition-colors duration-300 z-0">
+      {/* 세션 사이드바 */}
+      <SessionSidebar
+        sessions={sessions}
+        currentSessionId={currentSessionId}
+        onSelectSession={handleSelectSession}
+        onNewChat={handleNewChat}
+        onDeleteSession={handleDeleteSession}
+        onSessionsLoaded={handleSessionsLoaded}
+        credits={user?.credits}
+        isOpen={isSidebarOpen}
+        onToggle={setIsSidebarOpen}
       />
-      {/* Input Area */}
-      <ChatInput onSend={handleSend} isLoading={isLoading} />
+
+      {/* 채팅 영역 - 사이드바 열림 상태에 따라 마진 조정 */}
+      <div
+        className={`
+          flex-1 flex flex-col transition-all duration-300
+          ${isSidebarOpen ? "md:ml-64" : "md:ml-0"}
+        `}
+      >
+        {isLoadingSession ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <ChatWindow
+              messages={messages}
+              isLoading={isLoading}
+              error={error}
+              onRetry={handleRetry}
+              suggestedQuestions={
+                isCurrentSessionEmpty ? SUGGESTED_QUESTIONS : null
+              }
+              onSuggestedQuestion={handleSuggestedQuestion}
+            />
+            <ChatInput
+              onSend={handleSend}
+              isLoading={isLoading}
+              value={inputValue}
+              onChange={setInputValue}
+            />
+          </>
+        )}
+      </div>
+
+      {/* 크레딧 부족 모달 */}
+      <InsufficientCreditsModal
+        isOpen={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
+      />
     </div>
   );
 }

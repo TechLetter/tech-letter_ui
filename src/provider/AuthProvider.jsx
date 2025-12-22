@@ -67,6 +67,11 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // 크레딧 잔액 로컬 업데이트 (채팅 응답 후 사용)
+  const updateCredits = useCallback((newCredits) => {
+    setUser((prev) => (prev ? { ...prev, credits: newCredits } : prev));
+  }, []);
+
   const isAdmin = user?.role === "admin";
 
   const value = {
@@ -77,6 +82,7 @@ export function AuthProvider({ children }) {
     error,
     loginWithToken,
     logout,
+    updateCredits,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
