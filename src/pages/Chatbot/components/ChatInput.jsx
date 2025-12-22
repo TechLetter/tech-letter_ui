@@ -1,15 +1,25 @@
-import { useState, useRef, useEffect } from "react";
-import { RiArrowUpLine, RiLoader4Line } from "react-icons/ri"; // 아이콘 복구 (ArrowUp)
+import { useRef, useEffect } from "react";
+import { RiArrowUpLine, RiLoader4Line } from "react-icons/ri";
 
 /**
  * ChatInput 컴포넌트
  * ChatGPT 모바일 스타일: 둥근 알약(Pill) 형태, 회색 배경.
+ * 외부에서 value 제어 가능 (추천 질문 선택 시)
  *
  * @param {Object} props
  */
-export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
-  const [query, setQuery] = useState("");
+export default function ChatInput({
+  onSend,
+  isLoading,
+  maxLength = 2000,
+  value = "",
+  onChange,
+}) {
   const textareaRef = useRef(null);
+
+  // 외부 value와 동기화 (제어 컴포넌트)
+  const query = value;
+  const setQuery = onChange || (() => {});
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -20,6 +30,13 @@ export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
       )}px`;
     }
   }, [query]);
+
+  // 외부에서 값이 설정되면 포커스
+  useEffect(() => {
+    if (value && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [value]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -62,9 +79,6 @@ export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
             }
           `}
         >
-          {/* 입력창 (둥근 아이콘 모양 추가 가능) */}
-          {/* <button type="button" className="text-slate-400 p-1 rounded-full bg-slate-200 mr-2"><BsPlusLg/></button> (옵션: + 버튼) */}
-
           <textarea
             ref={textareaRef}
             value={query}
@@ -78,11 +92,10 @@ export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
               focus:ring-0 focus:outline-none resize-none text-[16px] leading-6 max-h-[150px]
               dark:text-slate-100 dark:placeholder:text-slate-400
               ${isOverLimit ? "text-red-700 dark:text-red-400" : ""}
-            `} // text-[16px]는 iOS에서 줌인 방지
+            `}
             style={{ minHeight: "24px" }}
           />
 
-          {/* 전송 버튼 (원형, 검은색/회색) */}
           <button
             type="submit"
             disabled={!isSendable}
@@ -91,7 +104,7 @@ export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
               ${
                 isSendable
                   ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md hover:shadow-lg active:scale-95"
-                  : "bg-[#d7d7d7] text-white cursor-not-allowed" // 비활성 시 더 연한 회색
+                  : "bg-[#d7d7d7] text-white cursor-not-allowed dark:bg-slate-600 dark:text-slate-400"
               }
             `}
           >
@@ -103,7 +116,6 @@ export default function ChatInput({ onSend, isLoading, maxLength = 2000 }) {
           </button>
         </form>
 
-        {/* 경고 문구 (평소엔 숨김, 에러 시에만) */}
         {isOverLimit && (
           <p className="text-center mt-1 text-xs text-red-500 font-bold">
             {query.length}/{maxLength}자 (제한 초과)

@@ -8,6 +8,13 @@ import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
 import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
 
+// 추천 질문 목록
+const SUGGESTED_QUESTIONS = [
+  "쿠버네티스가 무엇인지 설명하고 실제 기업들의 활용 사례를 알려줘.",
+  "RAG를 활용해서 문제를 해결한 사례를 알려줘.",
+  "시스템 모니터링 개선 사례 알려줘.",
+];
+
 export default function Chatbot() {
   const navigate = useNavigate();
   const { isAuthenticated, initialized, user, updateCredits } = useAuth();
@@ -24,6 +31,9 @@ export default function Chatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastQuery, setLastQuery] = useState("");
+
+  // 입력창 제어
+  const [inputValue, setInputValue] = useState("");
 
   // 모달 상태
   const [showCreditsModal, setShowCreditsModal] = useState(false);
@@ -42,6 +52,14 @@ export default function Chatbot() {
   const handleSessionsLoaded = useCallback((loadedSessions) => {
     setSessions(loadedSessions);
   }, []);
+
+  // 빈 세션 찾기 (메시지가 없는 세션)
+  const findEmptySession = useCallback(() => {
+    return sessions.find((s) => !s.messages || s.messages.length === 0);
+  }, [sessions]);
+
+  // 현재 세션이 빈 세션인지 확인
+  const isCurrentSessionEmpty = messages.length === 0;
 
   // 세션 선택 시 메시지 로드
   const handleSelectSession = useCallback(
@@ -72,8 +90,23 @@ export default function Chatbot() {
     [currentSessionId]
   );
 
-  // 새 채팅 시작
+  // 새 채팅 시작 - 빈 세션이 있으면 재사용
   const handleNewChat = useCallback(async () => {
+    // 이미 빈 세션을 보고 있다면 아무것도 하지 않음
+    if (currentSessionId && isCurrentSessionEmpty) {
+      return;
+    }
+
+    // 기존 빈 세션 찾기
+    const emptySession = findEmptySession();
+    if (emptySession) {
+      setCurrentSessionId(emptySession.id);
+      setMessages([]);
+      setError(null);
+      return;
+    }
+
+    // 빈 세션이 없으면 새로 생성
     try {
       const newSession = await chatbotApi.createSession();
       setSessions((prev) => [newSession, ...prev]);
@@ -83,7 +116,7 @@ export default function Chatbot() {
     } catch (err) {
       console.error("세션 생성 실패:", err);
     }
-  }, []);
+  }, [currentSessionId, isCurrentSessionEmpty, findEmptySession]);
 
   // 세션 삭제
   const handleDeleteSession = useCallback(
@@ -97,6 +130,11 @@ export default function Chatbot() {
     [currentSessionId]
   );
 
+  // 추천 질문 선택
+  const handleSuggestedQuestion = useCallback((question) => {
+    setInputValue(question);
+  }, []);
+
   // 메시지 전송
   const handleSend = useCallback(
     async (query) => {
@@ -104,6 +142,7 @@ export default function Chatbot() {
 
       setError(null);
       setLastQuery(query);
+      setInputValue(""); // 입력창 초기화
 
       const userMsg = {
         id: Date.now().toString(),
@@ -115,8 +154,25 @@ export default function Chatbot() {
       setMessages((prev) => [...prev, userMsg]);
       setIsLoading(true);
 
+      // 세션이 없으면 새 세션 생성
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        try {
+          const newSession = await chatbotApi.createSession();
+          setSessions((prev) => [newSession, ...prev]);
+          setCurrentSessionId(newSession.id);
+          sessionId = newSession.id;
+        } catch (err) {
+          console.error("세션 생성 실패:", err);
+          setError(new Error("세션 생성에 실패했습니다. 다시 시도해 주세요."));
+          setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+          setIsLoading(false);
+          return;
+        }
+      }
+
       try {
-        const data = await chatbotApi.sendChatRequest(query, currentSessionId);
+        const data = await chatbotApi.sendChatRequest(query, sessionId);
 
         const botMsg = {
           id: (Date.now() + 1).toString(),
@@ -213,8 +269,17 @@ export default function Chatbot() {
               isLoading={isLoading}
               error={error}
               onRetry={handleRetry}
+              suggestedQuestions={
+                isCurrentSessionEmpty ? SUGGESTED_QUESTIONS : null
+              }
+              onSuggestedQuestion={handleSuggestedQuestion}
             />
-            <ChatInput onSend={handleSend} isLoading={isLoading} />
+            <ChatInput
+              onSend={handleSend}
+              isLoading={isLoading}
+              value={inputValue}
+              onChange={setInputValue}
+            />
           </>
         )}
       </div>
