@@ -26,7 +26,9 @@ export default function Table({
           {columns.map((col) => (
             <div
               key={col.key}
-              className="h-4 bg-slate-200 rounded animate-pulse dark:bg-slate-700"
+              className={`h-4 bg-slate-200 rounded animate-pulse dark:bg-slate-700 min-w-0 ${
+                col.className || ""
+              }`}
               style={{
                 width: col.width || "auto",
                 flex: col.width ? "none" : 1,
@@ -43,7 +45,9 @@ export default function Table({
             {columns.map((col) => (
               <div
                 key={col.key}
-                className="h-4 bg-slate-100 rounded animate-pulse dark:bg-slate-800"
+                className={`h-4 bg-slate-100 rounded animate-pulse dark:bg-slate-800 min-w-0 ${
+                  col.className || ""
+                }`}
                 style={{
                   width: col.width || "auto",
                   flex: col.width ? "none" : 1,
@@ -72,13 +76,13 @@ export default function Table({
         {columns.map((col) => (
           <div
             key={col.key}
-            className={`text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ${
+            className={`min-w-0 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ${
               col.align === "center"
                 ? "text-center"
                 : col.align === "right"
                 ? "text-right"
                 : "text-left"
-            }`}
+            } ${col.className || ""}`}
             style={{ width: col.width || "auto", flex: col.width ? "none" : 1 }}
           >
             {col.label}
@@ -100,13 +104,13 @@ export default function Table({
           {columns.map((col) => (
             <div
               key={col.key}
-              className={`text-sm text-slate-700 dark:text-slate-300 ${
+              className={`min-w-0 text-sm text-slate-700 dark:text-slate-300 ${
                 col.align === "center"
                   ? "text-center"
                   : col.align === "right"
                   ? "text-right"
                   : "text-left"
-              }`}
+              } ${col.className || ""}`}
               style={{
                 width: col.width || "auto",
                 flex: col.width ? "none" : 1,
@@ -129,6 +133,7 @@ Table.propTypes = {
       render: PropTypes.func,
       width: PropTypes.string,
       align: PropTypes.oneOf(["left", "center", "right"]),
+      className: PropTypes.string,
     })
   ).isRequired,
   data: PropTypes.array,
