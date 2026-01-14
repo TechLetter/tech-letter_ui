@@ -105,6 +105,19 @@ export async function getUsers(params = {}) {
   return response.data;
 }
 
+/**
+ * 크레딧 지급
+ * @param {string} userCode - 사용자 코드 (예: "google:abc123")
+ * @param {Object} data - { amount: number, expired_at: string (ISO 8601) }
+ */
+export async function grantCredit(userCode, data) {
+  const response = await client.post(
+    `${ADMIN_BASE}/users/${userCode}/credits`,
+    data
+  );
+  return response.data;
+}
+
 // ============================================================
 // Error Handler
 // ============================================================
