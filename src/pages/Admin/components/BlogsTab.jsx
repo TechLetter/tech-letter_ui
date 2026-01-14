@@ -61,6 +61,7 @@ export default function BlogsTab() {
       key: "id",
       label: "ID",
       width: "200px",
+      className: "hidden md:block",
       render: (id) => (
         <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded dark:bg-slate-800 dark:text-slate-400">
           {id}
