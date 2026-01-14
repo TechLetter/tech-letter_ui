@@ -91,7 +91,9 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
                 {userName}
               </p>
               {userEmail && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userEmail}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {userEmail}
+                </p>
               )}
               <p className="mt-0.5 text-[11px] text-indigo-600 dark:text-indigo-400">
                 {userRoleLabel}

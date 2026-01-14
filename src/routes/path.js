@@ -5,4 +5,5 @@ export const PATHS = {
   BOOKMARKS: "/bookmarks",
   CHATBOT: "/chatbot",
   ADMIN: "/admin",
+  PRIVACY: "/privacy",
 };

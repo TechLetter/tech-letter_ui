@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { RiRefreshLine } from "react-icons/ri";
+import { RiRefreshLine, RiCoinLine } from "react-icons/ri";
 import Table from "../../../components/common/Table";
 import Badge from "../../../components/common/Badge";
 import Pagination from "../../../components/common/Pagination";
-import { getUsers, handleAdminError } from "../../../api/adminApi";
+import { getUsers, grantCredit, handleAdminError } from "../../../api/adminApi";
 import { showToast } from "../../../provider/ToastModalProvider";
 import timeutils from "../../../utils/timeutils";
 import { useUrlState } from "../../../hooks/useUrlState";
+import GrantCreditModal from "./GrantCreditModal";
 
 export default function UsersTab() {
   const [users, setUsers] = useState([]);
@@ -16,6 +17,10 @@ export default function UsersTab() {
 
   // URL 동기화되는 페이지 상태
   const [page, setPage] = useUrlState("userPage", 1, { parse: Number });
+
+  // 크레딧 지급 모달 상태
+  const [showGrantModal, setShowGrantModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -34,6 +39,30 @@ export default function UsersTab() {
     fetchUsers();
   }, [fetchUsers]);
 
+  const handleGrantCredit = useCallback((user) => {
+    setSelectedUser(user);
+    setShowGrantModal(true);
+  }, []);
+
+  const handleGrantSubmit = useCallback(
+    async (amount, expiresAt) => {
+      try {
+        await grantCredit(selectedUser.user_code, {
+          amount,
+          expired_at: expiresAt,
+        });
+        showToast(
+          `${selectedUser.name}에게 크레딧 ${amount}개를 지급했습니다.`,
+          "success"
+        );
+        fetchUsers(); // 목록 새로고침
+      } catch (error) {
+        throw new Error(handleAdminError(error));
+      }
+    },
+    [selectedUser, fetchUsers]
+  );
+
   const columns = [
     {
       key: "name",
@@ -42,6 +71,18 @@ export default function UsersTab() {
       render: (name) => (
         <span className="font-medium text-slate-900 dark:text-slate-100">
           {name || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "credits",
+      label: "크레딧",
+      width: "100px",
+      align: "center",
+      render: (credits) => (
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-medium">
+          <RiCoinLine />
+          {credits ?? 0}
         </span>
       ),
     },
@@ -85,6 +126,21 @@ export default function UsersTab() {
         </span>
       ),
     },
+    {
+      key: "actions",
+      label: "액션",
+      width: "100px",
+      align: "center",
+      render: (_, user) => (
+        <button
+          onClick={() => handleGrantCredit(user)}
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+        >
+          <RiCoinLine />
+          지급
+        </button>
+      ),
+    },
   ];
 
   return (
@@ -124,6 +180,14 @@ export default function UsersTab() {
           />
         </div>
       )}
+
+      {/* 크레딧 지급 모달 */}
+      <GrantCreditModal
+        isOpen={showGrantModal}
+        user={selectedUser}
+        onClose={() => setShowGrantModal(false)}
+        onSubmit={handleGrantSubmit}
+      />
     </div>
   );
 }
