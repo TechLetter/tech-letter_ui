@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { PATHS } from "../routes/path";
 import GoogleLoginButton from "../components/auth/GoogleLoginButton";
 
 export default function Login() {
@@ -20,7 +22,14 @@ export default function Login() {
         <div className="space-y-4">
           <GoogleLoginButton />
           <p className="text-xs text-gray-400 text-center dark:text-slate-500">
-            로그인 시 서비스 이용 약관 및 개인정보 처리방침에 동의하게 됩니다.
+            로그인 시{" "}
+            <Link
+              to={PATHS.PRIVACY}
+              className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 underline underline-offset-2"
+            >
+              개인정보 처리방침
+            </Link>
+            에 동의하게 됩니다.
           </p>
         </div>
       </div>

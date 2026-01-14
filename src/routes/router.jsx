@@ -9,6 +9,7 @@ const LoginSuccess = lazy(() => import("../pages/LoginSuccess"));
 const Bookmarks = lazy(() => import("../pages/Bookmarks"));
 const Chatbot = lazy(() => import("../pages/Chatbot"));
 const Admin = lazy(() => import("../pages/Admin"));
+const PrivacyPolicy = lazy(() => import("../pages/PrivacyPolicy"));
 
 export const ROUTES = [
   { path: PATHS.HOME, element: <Home /> },
@@ -24,6 +25,7 @@ export const ROUTES = [
       </AdminRouteProvider>
     ),
   },
+  { path: PATHS.PRIVACY, element: <PrivacyPolicy /> },
   // Catch-all: 정의되지 않은 모든 경로는 홈으로 리다이렉트
   { path: "*", element: <Navigate to={PATHS.HOME} replace /> },
 ];
