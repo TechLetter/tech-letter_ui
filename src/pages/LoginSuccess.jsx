@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "../routes/path";
-import { useAuth } from "../provider/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import authApi from "../api/authApi";
 
 export default function LoginSuccess() {
@@ -40,7 +40,7 @@ export default function LoginSuccess() {
         setTimeout(() => {
           navigate(PATHS.HOME, { replace: true });
         }, 1200);
-      } catch (error) {
+      } catch {
         setStatus("error");
         setMessage(
           "로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."

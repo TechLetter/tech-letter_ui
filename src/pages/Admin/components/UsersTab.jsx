@@ -4,7 +4,7 @@ import Table from "../../../components/common/Table";
 import Badge from "../../../components/common/Badge";
 import Pagination from "../../../components/common/Pagination";
 import { getUsers, grantCredit, handleAdminError } from "../../../api/adminApi";
-import { showToast } from "../../../provider/ToastModalProvider";
+import { showToast } from "../../../provider/toastModalBridge";
 import timeutils from "../../../utils/timeutils";
 import { useUrlState } from "../../../hooks/useUrlState";
 import GrantCreditModal from "./GrantCreditModal";

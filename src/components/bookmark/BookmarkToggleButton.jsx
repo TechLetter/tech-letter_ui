@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
-import { useAuth } from "../../provider/AuthProvider";
+import { useAuth } from "../../hooks/useAuth";
 import bookmarksApi from "../../api/bookmarksApi";
-import { showToast } from "../../provider/ToastModalProvider";
-import { showLoginRequiredModal } from "../../provider/LoginRequiredModalProvider";
+import { showToast } from "../../provider/toastModalBridge";
+import { showLoginRequiredModal } from "../../provider/loginRequiredModalBridge";
 
 export default function BookmarkToggleButton({
   postId,
@@ -34,7 +34,7 @@ export default function BookmarkToggleButton({
         await bookmarksApi.removeBookmark(postId);
         showToast("북마크에서 제거되었습니다.");
       }
-    } catch (error) {
+    } catch {
       setIsBookmarked(!nextValue);
       showToast(
         "북마크 처리 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요."

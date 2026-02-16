@@ -1,20 +1,29 @@
-// ModalManager.js
-import { useState, useEffect } from "react";
-
-let showInternal = null;
+import { useEffect, useRef, useState } from "react";
+import {
+  bindToastModalHandler,
+  unbindToastModalHandler,
+} from "./toastModalBridge";
 
 export function ToastModalProvider() {
   const [visible, setVisible] = useState(false);
   const [content, setContent] = useState("");
+  const hideTimerRef = useRef(null);
 
   useEffect(() => {
-    showInternal = (message) => {
+    bindToastModalHandler((message) => {
       setContent(message);
       setVisible(true);
-      setTimeout(() => setVisible(false), 1500);
-    };
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+      hideTimerRef.current = setTimeout(() => setVisible(false), 1500);
+    });
+
     return () => {
-      showInternal = null;
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+      unbindToastModalHandler();
     };
   }, []);
 
@@ -25,8 +34,4 @@ export function ToastModalProvider() {
       </div>
     </div>
   ) : null;
-}
-
-export function showToast(message) {
-  if (showInternal) showInternal(message);
 }

@@ -1,16 +1,15 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-
-const ThemeContext = createContext();
+import { ThemeContext } from "./ThemeContext";
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    // Check localStorage first
+    // 사용자가 마지막으로 고른 테마를 우선 복원해 초기 깜빡임을 줄인다.
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       return savedTheme;
     }
-    // Check system preference
+    // 저장값이 없으면 시스템 선호 테마를 기본값으로 따른다.
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       return "dark";
     }
@@ -45,11 +44,3 @@ export function ThemeProvider({ children }) {
 ThemeProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
-}

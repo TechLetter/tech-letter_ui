@@ -19,7 +19,7 @@ const cleanParams = (params) => {
   if (!params) return {};
   return Object.fromEntries(
     Object.entries(params).filter(
-      ([_, v]) => v !== undefined && v !== null && v !== ""
+      ([, value]) => value !== undefined && value !== null && value !== ""
     )
   );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import postsApi from "../api/postsApi";
 import filtersApi from "../api/filtersApi";
 import HomeFilterSection from "../components/home/HomeFilterSection";
@@ -27,7 +27,7 @@ export default function Home() {
     serialize: (v) => (Array.isArray(v) && v.length > 0 ? v.join(",") : ""),
   });
 
-  const fetchPosts = async (pageNum = 1, resetPosts = false) => {
+  const fetchPosts = useCallback(async (pageNum = 1, resetPosts = false) => {
     setLoading(true);
     try {
       const res = await postsApi.getPosts({
@@ -52,9 +52,15 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory, selectedBlogId, selectedTags]);
 
-  const loadCategoryFilters = async () => {
+  const fetchPostsRef = useRef(fetchPosts);
+
+  useEffect(() => {
+    fetchPostsRef.current = fetchPosts;
+  }, [fetchPosts]);
+
+  const loadCategoryFilters = useCallback(async () => {
     try {
       const res = await filtersApi.getCategories({
         blog_id: selectedBlogId,
@@ -67,9 +73,9 @@ export default function Home() {
       console.log("Failed to fetch category filters:", err);
       setCategoryFilters([]);
     }
-  };
+  }, [selectedBlogId, selectedTags]);
 
-  const loadBlogFilters = async () => {
+  const loadBlogFilters = useCallback(async () => {
     try {
       const res = await filtersApi.getBlogs({
         categories: [selectedCategory],
@@ -80,9 +86,9 @@ export default function Home() {
       console.log("Failed to fetch blog filters:", err);
       setBlogFilters([]);
     }
-  };
+  }, [selectedCategory, selectedTags]);
 
-  const loadTagFilters = async () => {
+  const loadTagFilters = useCallback(async () => {
     try {
       const res = await filtersApi.getTags({
         blog_id: selectedBlogId,
@@ -93,23 +99,23 @@ export default function Home() {
       console.log("Failed to fetch tag filters:", err);
       setTagFilters([]);
     }
-  };
+  }, [selectedBlogId, selectedCategory]);
 
   // Load all filters on mount and when selection changes
   useEffect(() => {
     loadCategoryFilters();
     loadBlogFilters();
     loadTagFilters();
-  }, [selectedCategory, selectedBlogId, selectedTags]);
+  }, [loadCategoryFilters, loadBlogFilters, loadTagFilters]);
 
   useEffect(() => {
-    fetchPosts(page);
+    fetchPostsRef.current(page);
   }, [page]);
 
   useEffect(() => {
     setPage(1);
     setHasMore(true);
-    fetchPosts(1, true);
+    fetchPostsRef.current(1, true);
   }, [selectedCategory, selectedBlogId, selectedTags]);
 
   useEffect(() => {

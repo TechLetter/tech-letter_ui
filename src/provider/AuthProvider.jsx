@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useCallback,
   useEffect,
   useRef,
@@ -12,8 +10,7 @@ import {
   setAccessToken,
   clearAccessToken,
 } from "../utils/authToken";
-
-const AuthContext = createContext(null);
+import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -36,7 +33,7 @@ export function AuthProvider({ children }) {
         const response = await authApi.getProfile();
         setUser(response.data);
         setError(null);
-      } catch (err) {
+      } catch {
         clearAccessToken();
         setUser(null);
         setError("세션이 만료되었어요. 다시 로그인해 주세요.");
@@ -86,12 +83,4 @@ export function AuthProvider({ children }) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth는 AuthProvider 안에서만 사용할 수 있습니다.");
-  }
-  return context;
 }

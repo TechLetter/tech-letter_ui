@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import bookmarksApi from "../api/bookmarksApi";
 import PostCard from "../components/PostCard";
 import { PATHS } from "../routes/path";
-import { useAuth } from "../provider/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { mergeUniqueByKey } from "../utils/arrayUtils";
 
 const PAGE_SIZE = 12;
