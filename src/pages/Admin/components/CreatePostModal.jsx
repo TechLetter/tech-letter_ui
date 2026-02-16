@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { RiCloseLine } from "react-icons/ri";
 import { createPost, getBlogs, handleAdminError } from "../../../api/adminApi";
-import { showToast } from "../../../provider/ToastModalProvider";
+import { showToast } from "../../../provider/toastModalBridge";
 
 export default function CreatePostModal({ open, onClose, onCreated }) {
   const [blogs, setBlogs] = useState([]);
@@ -21,7 +21,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
     if (open && blogs.length === 0) {
       loadBlogs();
     }
-  }, [open]);
+  }, [open, blogs.length]);
 
   // 모달 닫힐 때 폼 초기화
   useEffect(() => {

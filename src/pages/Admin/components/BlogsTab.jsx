@@ -3,7 +3,7 @@ import { RiRefreshLine, RiExternalLinkLine } from "react-icons/ri";
 import Table from "../../../components/common/Table";
 import Pagination from "../../../components/common/Pagination";
 import { getBlogs, handleAdminError } from "../../../api/adminApi";
-import { showToast } from "../../../provider/ToastModalProvider";
+import { showToast } from "../../../provider/toastModalBridge";
 import { useUrlState } from "../../../hooks/useUrlState";
 
 export default function BlogsTab() {

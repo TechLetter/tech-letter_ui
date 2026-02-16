@@ -33,7 +33,7 @@ export default function MessageBubble({ message }) {
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                a: ({ node, ...props }) => (
+                a: ({ ...props }) => (
                   <a
                     {...props}
                     target="_blank"
@@ -42,23 +42,23 @@ export default function MessageBubble({ message }) {
                   />
                 ),
                 // 모바일에서 너무 큰 제목 방지
-                h1: ({ node, ...props }) => (
+                h1: ({ ...props }) => (
                   <h1 {...props} className="text-2xl font-bold mt-6 mb-4" />
                 ),
-                h2: ({ node, ...props }) => (
+                h2: ({ ...props }) => (
                   <h2 {...props} className="text-xl font-bold mt-5 mb-3" />
                 ),
-                h3: ({ node, ...props }) => (
+                h3: ({ ...props }) => (
                   <h3 {...props} className="text-lg font-bold mt-4 mb-2" />
                 ),
-                ul: ({ node, ...props }) => (
+                ul: ({ ...props }) => (
                   <ul {...props} className="list-disc pl-5 my-2" />
                 ),
-                ol: ({ node, ...props }) => (
+                ol: ({ ...props }) => (
                   <ol {...props} className="list-decimal pl-5 my-2" />
                 ),
-                p: ({ node, ...props }) => <p {...props} className="my-2" />,
-                code: ({ node, inline, className, children, ...props }) => {
+                p: ({ ...props }) => <p {...props} className="my-2" />,
+                code: ({ className, children, ...props }) => {
                   return (
                     <code
                       className={`${className} bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5`}
@@ -68,7 +68,7 @@ export default function MessageBubble({ message }) {
                     </code>
                   );
                 },
-                pre: ({ node, ...props }) => (
+                pre: ({ ...props }) => (
                   <pre
                     {...props}
                     className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto my-4"

@@ -19,7 +19,7 @@ import {
   triggerEmbed,
   handleAdminError,
 } from "../../../api/adminApi";
-import { showToast } from "../../../provider/ToastModalProvider";
+import { showToast } from "../../../provider/toastModalBridge";
 import { formatKSTDateTime } from "../../../utils/timeutils";
 import { useUrlState, parseBool } from "../../../hooks/useUrlState";
 import CreatePostModal from "./CreatePostModal";

@@ -2,17 +2,19 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BasicModal from "../components/common/BasicModal";
 import { PATHS } from "../routes/path";
-
-let openInternal = null;
+import {
+  bindLoginRequiredModalHandler,
+  unbindLoginRequiredModalHandler,
+} from "./loginRequiredModalBridge";
 
 export function LoginRequiredModalProvider() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    openInternal = () => setOpen(true);
+    bindLoginRequiredModalHandler(() => setOpen(true));
     return () => {
-      openInternal = null;
+      unbindLoginRequiredModalHandler();
     };
   }, []);
 
@@ -35,10 +37,4 @@ export function LoginRequiredModalProvider() {
       onClose={handleClose}
     />
   );
-}
-
-export function showLoginRequiredModal() {
-  if (openInternal) {
-    openInternal();
-  }
 }

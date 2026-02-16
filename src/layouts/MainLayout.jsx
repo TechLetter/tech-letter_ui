@@ -3,9 +3,9 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { RiRobot2Line } from "react-icons/ri";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { PATHS } from "../routes/path";
-import { useAuth } from "../provider/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import UserProfileMenu from "../components/auth/UserProfileMenu";
-import { showLoginRequiredModal } from "../provider/LoginRequiredModalProvider";
+import { showLoginRequiredModal } from "../provider/loginRequiredModalBridge";
 import ThemeToggle from "../components/common/ThemeToggle";
 
 export default function MainLayout() {

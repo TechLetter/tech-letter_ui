@@ -1,5 +1,5 @@
 import { RiMoonLine, RiSunLine } from "react-icons/ri";
-import { useTheme } from "../../provider/ThemeProvider";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function ThemeToggle() {
   const { isDarkMode, toggleTheme } = useTheme();

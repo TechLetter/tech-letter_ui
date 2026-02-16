@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../provider/AuthProvider";
+import { useAuth } from "../../hooks/useAuth";
 import { PATHS } from "../../routes/path";
 import chatbotApi from "../../api/chatbotApi";
 import ChatWindow from "./components/ChatWindow";

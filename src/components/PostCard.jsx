@@ -1,7 +1,7 @@
 import timeutils from "../utils/timeutils";
 import { GrView } from "react-icons/gr";
 import { IoShareSocialOutline } from "react-icons/io5";
-import { showToast } from "../provider/ToastModalProvider";
+import { showToast } from "../provider/toastModalBridge";
 import postsApi from "../api/postsApi";
 import BookmarkToggleButton from "./bookmark/BookmarkToggleButton";
 
