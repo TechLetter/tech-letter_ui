@@ -89,6 +89,37 @@ export async function getBlogs(params = {}) {
   return response.data;
 }
 
+/**
+ * 블로그 생성
+ * @param {Object} data - { name, url, rss_url, blog_type: "company" | "creator", is_active }
+ */
+export async function createBlog(data) {
+  const response = await client.post(`${ADMIN_BASE}/blogs`, data);
+  return response.data;
+}
+
+/**
+ * 블로그 수정
+ * @param {string} id - 블로그 ID
+ * @param {Object} data - { name, url, rss_url, blog_type: "company" | "creator", is_active }
+ */
+export async function updateBlog(id, data) {
+  const response = await client.put(`${ADMIN_BASE}/blogs/${id}`, data);
+  return response.data;
+}
+
+/**
+ * 블로그 삭제
+ * @param {string} id - 블로그 ID
+ * @param {Object} options - { delete_posts }
+ */
+export async function deleteBlog(id, options = {}) {
+  const response = await client.delete(`${ADMIN_BASE}/blogs/${id}`, {
+    params: { delete_posts: Boolean(options.delete_posts) },
+  });
+  return response.data;
+}
+
 // ============================================================
 // Users API
 // ============================================================
@@ -144,6 +175,14 @@ export function handleAdminError(error) {
       return "접근 권한이 없습니다.";
     case 404:
       return "요청한 리소스를 찾을 수 없습니다.";
+    case 409:
+      if (serverMessage?.includes("rss_url")) {
+        return "이미 등록된 RSS URL입니다.";
+      }
+      if (serverMessage?.includes("url")) {
+        return "이미 등록된 블로그 URL입니다.";
+      }
+      return serverMessage || "이미 등록된 블로그 정보입니다.";
     case 500:
       return "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
     default:
