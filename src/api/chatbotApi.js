@@ -62,7 +62,7 @@ const chatbotApi = {
    * @param {string} query - 사용자의 질문.
    * @param {string} [sessionId] - 세션 ID (제공 시 해당 세션에 대화 저장)
    * @param {AbortSignal} [signal] - 요청 취소를 위한 옵션 시그널.
-   * @returns {Promise<{answer: string, consumed_credits: number, remaining_credits: number}>}
+   * @returns {Promise<{answer: string, consumed_credits: number, remaining_credits: number, sources: Array, agent: Object, guard: Object, memory: Object, suggested_questions: Array}>}
    * @throws {Error} - 에러 코드에 따른 커스텀 에러.
    */
   sendChatRequest: async (query, sessionId, signal) => {
@@ -109,6 +109,9 @@ const handleChatbotError = (error) => {
     message = "로그인이 필요한 서비스입니다.";
   } else if (status === 402 || errorCode === "insufficient_credits") {
     message = "크레딧이 부족합니다.";
+  } else if (status === 403 || errorCode === "policy_blocked") {
+    message =
+      "요청에 내부 지시 변경 또는 민감 정보 요청으로 해석될 수 있는 내용이 포함되어 처리하지 않았습니다.";
   } else if (status === 429 || errorCode === "rate_limited") {
     message = "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
   } else if (status === 503 || errorCode === "chatbot_unavailable") {
