@@ -1,5 +1,9 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import AgentActivityPanel from "./AgentActivityPanel";
+import FollowUpSuggestions from "./FollowUpSuggestions";
+import SecurityNotice from "./SecurityNotice";
+import SourceList from "./SourceList";
 
 /**
  * MessageBubble 컴포넌트
@@ -8,7 +12,7 @@ import remarkGfm from "remark-gfm";
  * @param {Object} props
  * @param {Object} props.message
  */
-export default function MessageBubble({ message }) {
+export default function MessageBubble({ message, onSuggestedQuestion }) {
   const isUser = message.role === "user";
 
   return (
@@ -30,54 +34,63 @@ export default function MessageBubble({ message }) {
           {isUser ? (
             <span className="whitespace-pre-wrap">{message.content}</span>
           ) : (
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a: ({ ...props }) => (
-                  <a
-                    {...props}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline dark:text-blue-400"
-                  />
-                ),
-                // 모바일에서 너무 큰 제목 방지
-                h1: ({ ...props }) => (
-                  <h1 {...props} className="text-2xl font-bold mt-6 mb-4" />
-                ),
-                h2: ({ ...props }) => (
-                  <h2 {...props} className="text-xl font-bold mt-5 mb-3" />
-                ),
-                h3: ({ ...props }) => (
-                  <h3 {...props} className="text-lg font-bold mt-4 mb-2" />
-                ),
-                ul: ({ ...props }) => (
-                  <ul {...props} className="list-disc pl-5 my-2" />
-                ),
-                ol: ({ ...props }) => (
-                  <ol {...props} className="list-decimal pl-5 my-2" />
-                ),
-                p: ({ ...props }) => <p {...props} className="my-2" />,
-                code: ({ className, children, ...props }) => {
-                  return (
-                    <code
-                      className={`${className} bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5`}
+            <>
+              <SecurityNotice guard={message.guard} />
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ ...props }) => (
+                    <a
                       {...props}
-                    >
-                      {children}
-                    </code>
-                  );
-                },
-                pre: ({ ...props }) => (
-                  <pre
-                    {...props}
-                    className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto my-4"
-                  />
-                ),
-              }}
-            >
-              {message.content}
-            </ReactMarkdown>
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline dark:text-blue-400"
+                    />
+                  ),
+                  // 모바일에서 너무 큰 제목 방지
+                  h1: ({ ...props }) => (
+                    <h1 {...props} className="text-2xl font-bold mt-6 mb-4" />
+                  ),
+                  h2: ({ ...props }) => (
+                    <h2 {...props} className="text-xl font-bold mt-5 mb-3" />
+                  ),
+                  h3: ({ ...props }) => (
+                    <h3 {...props} className="text-lg font-bold mt-4 mb-2" />
+                  ),
+                  ul: ({ ...props }) => (
+                    <ul {...props} className="list-disc pl-5 my-2" />
+                  ),
+                  ol: ({ ...props }) => (
+                    <ol {...props} className="list-decimal pl-5 my-2" />
+                  ),
+                  p: ({ ...props }) => <p {...props} className="my-2" />,
+                  code: ({ className, children, ...props }) => {
+                    return (
+                      <code
+                        className={`${className} bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5`}
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    );
+                  },
+                  pre: ({ ...props }) => (
+                    <pre
+                      {...props}
+                      className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto my-4"
+                    />
+                  ),
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+              <AgentActivityPanel agent={message.agent} memory={message.memory} />
+              <SourceList sources={message.sources} />
+              <FollowUpSuggestions
+                questions={message.suggestedQuestions}
+                onSelect={onSuggestedQuestion}
+              />
+            </>
           )}
         </div>
       </div>

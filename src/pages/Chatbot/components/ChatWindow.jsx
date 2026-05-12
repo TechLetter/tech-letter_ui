@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
+import SecurityNotice from "./SecurityNotice";
 import { RiRobot2Line, RiRefreshLine, RiLightbulbLine } from "react-icons/ri";
 
 /**
@@ -69,7 +70,11 @@ export default function ChatWindow({
         {/* 메시지 목록 */}
         <div className="flex-1 flex flex-col px-4">
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              onSuggestedQuestion={onSuggestedQuestion}
+            />
           ))}
 
           {/* 로딩 표시 */}
@@ -95,6 +100,7 @@ export default function ChatWindow({
           {/* 에러 상태 */}
           {error && (
             <div className="my-4 p-4 bg-red-50 rounded-xl text-center mx-4 dark:bg-red-900/20">
+              <SecurityNotice error={error} />
               <p className="text-red-800 text-sm mb-2 dark:text-red-300">
                 {error.message || "오류가 발생했습니다."}
               </p>

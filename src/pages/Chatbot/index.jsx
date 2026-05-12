@@ -15,6 +15,21 @@ const SUGGESTED_QUESTIONS = [
   "시스템 모니터링 개선 사례를 알려줘.",
 ];
 
+const buildMessageFromSession = (sessionId, msg, idx) => {
+  const metadata = msg.metadata || {};
+  return {
+    id: `${sessionId}-${idx}`,
+    role: msg.role,
+    content: msg.content,
+    createdAt: msg.created_at,
+    sources: metadata.sources || [],
+    agent: metadata.agent || null,
+    guard: metadata.guard || null,
+    memory: metadata.memory || null,
+    suggestedQuestions: metadata.suggested_questions || [],
+  };
+};
+
 export default function Chatbot() {
   const navigate = useNavigate();
   const { isAuthenticated, initialized, user, updateCredits } = useAuth();
@@ -73,12 +88,9 @@ export default function Chatbot() {
 
       try {
         const session = await chatbotApi.getSessionDetail(sessionId);
-        const formattedMessages = (session.messages || []).map((msg, idx) => ({
-          id: `${sessionId}-${idx}`,
-          role: msg.role,
-          content: msg.content,
-          createdAt: msg.created_at,
-        }));
+        const formattedMessages = (session.messages || []).map((msg, idx) =>
+          buildMessageFromSession(sessionId, msg, idx)
+        );
         setMessages(formattedMessages);
       } catch (err) {
         console.error("세션 로드 실패:", err);
@@ -178,6 +190,11 @@ export default function Chatbot() {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content: data.answer,
+          sources: data.sources || [],
+          agent: data.agent || null,
+          guard: data.guard || null,
+          memory: data.memory || null,
+          suggestedQuestions: data.suggested_questions || [],
           createdAt: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, botMsg]);
@@ -211,6 +228,11 @@ export default function Chatbot() {
           setShowCreditsModal(true);
           setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
           return;
+        }
+
+        if (err.code === "policy_blocked") {
+          setInputValue(query);
+          setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
         }
 
         setError(err);
