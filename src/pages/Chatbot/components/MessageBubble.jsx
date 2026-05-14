@@ -1,7 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import AgentActivityPanel from "./AgentActivityPanel";
-import FollowUpSuggestions from "./FollowUpSuggestions";
 import SecurityNotice from "./SecurityNotice";
 import SourceList from "./SourceList";
 
@@ -12,7 +11,7 @@ import SourceList from "./SourceList";
  * @param {Object} props
  * @param {Object} props.message
  */
-export default function MessageBubble({ message, onSuggestedQuestion }) {
+export default function MessageBubble({ message }) {
   const isUser = message.role === "user";
 
   return (
@@ -86,10 +85,6 @@ export default function MessageBubble({ message, onSuggestedQuestion }) {
               </ReactMarkdown>
               <AgentActivityPanel agent={message.agent} memory={message.memory} />
               <SourceList sources={message.sources} />
-              <FollowUpSuggestions
-                questions={message.suggestedQuestions}
-                onSelect={onSuggestedQuestion}
-              />
             </>
           )}
         </div>

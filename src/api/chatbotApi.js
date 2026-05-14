@@ -62,7 +62,7 @@ const chatbotApi = {
    * @param {string} query - 사용자의 질문.
    * @param {string} [sessionId] - 세션 ID (제공 시 해당 세션에 대화 저장)
    * @param {AbortSignal} [signal] - 요청 취소를 위한 옵션 시그널.
-   * @returns {Promise<{answer: string, consumed_credits: number, remaining_credits: number, sources: Array, agent: Object, guard: Object, memory: Object, suggested_questions: Array}>}
+   * @returns {Promise<{answer: string, consumed_credits: number, remaining_credits: number, sources: Array, agent: Object, guard: Object, memory: Object}>}
    * @throws {Error} - 에러 코드에 따른 커스텀 에러.
    */
   sendChatRequest: async (query, sessionId, signal) => {
