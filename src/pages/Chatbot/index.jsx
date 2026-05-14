@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { PATHS } from "../../routes/path";
@@ -26,13 +26,13 @@ const buildMessageFromSession = (sessionId, msg, idx) => {
     agent: metadata.agent || null,
     guard: metadata.guard || null,
     memory: metadata.memory || null,
-    suggestedQuestions: metadata.suggested_questions || [],
   };
 };
 
 export default function Chatbot() {
   const navigate = useNavigate();
   const { isAuthenticated, initialized, user, updateCredits } = useAuth();
+  const hasAutoSelectedSessionRef = useRef(false);
 
   // 사이드바 토글 상태
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -65,12 +65,17 @@ export default function Chatbot() {
 
   // 세션 목록 로드 콜백
   const handleSessionsLoaded = useCallback((loadedSessions) => {
-    setSessions(loadedSessions);
+    setSessions(
+      loadedSessions.map((session) => ({
+        ...session,
+        isEmptySession: false,
+      }))
+    );
   }, []);
 
   // 빈 세션 찾기 (메시지가 없는 세션)
   const findEmptySession = useCallback(() => {
-    return sessions.find((s) => !s.messages || s.messages.length === 0);
+    return sessions.find((s) => s.isEmptySession);
   }, [sessions]);
 
   // 현재 세션이 빈 세션인지 확인
@@ -91,6 +96,17 @@ export default function Chatbot() {
         const formattedMessages = (session.messages || []).map((msg, idx) =>
           buildMessageFromSession(sessionId, msg, idx)
         );
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId
+              ? {
+                  ...s,
+                  ...session,
+                  isEmptySession: formattedMessages.length === 0,
+                }
+              : s
+          )
+        );
         setMessages(formattedMessages);
       } catch (err) {
         console.error("세션 로드 실패:", err);
@@ -101,6 +117,25 @@ export default function Chatbot() {
     },
     [currentSessionId]
   );
+
+  useEffect(() => {
+    if (
+      hasAutoSelectedSessionRef.current ||
+      currentSessionId ||
+      sessions.length === 0 ||
+      isLoadingSession
+    ) {
+      return;
+    }
+
+    const latestSession = sessions[0];
+    if (!latestSession?.id) {
+      return;
+    }
+
+    hasAutoSelectedSessionRef.current = true;
+    handleSelectSession(latestSession.id);
+  }, [currentSessionId, handleSelectSession, isLoadingSession, sessions]);
 
   // 새 채팅 시작 - 빈 세션이 있으면 재사용
   const handleNewChat = useCallback(async () => {
@@ -121,7 +156,7 @@ export default function Chatbot() {
     // 빈 세션이 없으면 새로 생성
     try {
       const newSession = await chatbotApi.createSession();
-      setSessions((prev) => [newSession, ...prev]);
+      setSessions((prev) => [{ ...newSession, isEmptySession: true }, ...prev]);
       setCurrentSessionId(newSession.id);
       setMessages([]);
       setError(null);
@@ -171,7 +206,10 @@ export default function Chatbot() {
       if (!sessionId) {
         try {
           const newSession = await chatbotApi.createSession();
-          setSessions((prev) => [newSession, ...prev]);
+          setSessions((prev) => [
+            { ...newSession, isEmptySession: true },
+            ...prev,
+          ]);
           setCurrentSessionId(newSession.id);
           sessionId = newSession.id;
         } catch (err) {
@@ -194,7 +232,6 @@ export default function Chatbot() {
           agent: data.agent || null,
           guard: data.guard || null,
           memory: data.memory || null,
-          suggestedQuestions: data.suggested_questions || [],
           createdAt: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, botMsg]);
@@ -203,19 +240,17 @@ export default function Chatbot() {
           updateCredits(data.remaining_credits);
         }
 
-        if (currentSessionId) {
-          setSessions((prev) =>
-            prev.map((s) =>
-              s.id === currentSessionId
-                ? {
-                    ...s,
-                    title:
-                      query.slice(0, 30) + (query.length > 30 ? "..." : ""),
-                  }
-                : s
-            )
-          );
-        }
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId
+              ? {
+                  ...s,
+                  title: query.slice(0, 30) + (query.length > 30 ? "..." : ""),
+                  isEmptySession: false,
+                }
+              : s
+          )
+        );
       } catch (err) {
         console.error("Chatbot Error:", err);
 

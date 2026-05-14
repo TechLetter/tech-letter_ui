@@ -70,11 +70,7 @@ export default function ChatWindow({
         {/* 메시지 목록 */}
         <div className="flex-1 flex flex-col px-4">
           {messages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              onSuggestedQuestion={onSuggestedQuestion}
-            />
+            <MessageBubble key={msg.id} message={msg} />
           ))}
 
           {/* 로딩 표시 */}
