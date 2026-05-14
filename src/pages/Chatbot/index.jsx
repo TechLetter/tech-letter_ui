@@ -29,6 +29,25 @@ const buildMessageFromSession = (sessionId, msg, idx) => {
   };
 };
 
+const mergeActivity = (activities = [], nextActivity) => {
+  const nextActivities = [...activities];
+  const exactIndex = nextActivities.findIndex(
+    (activity) =>
+      activity.type === nextActivity.type && activity.label === nextActivity.label
+  );
+  const runningIndex = nextActivities.findIndex(
+    (activity) =>
+      activity.type === nextActivity.type && activity.status === "running"
+  );
+  const targetIndex = exactIndex >= 0 ? exactIndex : runningIndex;
+
+  if (targetIndex >= 0) {
+    nextActivities[targetIndex] = nextActivity;
+    return nextActivities;
+  }
+  return [...nextActivities, nextActivity];
+};
+
 export default function Chatbot() {
   const navigate = useNavigate();
   const { isAuthenticated, initialized, user, updateCredits } = useAuth();
@@ -80,6 +99,7 @@ export default function Chatbot() {
 
   // 현재 세션이 빈 세션인지 확인
   const isCurrentSessionEmpty = messages.length === 0;
+  const hasStreamingMessage = messages.some((message) => message.isStreaming);
 
   // 세션 선택 시 메시지 로드
   const handleSelectSession = useCallback(
@@ -221,20 +241,66 @@ export default function Chatbot() {
         }
       }
 
+      const botMessageId = (Date.now() + 1).toString();
+      const streamingBotMsg = {
+        id: botMessageId,
+        role: "assistant",
+        content: "",
+        sources: [],
+        agent: {
+          mode: "stream",
+          intent: "pending",
+          activities: [
+            {
+              type: "guard",
+              label: "질문 안전성 확인",
+              status: "running",
+            },
+          ],
+        },
+        guard: null,
+        memory: null,
+        isStreaming: true,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, streamingBotMsg]);
+
       try {
-        const data = await chatbotApi.sendChatRequest(query, sessionId);
+        const data = await chatbotApi.streamChatRequest(query, sessionId, {
+          onActivity: (activity) => {
+            setMessages((prev) =>
+              prev.map((message) =>
+                message.id === botMessageId
+                  ? {
+                      ...message,
+                      agent: {
+                        ...(message.agent || {}),
+                        activities: mergeActivity(
+                          message.agent?.activities,
+                          activity
+                        ),
+                      },
+                    }
+                  : message
+              )
+            );
+          },
+        });
 
         const botMsg = {
-          id: (Date.now() + 1).toString(),
+          id: botMessageId,
           role: "assistant",
           content: data.answer,
           sources: data.sources || [],
           agent: data.agent || null,
           guard: data.guard || null,
           memory: data.memory || null,
+          isStreaming: false,
           createdAt: new Date().toISOString(),
         };
-        setMessages((prev) => [...prev, botMsg]);
+        setMessages((prev) =>
+          prev.map((message) => (message.id === botMessageId ? botMsg : message))
+        );
 
         if (data.remaining_credits !== undefined) {
           updateCredits(data.remaining_credits);
@@ -255,19 +321,28 @@ export default function Chatbot() {
         console.error("Chatbot Error:", err);
 
         if (err.status === 401) {
+          setMessages((prev) =>
+            prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
+          );
           navigate(PATHS.LOGIN);
           return;
         }
 
         if (err.code === "insufficient_credits" || err.status === 402) {
           setShowCreditsModal(true);
-          setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+          setMessages((prev) =>
+            prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
+          );
           return;
         }
 
         if (err.code === "policy_blocked") {
           setInputValue(query);
-          setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+          setMessages((prev) =>
+            prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
+          );
+        } else {
+          setMessages((prev) => prev.filter((m) => m.id !== botMessageId));
         }
 
         setError(err);
@@ -323,7 +398,7 @@ export default function Chatbot() {
           <>
             <ChatWindow
               messages={messages}
-              isLoading={isLoading}
+              isLoading={isLoading && !hasStreamingMessage}
               error={error}
               onRetry={handleRetry}
               suggestedQuestions={
