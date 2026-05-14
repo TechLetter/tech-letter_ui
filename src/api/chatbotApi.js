@@ -1,4 +1,5 @@
 import apiClient from "./client";
+import { getAccessToken } from "../utils/authToken";
 
 /**
  * Chatbot API 서비스
@@ -83,6 +84,140 @@ const chatbotApi = {
       throw handleChatbotError(error);
     }
   },
+
+  /**
+   * 챗봇에게 질의를 전송하고 처리 과정 이벤트를 스트리밍합니다.
+   *
+   * @param {string} query - 사용자의 질문.
+   * @param {string} [sessionId] - 세션 ID.
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal] - 요청 취소 시그널.
+   * @param {(activity: Object) => void} [options.onActivity] - 처리 과정 이벤트 콜백.
+   * @returns {Promise<{answer: string, consumed_credits: number, remaining_credits: number, sources: Array, agent: Object, guard: Object, memory: Object}>}
+   */
+  streamChatRequest: async (query, sessionId, options = {}) => {
+    const payload = { query };
+    if (sessionId) {
+      payload.session_id = sessionId;
+    }
+
+    const response = await fetch(buildApiUrl("/api/v1/chatbot/chat/stream"), {
+      method: "POST",
+      headers: buildStreamHeaders(),
+      body: JSON.stringify(payload),
+      signal: options.signal,
+    });
+
+    if (!response.ok) {
+      const errorPayload = await readErrorPayload(response);
+      throw buildChatbotError(response.status, errorPayload?.error);
+    }
+
+    if (!response.body) {
+      throw new Error("스트림 응답을 읽을 수 없습니다.");
+    }
+
+    return readChatbotStream(response.body, {
+      onActivity: options.onActivity,
+    });
+  },
+};
+
+const buildApiUrl = (path) => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
+};
+
+const buildStreamHeaders = () => {
+  const headers = {
+    "Content-Type": "application/json",
+    Accept: "text/event-stream",
+  };
+  const token = getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+const readErrorPayload = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+const readChatbotStream = async (body, { onActivity } = {}) => {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let donePayload = null;
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const blocks = buffer.split(/\n\n/);
+    buffer = blocks.pop() || "";
+
+    for (const block of blocks) {
+      const event = parseStreamEvent(block);
+      if (!event) continue;
+
+      if (event.type === "activity") {
+        onActivity?.(event.data);
+      }
+      if (event.type === "done") {
+        donePayload = event.data;
+      }
+      if (event.type === "error") {
+        throw buildChatbotError(undefined, event.data?.code, event.data?.message);
+      }
+    }
+  }
+  buffer += decoder.decode();
+
+  if (buffer.trim()) {
+    const event = parseStreamEvent(buffer);
+    if (event?.type === "done") {
+      donePayload = event.data;
+    }
+    if (event?.type === "error") {
+      throw buildChatbotError(undefined, event.data?.code, event.data?.message);
+    }
+  }
+
+  if (!donePayload) {
+    throw new Error("챗봇 응답이 완료되지 않았습니다.");
+  }
+  return donePayload;
+};
+
+const parseStreamEvent = (block) => {
+  let type = "message";
+  const dataLines = [];
+
+  block.split(/\r?\n/).forEach((line) => {
+    if (line.startsWith("event:")) {
+      type = line.slice("event:".length).trim();
+    }
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice("data:".length).trimStart());
+    }
+  });
+
+  if (dataLines.length === 0) return null;
+
+  try {
+    return {
+      type,
+      data: JSON.parse(dataLines.join("\n")),
+    };
+  } catch {
+    return null;
+  }
 };
 
 /**
@@ -93,8 +228,14 @@ const chatbotApi = {
 const handleChatbotError = (error) => {
   const status = error.response?.status;
   const errorCode = error.response?.data?.error;
+  return buildChatbotError(status, errorCode);
+};
 
+const buildChatbotError = (status, errorCode, fallbackMessage) => {
   let message = "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+  if (fallbackMessage) {
+    message = fallbackMessage;
+  }
 
   if (status === 400) {
     if (errorCode === "invalid_session_id") {

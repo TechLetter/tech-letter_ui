@@ -1,5 +1,7 @@
 import {
   RiCheckboxCircleLine,
+  RiErrorWarningLine,
+  RiFileList3Line,
   RiLoader4Line,
   RiSearchLine,
 } from "react-icons/ri";
@@ -12,6 +14,7 @@ const activityIconByType = {
   verify: RiCheckboxCircleLine,
   guard: RiCheckboxCircleLine,
   answer: RiCheckboxCircleLine,
+  list_posts: RiFileList3Line,
 };
 
 export default function AgentActivityPanel({ agent, memory }) {
@@ -33,10 +36,13 @@ export default function AgentActivityPanel({ agent, memory }) {
           </div>
           <div className="flex flex-wrap gap-2">
             {activities.map((activity, index) => {
-              const Icon =
-                activity.status === "running"
-                  ? RiLoader4Line
-                  : activityIconByType[activity.type] || RiCheckboxCircleLine;
+              let Icon = activityIconByType[activity.type] || RiCheckboxCircleLine;
+              if (activity.status === "running") {
+                Icon = RiLoader4Line;
+              }
+              if (activity.status === "failed") {
+                Icon = RiErrorWarningLine;
+              }
               return (
                 <div
                   key={`${activity.type}-${index}`}
