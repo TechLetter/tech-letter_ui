@@ -16,22 +16,26 @@ export default function MessageBubble({ message }) {
 
   return (
     <div
-      className={`flex w-full ${isUser ? "justify-end" : "justify-start"} mb-6`}
+      className={`mb-5 flex w-full min-w-0 ${
+        isUser ? "justify-end" : "justify-start"
+      } sm:mb-6`}
     >
       <div
-        className={`flex w-full max-w-full ${
+        className={`flex w-full min-w-0 max-w-full ${
           isUser ? "justify-end" : "justify-start"
         }`}
       >
         <div
-          className={`text-base leading-relaxed overflow-hidden max-w-full lg:max-w-4xl ${
+          className={`min-w-0 overflow-hidden text-[15px] leading-relaxed sm:text-base ${
             isUser
-              ? "bg-indigo-600 text-white rounded-[2rem] rounded-tr-sm px-5 py-3" // 유저: 보라색 물방울(상단 꼬리)
-              : "bg-transparent text-slate-900 dark:text-slate-100 prose prose-slate dark:prose-invert max-w-none" // 어시스턴트: 배경 없음, 순수 텍스트 (dark:prose-invert adds dark mode support for typography)
+              ? "max-w-[88%] rounded-[1.5rem] rounded-tr-sm bg-indigo-600 px-4 py-3 text-white sm:max-w-[78%] sm:rounded-[2rem] sm:px-5"
+              : "max-w-full bg-transparent text-slate-900 prose prose-sm prose-slate max-w-none dark:prose-invert dark:text-slate-100 sm:prose-base"
           }`}
         >
           {isUser ? (
-            <span className="whitespace-pre-wrap">{message.content}</span>
+            <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+              {message.content}
+            </span>
           ) : (
             <>
               <SecurityNotice guard={message.guard} />
@@ -48,13 +52,13 @@ export default function MessageBubble({ message }) {
                   ),
                   // 모바일에서 너무 큰 제목 방지
                   h1: ({ ...props }) => (
-                    <h1 {...props} className="text-2xl font-bold mt-6 mb-4" />
+                    <h1 {...props} className="mt-6 mb-4 text-xl font-bold sm:text-2xl" />
                   ),
                   h2: ({ ...props }) => (
-                    <h2 {...props} className="text-xl font-bold mt-5 mb-3" />
+                    <h2 {...props} className="mt-5 mb-3 text-lg font-bold sm:text-xl" />
                   ),
                   h3: ({ ...props }) => (
-                    <h3 {...props} className="text-lg font-bold mt-4 mb-2" />
+                    <h3 {...props} className="mt-4 mb-2 text-base font-bold sm:text-lg" />
                   ),
                   ul: ({ ...props }) => (
                     <ul {...props} className="list-disc pl-5 my-2" />
@@ -62,11 +66,13 @@ export default function MessageBubble({ message }) {
                   ol: ({ ...props }) => (
                     <ol {...props} className="list-decimal pl-5 my-2" />
                   ),
-                  p: ({ ...props }) => <p {...props} className="my-2" />,
+                  p: ({ ...props }) => (
+                    <p {...props} className="my-2 break-words [overflow-wrap:anywhere]" />
+                  ),
                   code: ({ className, children, ...props }) => {
                     return (
                       <code
-                        className={`${className} bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5`}
+                        className={`${className} rounded bg-slate-100 px-1 py-0.5 break-words dark:bg-slate-800`}
                         {...props}
                       >
                         {children}
@@ -76,7 +82,24 @@ export default function MessageBubble({ message }) {
                   pre: ({ ...props }) => (
                     <pre
                       {...props}
-                      className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto my-4"
+                      className="my-4 max-w-full overflow-x-auto rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-800 sm:p-4"
+                    />
+                  ),
+                  table: ({ ...props }) => (
+                    <div className="my-4 max-w-full overflow-x-auto">
+                      <table {...props} className="w-full min-w-max text-sm" />
+                    </div>
+                  ),
+                  th: ({ ...props }) => (
+                    <th
+                      {...props}
+                      className="border border-slate-200 px-2 py-1 text-left dark:border-slate-700"
+                    />
+                  ),
+                  td: ({ ...props }) => (
+                    <td
+                      {...props}
+                      className="border border-slate-200 px-2 py-1 dark:border-slate-700"
                     />
                   ),
                 }}

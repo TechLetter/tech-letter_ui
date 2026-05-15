@@ -7,6 +7,7 @@ import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
 import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
+import { RiAddLine, RiMenuLine } from "react-icons/ri";
 
 // 추천 질문 목록
 const SUGGESTED_QUESTIONS = [
@@ -55,6 +56,7 @@ export default function Chatbot() {
 
   // 사이드바 토글 상태
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // 세션 상태
   const [sessions, setSessions] = useState([]);
@@ -100,6 +102,7 @@ export default function Chatbot() {
   // 현재 세션이 빈 세션인지 확인
   const isCurrentSessionEmpty = messages.length === 0;
   const hasStreamingMessage = messages.some((message) => message.isStreaming);
+  const currentSession = sessions.find((session) => session.id === currentSessionId);
 
   // 세션 선택 시 메시지 로드
   const handleSelectSession = useCallback(
@@ -369,7 +372,7 @@ export default function Chatbot() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-12 flex w-full bg-white dark:bg-slate-900 transition-colors duration-300 z-0">
+    <div className="fixed inset-x-0 bottom-0 top-12 z-40 flex w-full overflow-hidden bg-white transition-colors duration-300 dark:bg-slate-900">
       {/* 세션 사이드바 */}
       <SessionSidebar
         sessions={sessions}
@@ -381,18 +384,49 @@ export default function Chatbot() {
         credits={user?.credits}
         isOpen={isSidebarOpen}
         onToggle={setIsSidebarOpen}
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileOpenChange={setIsMobileSidebarOpen}
       />
 
       {/* 채팅 영역 - 사이드바 열림 상태에 따라 마진 조정 */}
       <div
         className={`
-          flex-1 flex flex-col transition-all duration-300
+          flex min-w-0 flex-1 flex-col transition-all duration-300
           ${isSidebarOpen ? "md:ml-64" : "md:ml-0"}
         `}
       >
+        <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3 dark:border-slate-800 dark:bg-slate-900 md:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"
+            aria-label="채팅 기록 열기"
+          >
+            <RiMenuLine className="text-xl" />
+          </button>
+          <div className="min-w-0 px-3 text-center">
+            <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {currentSession?.title || "AI 챗봇"}
+            </div>
+            {user?.credits !== undefined && (
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                남은 크레딧 {user.credits}
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleNewChat}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm active:scale-95"
+            aria-label="새 채팅"
+          >
+            <RiAddLine className="text-xl" />
+          </button>
+        </div>
+
         {isLoadingSession ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="flex flex-1 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
           </div>
         ) : (
           <>

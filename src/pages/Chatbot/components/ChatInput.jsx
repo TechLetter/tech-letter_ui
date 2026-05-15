@@ -65,12 +65,12 @@ export default function ChatInput({
   const isSendable = query.trim().length > 0 && !isOverLimit && !isLoading;
 
   return (
-    <div className="w-full bg-white p-2 sm:pb-8 dark:bg-slate-900 transition-colors duration-300">
-      <div className="mx-auto max-w-full sm:max-w-2xl lg:max-w-4xl">
+    <div className="w-full flex-shrink-0 border-t border-slate-100 bg-white px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] transition-colors duration-300 dark:border-slate-800 dark:bg-slate-900 sm:px-4 sm:pb-6">
+      <div className="mx-auto w-full max-w-3xl lg:max-w-4xl">
         <form
           onSubmit={handleSubmit}
           className={`
-            relative flex items-end gap-2 w-full px-4 py-2.5 rounded-[26px] bg-[#f4f4f4] transition-colors duration-200
+            relative flex w-full items-end gap-2 rounded-2xl bg-[#f4f4f4] px-3 py-2.5 transition-colors duration-200 sm:rounded-[26px] sm:px-4
             dark:bg-slate-800
             ${
               isOverLimit
@@ -88,8 +88,8 @@ export default function ChatInput({
             rows={1}
             disabled={isLoading}
             className={`
-              flex-1 w-full bg-transparent border-0 p-1 text-slate-800 placeholder:text-slate-500 
-              focus:ring-0 focus:outline-none resize-none text-[16px] leading-6 max-h-[150px]
+              min-w-0 flex-1 w-full bg-transparent border-0 p-1 text-slate-800 placeholder:text-slate-500
+              focus:ring-0 focus:outline-none resize-none text-[16px] leading-6 max-h-[35vh] sm:max-h-[150px]
               dark:text-slate-100 dark:placeholder:text-slate-400
               ${isOverLimit ? "text-red-700 dark:text-red-400" : ""}
             `}
@@ -100,7 +100,7 @@ export default function ChatInput({
             type="submit"
             disabled={!isSendable}
             className={`
-              flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center transition-all duration-200 mb-0.5
+              mb-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200 sm:h-8 sm:w-8
               ${
                 isSendable
                   ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md hover:shadow-lg active:scale-95"
