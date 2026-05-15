@@ -58,6 +58,15 @@ const chatbotApi = {
   // ─────────────────────────────────────────────────────────────
 
   /**
+   * 챗봇 추천 예시 질문 목록을 조회합니다.
+   * @returns {Promise<Array<{id: string, text: string, sort_order: number, is_active: boolean}>>}
+   */
+  getSuggestedQuestions: async () => {
+    const response = await apiClient.get("/api/v1/chatbot/suggested-questions");
+    return response.data;
+  },
+
+  /**
    * 챗봇에게 질의를 전송하고 생성된 답변을 반환합니다.
    *
    * @param {string} query - 사용자의 질문.

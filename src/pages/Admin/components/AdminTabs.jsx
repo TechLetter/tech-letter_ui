@@ -1,5 +1,10 @@
 import PropTypes from "prop-types";
-import { RiFileTextLine, RiBookOpenLine, RiUserLine } from "react-icons/ri";
+import {
+  RiFileTextLine,
+  RiBookOpenLine,
+  RiQuestionAnswerLine,
+  RiUserLine,
+} from "react-icons/ri";
 
 /**
  * Admin 페이지 탭 네비게이션
@@ -8,11 +13,12 @@ const TABS = [
   { id: "posts", label: "포스트", icon: RiFileTextLine },
   { id: "blogs", label: "블로그", icon: RiBookOpenLine },
   { id: "users", label: "사용자", icon: RiUserLine },
+  { id: "suggestedQuestions", label: "추천 질문", icon: RiQuestionAnswerLine },
 ];
 
 export default function AdminTabs({ activeTab, onTabChange }) {
   return (
-    <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl dark:bg-slate-800">
+    <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -37,6 +43,11 @@ export default function AdminTabs({ activeTab, onTabChange }) {
 }
 
 AdminTabs.propTypes = {
-  activeTab: PropTypes.oneOf(["posts", "blogs", "users"]).isRequired,
+  activeTab: PropTypes.oneOf([
+    "posts",
+    "blogs",
+    "users",
+    "suggestedQuestions",
+  ]).isRequired,
   onTabChange: PropTypes.func.isRequired,
 };

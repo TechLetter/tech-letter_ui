@@ -3,6 +3,7 @@ import AdminTabs from "./components/AdminTabs";
 import PostsTab from "./components/PostsTab";
 import BlogsTab from "./components/BlogsTab";
 import UsersTab from "./components/UsersTab";
+import SuggestedQuestionsTab from "./components/SuggestedQuestionsTab";
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("posts");
@@ -15,6 +16,8 @@ export default function Admin() {
         return <BlogsTab />;
       case "users":
         return <UsersTab />;
+      case "suggestedQuestions":
+        return <SuggestedQuestionsTab />;
       default:
         return <PostsTab />;
     }
