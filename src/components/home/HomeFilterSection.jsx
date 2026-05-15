@@ -16,6 +16,12 @@ const FILTER_TABS = [
   { id: "blog", label: "출처", icon: RiNewspaperLine },
   { id: "tag", label: "태그", icon: RiPriceTag3Line },
 ];
+const DESKTOP_FILTER_PANEL_MAX_HEIGHT = "max-h-[min(28rem,calc(100vh-7rem))]";
+const FILTER_OPTION_GRID_CLASS =
+  "grid grid-cols-2 gap-2 sm:grid-cols-3";
+const DESKTOP_FILTER_OPTION_SCROLL_CLASS =
+  "max-h-[18rem] overflow-y-auto pr-1";
+const MOBILE_FILTER_OPTION_SCROLL_CLASS = "overflow-visible";
 
 export default function HomeFilterSection({
   categoryFilters = [],
@@ -30,8 +36,13 @@ export default function HomeFilterSection({
 }) {
   const [openDesktopPanel, setOpenDesktopPanel] = useState(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [desktopCategorySearchText, setDesktopCategorySearchText] =
+    useState("");
   const [desktopBlogSearchText, setDesktopBlogSearchText] = useState("");
+  const [desktopTagSearchText, setDesktopTagSearchText] = useState("");
+  const [mobileCategorySearchText, setMobileCategorySearchText] = useState("");
   const [mobileBlogSearchText, setMobileBlogSearchText] = useState("");
+  const [mobileTagSearchText, setMobileTagSearchText] = useState("");
   const [mobileActiveTab, setMobileActiveTab] = useState("category");
   const [draftCategory, setDraftCategory] = useState(selectedCategory);
   const [draftBlogId, setDraftBlogId] = useState(selectedBlogId);
@@ -55,18 +66,36 @@ export default function HomeFilterSection({
     selectedTags.length;
   const draftFilterCount =
     Number(Boolean(draftCategory)) + Number(Boolean(draftBlogId)) + draftTags.length;
+  const desktopFilteredCategories = useFilteredNamedOptions(
+    categoryFilters,
+    desktopCategorySearchText
+  );
   const desktopFilteredBlogs = useFilteredBlogs(
     blogFilters,
     desktopBlogSearchText
   );
+  const desktopFilteredTags = useFilteredNamedOptions(
+    tagFilters,
+    desktopTagSearchText
+  );
+  const mobileFilteredCategories = useFilteredNamedOptions(
+    categoryFilters,
+    mobileCategorySearchText
+  );
   const mobileFilteredBlogs = useFilteredBlogs(blogFilters, mobileBlogSearchText);
+  const mobileFilteredTags = useFilteredNamedOptions(
+    tagFilters,
+    mobileTagSearchText
+  );
 
   useEffect(() => {
     if (!isMobileSheetOpen) return;
     setDraftCategory(selectedCategory);
     setDraftBlogId(selectedBlogId);
     setDraftTags(selectedTags);
+    setMobileCategorySearchText("");
     setMobileBlogSearchText("");
+    setMobileTagSearchText("");
   }, [isMobileSheetOpen, selectedCategory, selectedBlogId, selectedTags]);
 
   const toggleDesktopPanel = (panelId) => {
@@ -78,7 +107,9 @@ export default function HomeFilterSection({
     onChangeBlog("");
     onChangeTags([]);
     setOpenDesktopPanel(null);
+    setDesktopCategorySearchText("");
     setDesktopBlogSearchText("");
+    setDesktopTagSearchText("");
   };
 
   const openMobileSheet = () => {
@@ -97,7 +128,9 @@ export default function HomeFilterSection({
     setDraftCategory("");
     setDraftBlogId("");
     setDraftTags([]);
+    setMobileCategorySearchText("");
     setMobileBlogSearchText("");
+    setMobileTagSearchText("");
   };
 
   const toggleDesktopTag = (tagName) => {
@@ -190,11 +223,16 @@ export default function HomeFilterSection({
       )}
 
       {openDesktopPanel && (
-        <div className="absolute right-0 top-12 z-30 hidden w-[min(100%,42rem)] rounded-xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50 md:block">
+        <div
+          className={`absolute right-0 top-12 z-30 hidden w-[min(100%,42rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50 md:block ${DESKTOP_FILTER_PANEL_MAX_HEIGHT}`}
+        >
           {openDesktopPanel === "category" && (
             <CategoryOptions
-              categories={categoryFilters}
+              categories={desktopFilteredCategories}
+              optionScrollClassName={DESKTOP_FILTER_OPTION_SCROLL_CLASS}
+              searchText={desktopCategorySearchText}
               selectedCategory={selectedCategory}
+              onChangeSearchText={setDesktopCategorySearchText}
               onSelectCategory={(categoryName) => {
                 onChangeCategory(categoryName);
                 setOpenDesktopPanel(null);
@@ -204,6 +242,7 @@ export default function HomeFilterSection({
           {openDesktopPanel === "blog" && (
             <BlogOptions
               blogs={desktopFilteredBlogs}
+              optionScrollClassName={DESKTOP_FILTER_OPTION_SCROLL_CLASS}
               searchText={desktopBlogSearchText}
               selectedBlogId={selectedBlogId}
               onChangeSearchText={setDesktopBlogSearchText}
@@ -215,8 +254,11 @@ export default function HomeFilterSection({
           )}
           {openDesktopPanel === "tag" && (
             <TagOptions
-              tags={tagFilters}
+              tags={desktopFilteredTags}
+              optionScrollClassName={DESKTOP_FILTER_OPTION_SCROLL_CLASS}
+              searchText={desktopTagSearchText}
               selectedTags={selectedTags}
+              onChangeSearchText={setDesktopTagSearchText}
               onToggleTag={toggleDesktopTag}
               onClearTags={() => onChangeTags([])}
             />
@@ -235,7 +277,7 @@ export default function HomeFilterSection({
 
       {isMobileSheetOpen && (
         <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[86vh] flex-col rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 md:hidden">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+          <div className="relative z-20 flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
               <RiFilter3Line className="h-4 w-4 text-indigo-500" />
               포스트 필터
@@ -250,7 +292,7 @@ export default function HomeFilterSection({
             </button>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+          <div className="relative z-20 flex shrink-0 gap-2 overflow-x-auto border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
             {FILTER_TABS.map((tab) => (
               <SheetTabButton
                 key={tab.id}
@@ -261,17 +303,21 @@ export default function HomeFilterSection({
             ))}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="relative z-0 min-h-0 flex-1 overflow-y-auto px-4 py-4">
             {mobileActiveTab === "category" && (
               <CategoryOptions
-                categories={categoryFilters}
+                categories={mobileFilteredCategories}
+                optionScrollClassName={MOBILE_FILTER_OPTION_SCROLL_CLASS}
+                searchText={mobileCategorySearchText}
                 selectedCategory={draftCategory}
+                onChangeSearchText={setMobileCategorySearchText}
                 onSelectCategory={setDraftCategory}
               />
             )}
             {mobileActiveTab === "blog" && (
               <BlogOptions
                 blogs={mobileFilteredBlogs}
+                optionScrollClassName={MOBILE_FILTER_OPTION_SCROLL_CLASS}
                 searchText={mobileBlogSearchText}
                 selectedBlogId={draftBlogId}
                 onChangeSearchText={setMobileBlogSearchText}
@@ -280,15 +326,18 @@ export default function HomeFilterSection({
             )}
             {mobileActiveTab === "tag" && (
               <TagOptions
-                tags={tagFilters}
+                tags={mobileFilteredTags}
+                optionScrollClassName={MOBILE_FILTER_OPTION_SCROLL_CLASS}
+                searchText={mobileTagSearchText}
                 selectedTags={draftTags}
+                onChangeSearchText={setMobileTagSearchText}
                 onToggleTag={toggleDraftTag}
                 onClearTags={() => setDraftTags([])}
               />
             )}
           </div>
 
-          <div className="border-t border-slate-200 bg-white px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 dark:border-slate-700 dark:bg-slate-900">
+          <div className="relative z-20 shrink-0 border-t border-slate-200 bg-white px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 dark:border-slate-700 dark:bg-slate-900">
             <div className="mb-3 flex min-h-8 gap-2 overflow-x-auto">
               {draftFilterCount > 0 ? (
                 <ActiveFilterChips
@@ -331,11 +380,15 @@ export default function HomeFilterSection({
 }
 
 function useFilteredBlogs(blogs, searchText) {
+  return useFilteredNamedOptions(blogs, searchText);
+}
+
+function useFilteredNamedOptions(options, searchText) {
   return useMemo(() => {
     const query = searchText.trim().toLowerCase();
-    if (!query) return blogs;
-    return blogs.filter((blog) => blog.name.toLowerCase().includes(query));
-  }, [blogs, searchText]);
+    if (!query) return options;
+    return options.filter((option) => option.name.toLowerCase().includes(query));
+  }, [options, searchText]);
 }
 
 function DesktopFilterToolbar({
@@ -464,30 +517,47 @@ function ActiveFilterChip({ label, value, onClear }) {
   );
 }
 
-function CategoryOptions({ categories, selectedCategory, onSelectCategory }) {
+function CategoryOptions({
+  categories,
+  optionScrollClassName = DESKTOP_FILTER_OPTION_SCROLL_CLASS,
+  searchText,
+  selectedCategory,
+  onChangeSearchText,
+  onSelectCategory,
+}) {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-      <FilterOptionButton
-        label="전체 주제"
-        isSelected={!selectedCategory}
-        onClick={() => onSelectCategory("")}
+    <div className="space-y-3">
+      <FilterSearchInput
+        value={searchText}
+        onChange={onChangeSearchText}
+        placeholder="주제 검색"
       />
-      {categories.map((category) => (
-        <FilterOptionButton
-          key={category.name}
-          label={category.name}
-          count={category.count}
-          isSelected={selectedCategory === category.name}
-          onClick={() => onSelectCategory(category.name)}
-        />
-      ))}
-      {categories.length === 0 && <EmptyFilterState label="주제 없음" />}
+      <div className={optionScrollClassName}>
+        <div className={FILTER_OPTION_GRID_CLASS}>
+          <FilterOptionButton
+            label="전체 주제"
+            isSelected={!selectedCategory}
+            onClick={() => onSelectCategory("")}
+          />
+          {categories.map((category) => (
+            <FilterOptionButton
+              key={category.name}
+              label={category.name}
+              count={category.count}
+              isSelected={selectedCategory === category.name}
+              onClick={() => onSelectCategory(category.name)}
+            />
+          ))}
+          {categories.length === 0 && <EmptyFilterState label="주제 없음" />}
+        </div>
+      </div>
     </div>
   );
 }
 
 function BlogOptions({
   blogs,
+  optionScrollClassName = DESKTOP_FILTER_OPTION_SCROLL_CLASS,
   searchText,
   selectedBlogId,
   onChangeSearchText,
@@ -495,42 +565,52 @@ function BlogOptions({
 }) {
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <RiSearchLine className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
-          type="search"
-          value={searchText}
-          onChange={(event) => onChangeSearchText(event.target.value)}
-          placeholder="출처 검색"
-          className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-950"
-        />
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <FilterOptionButton
-          label="전체 출처"
-          isSelected={!selectedBlogId}
-          onClick={() => onSelectBlog("")}
-          align="left"
-        />
-        {blogs.map((blog) => (
+      <FilterSearchInput
+        value={searchText}
+        onChange={onChangeSearchText}
+        placeholder="출처 검색"
+      />
+      <div className={optionScrollClassName}>
+        <div className="grid gap-2 sm:grid-cols-2">
           <FilterOptionButton
-            key={blog.id}
-            label={blog.name}
-            count={blog.count}
-            isSelected={selectedBlogId === blog.id}
-            onClick={() => onSelectBlog(blog.id)}
+            label="전체 출처"
+            isSelected={!selectedBlogId}
+            onClick={() => onSelectBlog("")}
             align="left"
           />
-        ))}
+          {blogs.map((blog) => (
+            <FilterOptionButton
+              key={blog.id}
+              label={blog.name}
+              count={blog.count}
+              isSelected={selectedBlogId === blog.id}
+              onClick={() => onSelectBlog(blog.id)}
+              align="left"
+            />
+          ))}
+          {blogs.length === 0 && <EmptyFilterState label="출처 없음" />}
+        </div>
       </div>
-      {blogs.length === 0 && <EmptyFilterState label="출처 없음" />}
     </div>
   );
 }
 
-function TagOptions({ tags, selectedTags, onToggleTag, onClearTags }) {
+function TagOptions({
+  tags,
+  optionScrollClassName = DESKTOP_FILTER_OPTION_SCROLL_CLASS,
+  searchText,
+  selectedTags,
+  onChangeSearchText,
+  onToggleTag,
+  onClearTags,
+}) {
   return (
     <div className="space-y-3">
+      <FilterSearchInput
+        value={searchText}
+        onChange={onChangeSearchText}
+        placeholder="태그 검색"
+      />
       {selectedTags.length > 0 && (
         <div className="flex justify-end">
           <button
@@ -543,18 +623,35 @@ function TagOptions({ tags, selectedTags, onToggleTag, onClearTags }) {
           </button>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {tags.map((tag) => (
-          <FilterOptionButton
-            key={tag.name}
-            label={tag.name}
-            count={tag.count}
-            isSelected={selectedTags.includes(tag.name)}
-            onClick={() => onToggleTag(tag.name)}
-          />
-        ))}
+      <div className={optionScrollClassName}>
+        <div className={FILTER_OPTION_GRID_CLASS}>
+          {tags.map((tag) => (
+            <FilterOptionButton
+              key={tag.name}
+              label={tag.name}
+              count={tag.count}
+              isSelected={selectedTags.includes(tag.name)}
+              onClick={() => onToggleTag(tag.name)}
+            />
+          ))}
+          {tags.length === 0 && <EmptyFilterState label="태그 없음" />}
+        </div>
       </div>
-      {tags.length === 0 && <EmptyFilterState label="태그 없음" />}
+    </div>
+  );
+}
+
+function FilterSearchInput({ value, onChange, placeholder }) {
+  return (
+    <div className="relative">
+      <RiSearchLine className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <input
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-950"
+      />
     </div>
   );
 }
