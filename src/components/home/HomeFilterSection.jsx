@@ -151,18 +151,11 @@ export default function HomeFilterSection({
 
   return (
     <section className="relative mb-2 w-full">
-      <div className="flex items-start justify-end gap-3">
-        <DesktopFilterToolbar
-          activeFilterCount={activeFilterCount}
-          openPanel={openDesktopPanel}
-          onTogglePanel={toggleDesktopPanel}
-          onClearAll={clearAllFilters}
-        />
-
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:hidden">
         <button
           type="button"
           onClick={openMobileSheet}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 px-3 text-sm font-semibold text-white shadow-sm shadow-indigo-200/70 transition-all active:scale-[0.98] dark:shadow-indigo-950/50 md:hidden"
+          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 px-3 text-sm font-semibold text-white shadow-sm shadow-indigo-200/70 transition-all active:scale-[0.98] dark:shadow-indigo-950/50"
           aria-expanded={isMobileSheetOpen}
         >
           <RiFilter3Line className="h-4 w-4" />
@@ -173,50 +166,52 @@ export default function HomeFilterSection({
             </span>
           )}
         </button>
+
+        {activeFilterCount > 0 ? (
+          <>
+            <ActiveFilterChips
+              selectedCategory={selectedCategory}
+              selectedBlog={selectedBlogDisplay}
+              selectedTags={selectedTags}
+              onClearCategory={() => onChangeCategory("")}
+              onClearBlog={() => onChangeBlog("")}
+              onClearTag={(tagName) =>
+                onChangeTags(selectedTags.filter((tag) => tag !== tagName))
+              }
+            />
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+            >
+              <RiRefreshLine className="h-3.5 w-3.5" />
+              초기화
+            </button>
+          </>
+        ) : (
+          <FilterStateChip label="전체" />
+        )}
       </div>
 
-      {activeFilterCount > 0 && (
-        <div className="mt-3 hidden flex-wrap justify-end gap-2 md:flex">
-          <ActiveFilterChips
-            selectedCategory={selectedCategory}
-            selectedBlog={selectedBlogDisplay}
-            selectedTags={selectedTags}
-            onClearCategory={() => onChangeCategory("")}
-            onClearBlog={() => onChangeBlog("")}
-            onClearTag={(tagName) =>
-              onChangeTags(selectedTags.filter((tag) => tag !== tagName))
-            }
-          />
-        </div>
-      )}
-
-      {activeFilterCount > 0 && (
-        <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1 md:hidden">
-          <ActiveFilterChips
-            selectedCategory={selectedCategory}
-            selectedBlog={selectedBlogDisplay}
-            selectedTags={selectedTags}
-            onClearCategory={() => onChangeCategory("")}
-            onClearBlog={() => onChangeBlog("")}
-            onClearTag={(tagName) =>
-              onChangeTags(selectedTags.filter((tag) => tag !== tagName))
-            }
-          />
-          <button
-            type="button"
-            onClick={clearAllFilters}
-            className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-          >
-            <RiRefreshLine className="h-3.5 w-3.5" />
-            초기화
-          </button>
-        </div>
-      )}
+      <FloatingFilterDock
+        activeFilterCount={activeFilterCount}
+        openPanel={openDesktopPanel}
+        selectedCategory={selectedCategory}
+        selectedBlog={selectedBlogDisplay}
+        selectedTags={selectedTags}
+        onTogglePanel={toggleDesktopPanel}
+        onClearAll={clearAllFilters}
+        onClearCategory={() => onChangeCategory("")}
+        onClearBlog={() => onChangeBlog("")}
+        onClearTag={(tagName) =>
+          onChangeTags(selectedTags.filter((tag) => tag !== tagName))
+        }
+      />
 
       {openDesktopPanel && (
         <button
           type="button"
-          className="fixed inset-0 z-20 hidden cursor-default md:block"
+          className="fixed inset-0 z-30 hidden cursor-default md:block"
           onClick={() => setOpenDesktopPanel(null)}
           aria-label="필터 닫기"
         />
@@ -224,7 +219,7 @@ export default function HomeFilterSection({
 
       {openDesktopPanel && (
         <div
-          className={`absolute right-0 top-12 z-30 hidden w-[min(100%,42rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50 md:block ${DESKTOP_FILTER_PANEL_MAX_HEIGHT}`}
+          className={`fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-1/2 z-50 hidden w-[min(100%,42rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/50 md:block ${DESKTOP_FILTER_PANEL_MAX_HEIGHT}`}
         >
           {openDesktopPanel === "category" && (
             <CategoryOptions
@@ -391,33 +386,69 @@ function useFilteredNamedOptions(options, searchText) {
   }, [options, searchText]);
 }
 
-function DesktopFilterToolbar({
+function FloatingFilterDock({
   activeFilterCount,
   openPanel,
+  selectedCategory,
+  selectedBlog,
+  selectedTags,
   onTogglePanel,
   onClearAll,
+  onClearCategory,
+  onClearBlog,
+  onClearTag,
 }) {
   return (
-    <div className="hidden shrink-0 items-center gap-2 md:flex">
-      {FILTER_TABS.map((tab) => (
-        <DesktopFilterButton
-          key={tab.id}
-          tab={tab}
-          isOpen={openPanel === tab.id}
-          onClick={() => onTogglePanel(tab.id)}
-        />
-      ))}
-      {activeFilterCount > 0 && (
-        <button
-          type="button"
-          onClick={onClearAll}
-          className="inline-flex h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-800"
-        >
-          <RiRefreshLine className="h-4 w-4" />
-          초기화
-        </button>
-      )}
+    <div className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] left-1/2 z-40 hidden w-[min(44rem,calc(100vw-3rem))] -translate-x-1/2 md:block">
+      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-2 py-2 shadow-xl shadow-slate-300/40 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-slate-950/50">
+        <div className="flex shrink-0 items-center gap-1.5">
+          {FILTER_TABS.map((tab) => (
+            <DesktopFilterButton
+              key={tab.id}
+              tab={tab}
+              isOpen={openPanel === tab.id}
+              onClick={() => onTogglePanel(tab.id)}
+            />
+          ))}
+        </div>
+
+        <div className="h-6 w-px shrink-0 bg-slate-200 dark:bg-slate-700" />
+
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+          {activeFilterCount > 0 ? (
+            <ActiveFilterChips
+              selectedCategory={selectedCategory}
+              selectedBlog={selectedBlog}
+              selectedTags={selectedTags}
+              onClearCategory={onClearCategory}
+              onClearBlog={onClearBlog}
+              onClearTag={onClearTag}
+            />
+          ) : (
+            <FilterStateChip label="전체" />
+          )}
+        </div>
+
+        {activeFilterCount > 0 && (
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-800"
+          >
+            <RiRefreshLine className="h-3.5 w-3.5" />
+            초기화
+          </button>
+        )}
+      </div>
     </div>
+  );
+}
+
+function FilterStateChip({ label }) {
+  return (
+    <span className="inline-flex h-8 shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+      {label}
+    </span>
   );
 }
 
@@ -429,7 +460,7 @@ function DesktopFilterButton({ tab, isOpen, onClick }) {
       type="button"
       onClick={onClick}
       aria-expanded={isOpen}
-      className={`inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-colors ${
+      className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-sm font-semibold transition-colors ${
         isOpen
           ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-950/50 dark:text-indigo-300"
           : "border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-300"

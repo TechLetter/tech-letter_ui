@@ -3,8 +3,7 @@ import PostCard from "../PostCard";
 
 export default function HomePostListSection({ posts, loading, hasMore }) {
   return (
-    <>
-      {/* 포스트 그리드 */}
+    <div className="pb-4 md:pb-28">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
         {posts.map((post, index) => (
           <PostCard
@@ -33,6 +32,6 @@ export default function HomePostListSection({ posts, loading, hasMore }) {
           모든 포스트를 불러왔습니다
         </div>
       )}
-    </>
+    </div>
   );
 }
