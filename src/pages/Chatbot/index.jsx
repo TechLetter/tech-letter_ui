@@ -9,13 +9,6 @@ import SessionSidebar from "./components/SessionSidebar";
 import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
 import { RiAddLine, RiMenuLine } from "react-icons/ri";
 
-// 추천 질문 목록
-const SUGGESTED_QUESTIONS = [
-  "쿠버네티스가 무엇인지 설명하고 실제 활용 사례를 찾아줘.",
-  "RAG를 활용해서 문제를 해결한 사례를 알려줘.",
-  "시스템 모니터링 개선 사례를 알려줘.",
-];
-
 const buildMessageFromSession = (sessionId, msg, idx) => {
   const metadata = msg.metadata || {};
   return {
@@ -67,6 +60,7 @@ export default function Chatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastQuery, setLastQuery] = useState("");
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
 
   // 입력창 제어
   const [inputValue, setInputValue] = useState("");
@@ -83,6 +77,28 @@ export default function Chatbot() {
       navigate(PATHS.LOGIN);
     }
   }, [initialized, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!initialized || !isAuthenticated) {
+      return;
+    }
+
+    const loadSuggestedQuestions = async () => {
+      try {
+        const questions = await chatbotApi.getSuggestedQuestions();
+        setSuggestedQuestions(
+          (questions || [])
+            .filter((question) => question?.text)
+            .map((question) => question.text)
+        );
+      } catch (err) {
+        console.error("추천 질문 로드 실패:", err);
+        setSuggestedQuestions([]);
+      }
+    };
+
+    loadSuggestedQuestions();
+  }, [initialized, isAuthenticated]);
 
   // 세션 목록 로드 콜백
   const handleSessionsLoaded = useCallback((loadedSessions) => {
@@ -436,7 +452,7 @@ export default function Chatbot() {
               error={error}
               onRetry={handleRetry}
               suggestedQuestions={
-                isCurrentSessionEmpty ? SUGGESTED_QUESTIONS : null
+                isCurrentSessionEmpty ? suggestedQuestions : null
               }
               onSuggestedQuestion={handleSuggestedQuestion}
             />

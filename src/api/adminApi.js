@@ -150,6 +150,54 @@ export async function grantCredit(userCode, data) {
 }
 
 // ============================================================
+// Chatbot Suggested Questions API
+// ============================================================
+
+/**
+ * 챗봇 추천 질문 목록 조회
+ */
+export async function getChatbotSuggestedQuestions() {
+  const response = await client.get(`${ADMIN_BASE}/chatbot/suggested-questions`);
+  return response.data;
+}
+
+/**
+ * 챗봇 추천 질문 생성
+ * @param {Object} data - { text, sort_order, is_active }
+ */
+export async function createChatbotSuggestedQuestion(data) {
+  const response = await client.post(
+    `${ADMIN_BASE}/chatbot/suggested-questions`,
+    data
+  );
+  return response.data;
+}
+
+/**
+ * 챗봇 추천 질문 수정
+ * @param {string} id
+ * @param {Object} data - { text, sort_order, is_active }
+ */
+export async function updateChatbotSuggestedQuestion(id, data) {
+  const response = await client.put(
+    `${ADMIN_BASE}/chatbot/suggested-questions/${id}`,
+    data
+  );
+  return response.data;
+}
+
+/**
+ * 챗봇 추천 질문 삭제
+ * @param {string} id
+ */
+export async function deleteChatbotSuggestedQuestion(id) {
+  const response = await client.delete(
+    `${ADMIN_BASE}/chatbot/suggested-questions/${id}`
+  );
+  return response.data;
+}
+
+// ============================================================
 // Error Handler
 // ============================================================
 
@@ -176,6 +224,9 @@ export function handleAdminError(error) {
     case 404:
       return "요청한 리소스를 찾을 수 없습니다.";
     case 409:
+      if (serverMessage?.includes("suggested question")) {
+        return "이미 등록된 추천 질문입니다.";
+      }
       if (serverMessage?.includes("rss_url")) {
         return "이미 등록된 RSS URL입니다.";
       }
