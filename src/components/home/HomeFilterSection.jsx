@@ -117,28 +117,8 @@ export default function HomeFilterSection({
   };
 
   return (
-    <section className="relative mb-5 w-full">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-xl font-bold tracking-normal text-slate-900 dark:text-slate-100 sm:text-2xl">
-            최신 기술 포스트
-          </div>
-          {activeFilterCount > 0 && (
-            <div className="mt-2 hidden flex-wrap gap-2 md:flex">
-              <ActiveFilterChips
-                selectedCategory={selectedCategory}
-                selectedBlog={selectedBlogDisplay}
-                selectedTags={selectedTags}
-                onClearCategory={() => onChangeCategory("")}
-                onClearBlog={() => onChangeBlog("")}
-                onClearTag={(tagName) =>
-                  onChangeTags(selectedTags.filter((tag) => tag !== tagName))
-                }
-              />
-            </div>
-          )}
-        </div>
-
+    <section className="relative mb-2 w-full">
+      <div className="flex items-start justify-end gap-3">
         <DesktopFilterToolbar
           activeFilterCount={activeFilterCount}
           openPanel={openDesktopPanel}
@@ -161,6 +141,21 @@ export default function HomeFilterSection({
           )}
         </button>
       </div>
+
+      {activeFilterCount > 0 && (
+        <div className="mt-3 hidden flex-wrap justify-end gap-2 md:flex">
+          <ActiveFilterChips
+            selectedCategory={selectedCategory}
+            selectedBlog={selectedBlogDisplay}
+            selectedTags={selectedTags}
+            onClearCategory={() => onChangeCategory("")}
+            onClearBlog={() => onChangeBlog("")}
+            onClearTag={(tagName) =>
+              onChangeTags(selectedTags.filter((tag) => tag !== tagName))
+            }
+          />
+        </div>
+      )}
 
       {activeFilterCount > 0 && (
         <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1 md:hidden">
