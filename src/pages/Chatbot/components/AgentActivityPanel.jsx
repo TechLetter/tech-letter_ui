@@ -1,8 +1,10 @@
 import {
   RiCheckboxCircleLine,
   RiErrorWarningLine,
+  RiFileTextLine,
   RiFileList3Line,
   RiLoader4Line,
+  RiRouteLine,
   RiSearchLine,
 } from "react-icons/ri";
 import MemoryStatusBadge from "./MemoryStatusBadge";
@@ -15,6 +17,8 @@ const activityIconByType = {
   guard: RiCheckboxCircleLine,
   answer: RiCheckboxCircleLine,
   list_posts: RiFileList3Line,
+  plan: RiRouteLine,
+  read_posts: RiFileTextLine,
 };
 
 export default function AgentActivityPanel({ agent, memory }) {
