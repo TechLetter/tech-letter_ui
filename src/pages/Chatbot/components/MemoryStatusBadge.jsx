@@ -96,7 +96,9 @@ export default function MemoryStatusBadge({ memory }) {
       <Icon className="mt-0.5 flex-shrink-0 text-base" />
       <div className="min-w-0">
         <div className="font-semibold">{status.label}</div>
-        <div className="mt-0.5 text-[11px] opacity-80">{status.description}</div>
+        <div className="mt-0.5 text-[11px] opacity-80 [overflow-wrap:anywhere]">
+          {status.description}
+        </div>
       </div>
     </div>
   );

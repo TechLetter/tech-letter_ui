@@ -4,7 +4,7 @@ export default function SourceList({ sources }) {
   if (!sources?.length) return null;
 
   return (
-    <div className="mt-4 border-t border-slate-200 pt-3 dark:border-slate-800">
+    <div className="mt-4 max-w-full overflow-hidden border-t border-slate-200 pt-3 dark:border-slate-800">
       <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
         <RiFileList3Line className="text-sm" />
         참고한 글 {sources.length}개
@@ -25,7 +25,7 @@ export default function SourceList({ sources }) {
             </>
           );
           const className =
-            "flex items-start gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300";
+            "flex max-w-full min-w-0 items-start gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300";
 
           if (!source.link) {
             return (

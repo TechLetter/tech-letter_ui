@@ -26,18 +26,18 @@ export default function ChatWindow({
   const showEmptyState = messages.length === 0 && !error;
 
   return (
-    <div className="flex-1 w-full overflow-y-auto">
-      <div className="mx-auto w-full max-w-full sm:max-w-2xl lg:max-w-4xl min-h-full flex flex-col pt-4 sm:pt-6 pb-2">
+    <div className="min-h-0 flex-1 w-full overflow-y-auto overscroll-contain">
+      <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col pt-3 pb-2 sm:pt-6 lg:max-w-4xl">
         {/* 빈 상태 */}
         {showEmptyState && (
           <div
-            className="flex-1 flex flex-col items-center justify-center text-center px-4 opacity-0 animate-fadeIn"
+            className="flex-1 flex flex-col items-center justify-center text-center px-4 py-8 opacity-0 animate-fadeIn"
             style={{ animationFillMode: "forwards" }}
           >
-            <div className="mb-6 rounded-full bg-slate-100 p-6 shadow-inner dark:bg-slate-800 dark:shadow-slate-900/50">
-              <RiRobot2Line className="text-6xl text-slate-300 dark:text-slate-600" />
+            <div className="mb-5 rounded-full bg-slate-100 p-5 shadow-inner dark:bg-slate-800 dark:shadow-slate-900/50 sm:mb-6 sm:p-6">
+              <RiRobot2Line className="text-5xl text-slate-300 dark:text-slate-600 sm:text-6xl" />
             </div>
-            <h2 className="text-xl font-bold text-slate-800 mb-2 dark:text-slate-200">
+            <h2 className="text-lg font-bold text-slate-800 mb-2 dark:text-slate-200 sm:text-xl">
               무엇을 도와드릴까요?
             </h2>
             <p className="text-slate-500 max-w-xs text-sm sm:text-base dark:text-slate-400 mb-6">
@@ -56,7 +56,7 @@ export default function ChatWindow({
                     <button
                       key={idx}
                       onClick={() => onSuggestedQuestion?.(question)}
-                      className="w-full text-left px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm hover:shadow"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 shadow-sm transition-all hover:border-indigo-300 hover:bg-slate-50 hover:shadow dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-600 dark:hover:bg-slate-700"
                     >
                       {question}
                     </button>
@@ -68,7 +68,7 @@ export default function ChatWindow({
         )}
 
         {/* 메시지 목록 */}
-        <div className="flex-1 flex flex-col px-4">
+        <div className="flex flex-1 flex-col px-3 sm:px-4 md:px-6">
           {messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} />
           ))}
@@ -95,7 +95,7 @@ export default function ChatWindow({
 
           {/* 에러 상태 */}
           {error && (
-            <div className="my-4 p-4 bg-red-50 rounded-xl text-center mx-4 dark:bg-red-900/20">
+            <div className="my-4 rounded-xl bg-red-50 p-4 text-center dark:bg-red-900/20">
               <SecurityNotice error={error} />
               <p className="text-red-800 text-sm mb-2 dark:text-red-300">
                 {error.message || "오류가 발생했습니다."}

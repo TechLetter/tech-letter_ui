@@ -26,7 +26,7 @@ export default function AgentActivityPanel({ agent, memory }) {
   if (!memory && activities.length === 0) return null;
 
   return (
-    <div className="mt-4 space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
+    <div className="mt-4 max-w-full space-y-3 overflow-hidden border-t border-slate-200 pt-3 dark:border-slate-800">
       {memory && (
         <div className="flex flex-wrap items-start gap-2">
           <MemoryStatusBadge memory={memory} />
@@ -50,14 +50,14 @@ export default function AgentActivityPanel({ agent, memory }) {
               return (
                 <div
                   key={`${activity.type}-${index}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                 >
                   <Icon
-                    className={`text-sm ${
+                    className={`flex-shrink-0 text-sm ${
                       activity.status === "running" ? "animate-spin" : ""
                     }`}
                   />
-                  <span>{activity.label}</span>
+                  <span className="min-w-0 truncate">{activity.label}</span>
                 </div>
               );
             })}

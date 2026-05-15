@@ -24,8 +24,9 @@ export default function SessionSidebar({
   credits,
   isOpen,
   onToggle,
+  isMobileOpen = false,
+  onMobileOpenChange,
 }) {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
@@ -62,17 +63,17 @@ export default function SessionSidebar({
 
   const handleSelectSession = (sessionId) => {
     onSelectSession(sessionId);
-    setIsMobileOpen(false);
+    onMobileOpenChange?.(false);
   };
 
   const handleNewChat = () => {
     onNewChat();
-    setIsMobileOpen(false);
+    onMobileOpenChange?.(false);
   };
 
   // 사이드바 컨텐츠
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-800/50">
+    <div className="flex h-full min-h-0 flex-col bg-slate-50 dark:bg-slate-800/50">
       {/* 헤더 */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-2">
@@ -83,15 +84,17 @@ export default function SessionSidebar({
           <button
             onClick={() => {
               onToggle(false);
-              setIsMobileOpen(false);
+              onMobileOpenChange?.(false);
             }}
             className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 md:block hidden"
+            aria-label="사이드바 닫기"
           >
             <RiCloseLine className="text-lg" />
           </button>
           <button
-            onClick={() => setIsMobileOpen(false)}
+            onClick={() => onMobileOpenChange?.(false)}
             className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 md:hidden"
+            aria-label="채팅 기록 닫기"
           >
             <RiCloseLine className="text-xl" />
           </button>
@@ -175,14 +178,6 @@ export default function SessionSidebar({
         </button>
       )}
 
-      {/* 모바일 햄버거 버튼 */}
-      <button
-        onClick={() => setIsMobileOpen(true)}
-        className="md:hidden fixed left-4 top-16 z-40 p-2.5 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-      >
-        <RiMenuLine className="text-xl text-slate-600 dark:text-slate-300" />
-      </button>
-
       {/* 데스크톱 사이드바 */}
       <div
         className={`
@@ -200,14 +195,14 @@ export default function SessionSidebar({
 
       {/* 모바일 오버레이 */}
       {isMobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
+        <div className="fixed inset-x-0 bottom-0 top-12 z-50 md:hidden">
           {/* 배경 */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileOpen(false)}
+            onClick={() => onMobileOpenChange?.(false)}
           />
           {/* 슬라이드 패널 */}
-          <div className="absolute left-0 top-12 bottom-0 w-72 animate-slideInLeft">
+          <div className="absolute bottom-0 left-0 top-0 w-[min(20rem,calc(100vw-2rem))] animate-slideInLeft overflow-hidden shadow-2xl">
             {sidebarContent}
           </div>
         </div>
