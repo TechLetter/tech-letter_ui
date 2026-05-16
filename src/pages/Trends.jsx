@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import filtersApi from "../api/filtersApi";
 import trendsApi from "../api/trendsApi";
 import RisingTagsPanel from "../components/trends/RisingTagsPanel";
 import TrendControls from "../components/trends/TrendControls";
@@ -26,11 +25,9 @@ export default function Trends() {
       Array.isArray(value) && value.length > 0 ? value.join(",") : "",
   });
 
-  const [tagOptions, setTagOptions] = useState([]);
   const [risingTags, setRisingTags] = useState([]);
   const [series, setSeries] = useState([]);
   const [posts, setPosts] = useState([]);
-  const [loadingFilters, setLoadingFilters] = useState(false);
   const [loadingRising, setLoadingRising] = useState(false);
   const [loadingSeries, setLoadingSeries] = useState(false);
   const [loadingPosts, setLoadingPosts] = useState(false);
@@ -45,46 +42,18 @@ export default function Trends() {
     return risingTags.slice(0, MAX_SELECTED_TAGS).map((item) => item.tag);
   }, [risingTags, selectedTags]);
 
-  const addTag = useCallback(
+  const toggleTag = useCallback(
     (tagName) => {
-      if (!tagName || selectedTags.includes(tagName)) return;
+      if (!tagName) return;
+      if (selectedTags.includes(tagName)) {
+        setSelectedTags(selectedTags.filter((tag) => tag !== tagName));
+        return;
+      }
       if (selectedTags.length >= MAX_SELECTED_TAGS) return;
       setSelectedTags([...selectedTags, tagName]);
     },
     [selectedTags, setSelectedTags]
   );
-
-  const removeTag = useCallback(
-    (tagName) => {
-      setSelectedTags(selectedTags.filter((tag) => tag !== tagName));
-    },
-    [selectedTags, setSelectedTags]
-  );
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadTags() {
-      setLoadingFilters(true);
-      try {
-        const response = await filtersApi.getTags({});
-        if (ignore) return;
-        setTagOptions(
-          response?.data?.items?.filter((item) => item.count > 0) || []
-        );
-      } catch (error) {
-        console.log("Failed to fetch trend tag options:", error);
-        if (!ignore) setTagOptions([]);
-      } finally {
-        if (!ignore) setLoadingFilters(false);
-      }
-    }
-
-    loadTags();
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -191,28 +160,12 @@ export default function Trends() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
-      <header className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-slate-950 dark:text-slate-50">
-          트렌드
-        </h1>
-        {loadingFilters && (
-          <span className="text-xs font-semibold text-slate-400">
-            태그 목록 갱신 중
-          </span>
-        )}
-      </header>
-
       <TrendControls
         period={period}
         interval={interval}
-        selectedTags={selectedTags}
-        tagOptions={tagOptions}
         isOverviewMode={isOverviewMode}
         onChangePeriod={setPeriod}
         onChangeInterval={setInterval}
-        onAddTag={addTag}
-        onRemoveTag={removeTag}
-        onClearTags={() => setSelectedTags([])}
       />
 
       {trendError && (
@@ -227,7 +180,8 @@ export default function Trends() {
           items={risingTags}
           loading={loadingRising}
           selectedTags={selectedTags}
-          onAddTag={addTag}
+          maxSelectedTags={MAX_SELECTED_TAGS}
+          onToggleTag={toggleTag}
         />
       </div>
 

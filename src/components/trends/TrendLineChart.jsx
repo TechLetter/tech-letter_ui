@@ -65,10 +65,10 @@ export default function TrendLineChart({ series = [], loading = false }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="h-72 min-w-[42rem] w-full"
+          className="h-64 w-full sm:h-72"
           role="img"
           aria-label="태그별 포스트 수 시계열 차트"
         >
