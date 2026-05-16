@@ -1,10 +1,11 @@
-import { RiAddLine, RiArrowUpLine } from "react-icons/ri";
+import { RiAddLine, RiArrowUpLine, RiCheckLine } from "react-icons/ri";
 
 export default function RisingTagsPanel({
   items = [],
   loading = false,
   selectedTags = [],
-  onAddTag,
+  maxSelectedTags = 5,
+  onToggleTag,
 }) {
   if (loading) {
     return (
@@ -43,15 +44,20 @@ export default function RisingTagsPanel({
         <div className="space-y-2">
           {items.map((item) => {
             const isSelected = selectedTags.includes(item.tag);
+            const isSelectionLimitReached =
+              !isSelected && selectedTags.length >= maxSelectedTags;
             return (
               <button
                 type="button"
                 key={item.tag}
-                onClick={() => onAddTag(item.tag)}
-                disabled={isSelected}
+                onClick={() => onToggleTag(item.tag)}
+                disabled={isSelectionLimitReached}
+                aria-pressed={isSelected}
                 className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left transition-colors ${
                   isSelected
                     ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/50 dark:text-indigo-300"
+                    : isSelectionLimitReached
+                      ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-600"
                     : "border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50/70 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-indigo-800 dark:hover:bg-indigo-950/40"
                 }`}
               >
@@ -66,8 +72,18 @@ export default function RisingTagsPanel({
                     {item.current_count}건
                   </span>
                 </span>
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 dark:border-slate-700">
-                  <RiAddLine className="h-4 w-4" />
+                <span
+                  className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
+                    isSelected
+                      ? "border-indigo-200 bg-white text-indigo-600 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-300"
+                      : "border-slate-200 text-slate-400 dark:border-slate-700"
+                  }`}
+                >
+                  {isSelected ? (
+                    <RiCheckLine className="h-4 w-4" />
+                  ) : (
+                    <RiAddLine className="h-4 w-4" />
+                  )}
                 </span>
               </button>
             );
