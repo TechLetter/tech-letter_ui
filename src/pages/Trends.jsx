@@ -175,21 +175,25 @@ export default function Trends() {
       )}
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <TrendLineChart series={series} loading={loadingSeries} />
-        <RisingTagsPanel
-          items={risingTags}
-          loading={loadingRising}
-          selectedTags={selectedTags}
-          maxSelectedTags={MAX_SELECTED_TAGS}
-          onToggleTag={toggleTag}
-        />
-      </div>
+        <div className="order-2 min-w-0 space-y-4 xl:order-1">
+          <TrendLineChart series={series} loading={loadingSeries} />
+          <TrendPostList
+            posts={posts}
+            loading={loadingPosts}
+            error={postsError}
+          />
+        </div>
 
-      <TrendPostList
-        posts={posts}
-        loading={loadingPosts}
-        error={postsError}
-      />
+        <div className="order-1 xl:sticky xl:top-20 xl:order-2">
+          <RisingTagsPanel
+            items={risingTags}
+            loading={loadingRising}
+            selectedTags={selectedTags}
+            maxSelectedTags={MAX_SELECTED_TAGS}
+            onToggleTag={toggleTag}
+          />
+        </div>
+      </div>
     </div>
   );
 }
