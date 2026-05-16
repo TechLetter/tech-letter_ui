@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   RiArrowDownSLine,
   RiCheckLine,
@@ -22,6 +28,12 @@ const FILTER_OPTION_GRID_CLASS =
 const DESKTOP_FILTER_OPTION_SCROLL_CLASS =
   "max-h-[18rem] overflow-y-auto pr-1";
 const MOBILE_FILTER_OPTION_SCROLL_CLASS = "overflow-visible";
+const ACTIVE_FILTER_CHIP_CLASS =
+  "inline-flex h-8 max-w-full shrink-0 items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 text-xs font-semibold text-indigo-700 dark:border-indigo-900/70 dark:bg-indigo-950/50 dark:text-indigo-300";
+const ACTIVE_FILTER_VALUE_CLASS =
+  "max-w-[4.5rem] truncate sm:max-w-[8rem] lg:max-w-[11rem]";
+const HIDDEN_FILTER_COUNT_CHIP_CLASS =
+  "inline-flex h-8 shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400";
 
 export default function HomeFilterSection({
   categoryFilters = [],
@@ -68,6 +80,16 @@ export default function HomeFilterSection({
     selectedTags.length;
   const draftFilterCount =
     Number(Boolean(draftCategory)) + Number(Boolean(draftBlogId)) + draftTags.length;
+  const activeFilterCountsByTab = {
+    category: Number(Boolean(selectedCategory)),
+    blog: Number(Boolean(selectedBlogId)),
+    tag: selectedTags.length,
+  };
+  const draftFilterCountsByTab = {
+    category: Number(Boolean(draftCategory)),
+    blog: Number(Boolean(draftBlogId)),
+    tag: draftTags.length,
+  };
   const desktopFilteredCategories = useFilteredNamedOptions(
     categoryFilters,
     desktopCategorySearchText
@@ -182,7 +204,6 @@ export default function HomeFilterSection({
             </button>
             <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
               <ActiveFilterSummary
-                maxVisibleCount={1}
                 selectedCategory={selectedCategory}
                 selectedBlog={selectedBlogDisplay}
                 selectedTags={selectedTags}
@@ -201,6 +222,7 @@ export default function HomeFilterSection({
 
       <FloatingFilterDock
         activeFilterCount={activeFilterCount}
+        filterCounts={activeFilterCountsByTab}
         openPanel={openDesktopPanel}
         selectedCategory={selectedCategory}
         selectedBlog={selectedBlogDisplay}
@@ -298,6 +320,7 @@ export default function HomeFilterSection({
               <SheetTabButton
                 key={tab.id}
                 tab={tab}
+                count={draftFilterCountsByTab[tab.id]}
                 isSelected={mobileActiveTab === tab.id}
                 onClick={() => setMobileActiveTab(tab.id)}
               />
@@ -342,7 +365,6 @@ export default function HomeFilterSection({
             <div className="mb-3 flex min-h-8 gap-2 overflow-hidden">
               {draftFilterCount > 0 ? (
                 <ActiveFilterSummary
-                  maxVisibleCount={2}
                   selectedCategory={draftCategory}
                   selectedBlog={draftBlogDisplay}
                   selectedTags={draftTags}
@@ -395,6 +417,7 @@ function useFilteredNamedOptions(options, searchText) {
 
 function FloatingFilterDock({
   activeFilterCount,
+  filterCounts,
   openPanel,
   selectedCategory,
   selectedBlog,
@@ -413,6 +436,7 @@ function FloatingFilterDock({
             <DesktopFilterButton
               key={tab.id}
               tab={tab}
+              count={filterCounts[tab.id]}
               isOpen={openPanel === tab.id}
               onClick={() => onTogglePanel(tab.id)}
             />
@@ -424,7 +448,6 @@ function FloatingFilterDock({
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
           {activeFilterCount > 0 ? (
             <ActiveFilterSummary
-              maxVisibleCount={1}
               selectedCategory={selectedCategory}
               selectedBlog={selectedBlog}
               selectedTags={selectedTags}
@@ -460,7 +483,7 @@ function FilterStateChip({ label }) {
   );
 }
 
-function DesktopFilterButton({ tab, isOpen, onClick }) {
+function DesktopFilterButton({ tab, count = 0, isOpen, onClick }) {
   const Icon = tab.icon;
 
   return (
@@ -475,7 +498,7 @@ function DesktopFilterButton({ tab, isOpen, onClick }) {
       }`}
     >
       <Icon className="h-4 w-4" />
-      {tab.label}
+      <FilterTabLabel label={tab.label} count={count} />
       <RiArrowDownSLine
         className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
       />
@@ -483,7 +506,7 @@ function DesktopFilterButton({ tab, isOpen, onClick }) {
   );
 }
 
-function SheetTabButton({ tab, isSelected, onClick }) {
+function SheetTabButton({ tab, count = 0, isSelected, onClick }) {
   const Icon = tab.icon;
 
   return (
@@ -498,13 +521,21 @@ function SheetTabButton({ tab, isSelected, onClick }) {
       }`}
     >
       <Icon className="h-4 w-4" />
-      {tab.label}
+      <FilterTabLabel label={tab.label} count={count} />
     </button>
   );
 }
 
+function FilterTabLabel({ label, count }) {
+  return (
+    <span className="inline-flex items-center">
+      {label}
+      {count > 0 && <span className="tabular-nums">({count})</span>}
+    </span>
+  );
+}
+
 function ActiveFilterSummary({
-  maxVisibleCount,
   selectedCategory,
   selectedBlog,
   selectedTags,
@@ -512,21 +543,65 @@ function ActiveFilterSummary({
   onClearBlog,
   onClearTag,
 }) {
-  const items = getActiveFilterItems({
-    selectedCategory,
-    selectedBlog,
-    selectedTags,
-    onClearCategory,
-    onClearBlog,
-    onClearTag,
-  });
-  const visibleCount =
-    typeof maxVisibleCount === "number" ? maxVisibleCount : items.length;
+  const containerRef = useRef(null);
+  const measurementRef = useRef(null);
+  const items = useMemo(
+    () =>
+      getActiveFilterItems({
+        selectedCategory,
+        selectedBlog,
+        selectedTags,
+        onClearCategory,
+        onClearBlog,
+        onClearTag,
+      }),
+    [
+      selectedCategory,
+      selectedBlog,
+      selectedTags,
+      onClearCategory,
+      onClearBlog,
+      onClearTag,
+    ]
+  );
+  const [visibleCount, setVisibleCount] = useState(items.length);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const measurement = measurementRef.current;
+    if (!container || !measurement) return undefined;
+
+    const updateVisibleCount = () => {
+      const nextVisibleCount = calculateVisibleFilterCount({
+        containerWidth: container.clientWidth,
+        measurementElement: measurement,
+        itemCount: items.length,
+      });
+      setVisibleCount((current) =>
+        current === nextVisibleCount ? current : nextVisibleCount
+      );
+    };
+
+    updateVisibleCount();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateVisibleCount);
+      return () => window.removeEventListener("resize", updateVisibleCount);
+    }
+
+    const resizeObserver = new ResizeObserver(updateVisibleCount);
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, [items]);
+
   const visibleItems = items.slice(0, visibleCount);
   const hiddenItems = items.slice(visibleCount);
 
   return (
-    <>
+    <div
+      ref={containerRef}
+      className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
+    >
       {visibleItems.map((item) => (
         <ActiveFilterChip
           key={item.key}
@@ -541,8 +616,72 @@ function ActiveFilterSummary({
           hiddenLabels={hiddenItems.map((item) => `${item.label} ${item.value}`)}
         />
       )}
-    </>
+      <div
+        ref={measurementRef}
+        className="pointer-events-none absolute left-0 top-0 flex items-center gap-2 opacity-0"
+        aria-hidden="true"
+      >
+        {items.map((item) => (
+          <MeasuredFilterChip
+            key={item.key}
+            label={item.label}
+            value={item.value}
+          />
+        ))}
+        <HiddenFilterCountChip
+          count={items.length}
+          hiddenLabels={[]}
+          isMeasurement
+        />
+      </div>
+    </div>
   );
+}
+
+function calculateVisibleFilterCount({
+  containerWidth,
+  measurementElement,
+  itemCount,
+}) {
+  if (itemCount === 0 || containerWidth <= 0) return 0;
+
+  const chipElements = Array.from(
+    measurementElement.querySelectorAll("[data-filter-chip]")
+  );
+  const moreElement = measurementElement.querySelector("[data-filter-more]");
+  const chipWidths = chipElements.map(
+    (element) => element.getBoundingClientRect().width
+  );
+  const moreWidth = moreElement?.getBoundingClientRect().width || 0;
+  const gap = parseFloat(getComputedStyle(measurementElement).columnGap) || 0;
+  const allWidth = getCombinedWidth(chipWidths, gap);
+
+  if (allWidth <= containerWidth) return itemCount;
+
+  let visibleCount = 0;
+  let usedWidth = 0;
+
+  for (let index = 0; index < chipWidths.length; index += 1) {
+    const chipWidth = chipWidths[index];
+    const nextUsedWidth =
+      usedWidth + (visibleCount > 0 ? gap : 0) + chipWidth;
+    const remainingCount = itemCount - index - 1;
+    const requiredWidth =
+      nextUsedWidth + (remainingCount > 0 ? gap + moreWidth : 0);
+
+    if (requiredWidth > containerWidth) break;
+
+    usedWidth = nextUsedWidth;
+    visibleCount += 1;
+  }
+
+  return visibleCount;
+}
+
+function getCombinedWidth(widths, gap) {
+  return widths.reduce((total, width, index) => {
+    return total + width + (index > 0 ? gap : 0);
+  }, 0);
 }
 
 function getActiveFilterItems({
@@ -587,11 +726,9 @@ function getActiveFilterItems({
 
 function ActiveFilterChip({ label, value, onClear }) {
   return (
-    <span className="inline-flex h-8 max-w-full shrink-0 items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 text-xs font-semibold text-indigo-700 dark:border-indigo-900/70 dark:bg-indigo-950/50 dark:text-indigo-300">
+    <span className={ACTIVE_FILTER_CHIP_CLASS}>
       <span className="text-indigo-500 dark:text-indigo-400">{label}</span>
-      <span className="max-w-[4.5rem] truncate sm:max-w-[8rem] lg:max-w-[11rem]">
-        {value}
-      </span>
+      <span className={ACTIVE_FILTER_VALUE_CLASS}>{value}</span>
       <button
         type="button"
         onClick={onClear}
@@ -604,12 +741,25 @@ function ActiveFilterChip({ label, value, onClear }) {
   );
 }
 
-function HiddenFilterCountChip({ count, hiddenLabels }) {
+function MeasuredFilterChip({ label, value }) {
+  return (
+    <span className={ACTIVE_FILTER_CHIP_CLASS} data-filter-chip="true">
+      <span className="text-indigo-500 dark:text-indigo-400">{label}</span>
+      <span className={ACTIVE_FILTER_VALUE_CLASS}>{value}</span>
+      <span className="rounded-full p-0.5 text-indigo-500 dark:text-indigo-300">
+        <RiCloseLine className="h-3.5 w-3.5" />
+      </span>
+    </span>
+  );
+}
+
+function HiddenFilterCountChip({ count, hiddenLabels, isMeasurement = false }) {
   return (
     <span
-      className="inline-flex h-8 shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+      className={HIDDEN_FILTER_COUNT_CHIP_CLASS}
       title={hiddenLabels.join(", ")}
       aria-label={`${count}개 필터 더 있음`}
+      data-filter-more={isMeasurement ? "true" : undefined}
     >
       +{count}
     </span>
