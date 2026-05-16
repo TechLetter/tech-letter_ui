@@ -191,15 +191,10 @@ export default function Trends() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
-      <header className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-950 dark:text-slate-50">
-            트렌드
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            태그가 달린 포스트 흐름을 기간별로 확인합니다.
-          </p>
-        </div>
+      <header className="flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-slate-950 dark:text-slate-50">
+          트렌드
+        </h1>
         {loadingFilters && (
           <span className="text-xs font-semibold text-slate-400">
             태그 목록 갱신 중
@@ -226,7 +221,7 @@ export default function Trends() {
         </p>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <TrendLineChart series={series} loading={loadingSeries} />
         <RisingTagsPanel
           items={risingTags}
