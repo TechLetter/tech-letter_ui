@@ -7,24 +7,24 @@ export default function TrendLineChart({ series = [], loading = false }) {
 
   if (loading) {
     return (
-      <div className="h-[22rem] rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="h-[17rem] self-start rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="h-5 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-        <div className="mt-6 h-64 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/70" />
+        <div className="mt-4 h-44 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/70" />
       </div>
     );
   }
 
   if (chartData.buckets.length === 0) {
     return (
-      <div className="flex h-[22rem] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+      <div className="flex h-[17rem] self-start items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
         표시할 트렌드 데이터가 없습니다.
       </div>
     );
   }
 
   const width = 720;
-  const height = 280;
-  const padding = { top: 28, right: 24, bottom: 44, left: 48 };
+  const height = 220;
+  const padding = { top: 18, right: 24, bottom: 34, left: 48 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const maxValue = Math.max(1, chartData.maxValue);
@@ -39,14 +39,11 @@ export default function TrendLineChart({ series = [], loading = false }) {
   const getY = (value) => padding.top + plotHeight - (plotHeight * value) / maxValue;
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <section className="self-start rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
             태그 언급 추이
-          </p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            태그가 달린 포스트 수 기준
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -68,7 +65,7 @@ export default function TrendLineChart({ series = [], loading = false }) {
       <div className="overflow-hidden">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="h-64 w-full sm:h-72"
+          className="h-52 w-full sm:h-56"
           role="img"
           aria-label="태그별 포스트 수 시계열 차트"
         >
