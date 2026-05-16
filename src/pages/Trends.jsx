@@ -9,9 +9,16 @@ import { useUrlState } from "../hooks/useUrlState";
 
 const MAX_SELECTED_TAGS = 5;
 const TREND_POST_PAGE_SIZE = 8;
+const DEFAULT_TREND_PERIOD = "180d";
+const ALLOWED_TREND_PERIODS = new Set(["30d", "180d", "365d", "3y"]);
 
 export default function Trends() {
-  const [period, setPeriod] = useUrlState("period", "90d");
+  const [period, setPeriod] = useUrlState("period", DEFAULT_TREND_PERIOD, {
+    parse: (value) =>
+      ALLOWED_TREND_PERIODS.has(value) ? value : DEFAULT_TREND_PERIOD,
+    serialize: (value) =>
+      ALLOWED_TREND_PERIODS.has(value) ? value : DEFAULT_TREND_PERIOD,
+  });
   const [interval, setInterval] = useUrlState("interval", "week");
   const [selectedTags, setSelectedTags] = useUrlState("tags", [], {
     parse: (value) => (value ? value.split(",").filter(Boolean) : []),
