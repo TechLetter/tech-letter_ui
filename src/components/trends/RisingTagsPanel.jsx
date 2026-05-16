@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { RiAddLine, RiArrowUpLine, RiCheckLine } from "react-icons/ri";
+
+const COMPACT_VISIBLE_TAG_COUNT = 5;
 
 export default function RisingTagsPanel({
   items = [],
@@ -7,6 +10,12 @@ export default function RisingTagsPanel({
   maxSelectedTags = 5,
   onToggleTag,
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hiddenCompactItemCount = items.filter(
+    (item, index) =>
+      index >= COMPACT_VISIBLE_TAG_COUNT && !selectedTags.includes(item.tag)
+  ).length;
+
   if (loading) {
     return (
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -42,8 +51,12 @@ export default function RisingTagsPanel({
         </p>
       ) : (
         <div className="space-y-2">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const isSelected = selectedTags.includes(item.tag);
+            const isHiddenInCompactMode =
+              !isExpanded &&
+              !isSelected &&
+              index >= COMPACT_VISIBLE_TAG_COUNT;
             const isSelectionLimitReached =
               !isSelected && selectedTags.length >= maxSelectedTags;
             return (
@@ -53,7 +66,7 @@ export default function RisingTagsPanel({
                 onClick={() => onToggleTag(item.tag)}
                 disabled={isSelectionLimitReached}
                 aria-pressed={isSelected}
-                className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left transition-colors ${
+                className={`${isHiddenInCompactMode ? "hidden xl:flex" : "flex"} w-full items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left transition-colors ${
                   isSelected
                     ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/50 dark:text-indigo-300"
                     : isSelectionLimitReached
@@ -88,6 +101,17 @@ export default function RisingTagsPanel({
               </button>
             );
           })}
+
+          {hiddenCompactItemCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded((current) => !current)}
+              aria-expanded={isExpanded}
+              className="flex w-full items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-500 transition-colors hover:border-indigo-200 hover:bg-indigo-50/70 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-indigo-800 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-300 xl:hidden"
+            >
+              {isExpanded ? "접기" : `더보기 ${hiddenCompactItemCount}개`}
+            </button>
+          )}
         </div>
       )}
     </section>
