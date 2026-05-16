@@ -4,7 +4,7 @@ import filtersApi from "../api/filtersApi";
 import HomeFilterSection from "../components/home/HomeFilterSection";
 import HomePostListSection from "../components/home/HomePostListSection";
 import { mergeUniqueByKey } from "../utils/arrayUtils";
-import { useUrlState } from "../hooks/useUrlState";
+import { useUrlParams, useUrlState } from "../hooks/useUrlState";
 
 const PAGE_SIZE = 12;
 
@@ -26,6 +26,26 @@ export default function Home() {
     parse: (v) => (v ? v.split(",") : []),
     serialize: (v) => (Array.isArray(v) && v.length > 0 ? v.join(",") : ""),
   });
+  const { updateParams } = useUrlParams();
+
+  const applyFilters = useCallback(
+    ({ category, blogId, tags }) => {
+      updateParams({
+        category,
+        blog: blogId,
+        tags: Array.isArray(tags) && tags.length > 0 ? tags.join(",") : null,
+      });
+    },
+    [updateParams]
+  );
+
+  const clearFilters = useCallback(() => {
+    updateParams({
+      category: null,
+      blog: null,
+      tags: null,
+    });
+  }, [updateParams]);
 
   const fetchPosts = useCallback(async (pageNum = 1, resetPosts = false) => {
     setLoading(true);
@@ -146,6 +166,8 @@ export default function Home() {
         onChangeCategory={setSelectedCategory}
         onChangeBlog={setSelectedBlogId}
         onChangeTags={setSelectedTags}
+        onApplyFilters={applyFilters}
+        onClearFilters={clearFilters}
       />
       {/* 포스트 그리드 */}
       <HomePostListSection posts={posts} loading={loading} hasMore={hasMore} />
