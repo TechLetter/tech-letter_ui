@@ -154,7 +154,7 @@ export default function HomeFilterSection({
 
   return (
     <section className="relative mb-2 w-full">
-      <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+      <div className="-mx-1 flex items-center gap-2 overflow-hidden px-1 pb-1 md:hidden">
         <button
           type="button"
           onClick={openMobileSheet}
@@ -180,16 +180,19 @@ export default function HomeFilterSection({
               <RiRefreshLine className="h-3.5 w-3.5" />
               초기화
             </button>
-            <ActiveFilterChips
-              selectedCategory={selectedCategory}
-              selectedBlog={selectedBlogDisplay}
-              selectedTags={selectedTags}
-              onClearCategory={() => onChangeCategory("")}
-              onClearBlog={() => onChangeBlog("")}
-              onClearTag={(tagName) =>
-                onChangeTags(selectedTags.filter((tag) => tag !== tagName))
-              }
-            />
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+              <ActiveFilterSummary
+                maxVisibleCount={1}
+                selectedCategory={selectedCategory}
+                selectedBlog={selectedBlogDisplay}
+                selectedTags={selectedTags}
+                onClearCategory={() => onChangeCategory("")}
+                onClearBlog={() => onChangeBlog("")}
+                onClearTag={(tagName) =>
+                  onChangeTags(selectedTags.filter((tag) => tag !== tagName))
+                }
+              />
+            </div>
           </>
         ) : (
           <FilterStateChip label="전체" />
@@ -336,9 +339,10 @@ export default function HomeFilterSection({
           </div>
 
           <div className="relative z-20 shrink-0 border-t border-slate-200 bg-white px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 dark:border-slate-700 dark:bg-slate-900">
-            <div className="mb-3 flex min-h-8 gap-2 overflow-x-auto">
+            <div className="mb-3 flex min-h-8 gap-2 overflow-hidden">
               {draftFilterCount > 0 ? (
-                <ActiveFilterChips
+                <ActiveFilterSummary
+                  maxVisibleCount={2}
                   selectedCategory={draftCategory}
                   selectedBlog={draftBlogDisplay}
                   selectedTags={draftTags}
@@ -417,9 +421,10 @@ function FloatingFilterDock({
 
         <div className="h-6 w-px shrink-0 bg-slate-200 dark:bg-slate-700" />
 
-        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
           {activeFilterCount > 0 ? (
-            <ActiveFilterChips
+            <ActiveFilterSummary
+              maxVisibleCount={1}
               selectedCategory={selectedCategory}
               selectedBlog={selectedBlog}
               selectedTags={selectedTags}
@@ -498,7 +503,8 @@ function SheetTabButton({ tab, isSelected, onClick }) {
   );
 }
 
-function ActiveFilterChips({
+function ActiveFilterSummary({
+  maxVisibleCount,
   selectedCategory,
   selectedBlog,
   selectedTags,
@@ -506,39 +512,86 @@ function ActiveFilterChips({
   onClearBlog,
   onClearTag,
 }) {
+  const items = getActiveFilterItems({
+    selectedCategory,
+    selectedBlog,
+    selectedTags,
+    onClearCategory,
+    onClearBlog,
+    onClearTag,
+  });
+  const visibleCount =
+    typeof maxVisibleCount === "number" ? maxVisibleCount : items.length;
+  const visibleItems = items.slice(0, visibleCount);
+  const hiddenItems = items.slice(visibleCount);
+
   return (
     <>
-      {selectedCategory && (
+      {visibleItems.map((item) => (
         <ActiveFilterChip
-          label="주제"
-          value={selectedCategory}
-          onClear={onClearCategory}
-        />
-      )}
-      {selectedBlog && (
-        <ActiveFilterChip
-          label="출처"
-          value={selectedBlog.name}
-          onClear={onClearBlog}
-        />
-      )}
-      {selectedTags.map((tag) => (
-        <ActiveFilterChip
-          key={tag}
-          label="태그"
-          value={tag}
-          onClear={() => onClearTag(tag)}
+          key={item.key}
+          label={item.label}
+          value={item.value}
+          onClear={item.onClear}
         />
       ))}
+      {hiddenItems.length > 0 && (
+        <HiddenFilterCountChip
+          count={hiddenItems.length}
+          hiddenLabels={hiddenItems.map((item) => `${item.label} ${item.value}`)}
+        />
+      )}
     </>
   );
+}
+
+function getActiveFilterItems({
+  selectedCategory,
+  selectedBlog,
+  selectedTags,
+  onClearCategory,
+  onClearBlog,
+  onClearTag,
+}) {
+  const items = [];
+
+  if (selectedCategory) {
+    items.push({
+      key: "category",
+      label: "주제",
+      value: selectedCategory,
+      onClear: onClearCategory,
+    });
+  }
+
+  if (selectedBlog) {
+    items.push({
+      key: "blog",
+      label: "출처",
+      value: selectedBlog.name,
+      onClear: onClearBlog,
+    });
+  }
+
+  selectedTags.forEach((tag) => {
+    items.push({
+      key: `tag:${tag}`,
+      label: "태그",
+      value: tag,
+      onClear: () => onClearTag(tag),
+    });
+  });
+
+  return items;
 }
 
 function ActiveFilterChip({ label, value, onClear }) {
   return (
     <span className="inline-flex h-8 max-w-full shrink-0 items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 text-xs font-semibold text-indigo-700 dark:border-indigo-900/70 dark:bg-indigo-950/50 dark:text-indigo-300">
       <span className="text-indigo-500 dark:text-indigo-400">{label}</span>
-      <span className="max-w-[11rem] truncate">{value}</span>
+      <span className="max-w-[4.5rem] truncate sm:max-w-[8rem] lg:max-w-[11rem]">
+        {value}
+      </span>
       <button
         type="button"
         onClick={onClear}
@@ -547,6 +600,18 @@ function ActiveFilterChip({ label, value, onClear }) {
       >
         <RiCloseLine className="h-3.5 w-3.5" />
       </button>
+    </span>
+  );
+}
+
+function HiddenFilterCountChip({ count, hiddenLabels }) {
+  return (
+    <span
+      className="inline-flex h-8 shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+      title={hiddenLabels.join(", ")}
+      aria-label={`${count}개 필터 더 있음`}
+    >
+      +{count}
     </span>
   );
 }
