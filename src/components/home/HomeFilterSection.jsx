@@ -33,6 +33,8 @@ export default function HomeFilterSection({
   onChangeCategory,
   onChangeBlog,
   onChangeTags,
+  onApplyFilters,
+  onClearFilters,
 }) {
   const [openDesktopPanel, setOpenDesktopPanel] = useState(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -103,13 +105,17 @@ export default function HomeFilterSection({
   };
 
   const clearAllFilters = () => {
-    onChangeCategory("");
-    onChangeBlog("");
-    onChangeTags([]);
+    onClearFilters();
     setOpenDesktopPanel(null);
     setDesktopCategorySearchText("");
     setDesktopBlogSearchText("");
     setDesktopTagSearchText("");
+    setDraftCategory("");
+    setDraftBlogId("");
+    setDraftTags([]);
+    setMobileCategorySearchText("");
+    setMobileBlogSearchText("");
+    setMobileTagSearchText("");
   };
 
   const openMobileSheet = () => {
@@ -118,19 +124,16 @@ export default function HomeFilterSection({
   };
 
   const applyMobileFilters = () => {
-    onChangeCategory(draftCategory);
-    onChangeBlog(draftBlogId);
-    onChangeTags(draftTags);
+    onApplyFilters({
+      category: draftCategory,
+      blogId: draftBlogId,
+      tags: draftTags,
+    });
     setIsMobileSheetOpen(false);
   };
 
   const clearMobileDraft = () => {
-    setDraftCategory("");
-    setDraftBlogId("");
-    setDraftTags([]);
-    setMobileCategorySearchText("");
-    setMobileBlogSearchText("");
-    setMobileTagSearchText("");
+    clearAllFilters();
   };
 
   const toggleDesktopTag = (tagName) => {
@@ -151,7 +154,7 @@ export default function HomeFilterSection({
 
   return (
     <section className="relative mb-2 w-full">
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+      <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 md:hidden">
         <button
           type="button"
           onClick={openMobileSheet}
@@ -169,6 +172,14 @@ export default function HomeFilterSection({
 
         {activeFilterCount > 0 ? (
           <>
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+            >
+              <RiRefreshLine className="h-3.5 w-3.5" />
+              초기화
+            </button>
             <ActiveFilterChips
               selectedCategory={selectedCategory}
               selectedBlog={selectedBlogDisplay}
@@ -179,14 +190,6 @@ export default function HomeFilterSection({
                 onChangeTags(selectedTags.filter((tag) => tag !== tagName))
               }
             />
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-            >
-              <RiRefreshLine className="h-3.5 w-3.5" />
-              초기화
-            </button>
           </>
         ) : (
           <FilterStateChip label="전체" />
