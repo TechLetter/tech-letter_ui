@@ -1,7 +1,7 @@
 import apiClient from "./client";
 
 const trendsApi = {
-  getRisingTags: ({ period = "90d", limit = 5 } = {}) =>
+  getRisingTags: ({ period = "180d", limit = 5 } = {}) =>
     apiClient.get("/api/v1/trends/rising", {
       params: {
         period,
@@ -9,7 +9,7 @@ const trendsApi = {
       },
     }),
 
-  getSeries: ({ tags = [], period = "90d", interval = "week" } = {}) =>
+  getSeries: ({ tags = [], period = "180d", interval = "week" } = {}) =>
     apiClient.get("/api/v1/trends/series", {
       params: {
         tags,
@@ -18,7 +18,7 @@ const trendsApi = {
       },
     }),
 
-  getPosts: ({ tags = [], period = "90d", page = 1, page_size = 10 } = {}) =>
+  getPosts: ({ tags = [], period = "180d", page = 1, page_size = 10 } = {}) =>
     apiClient.get("/api/v1/trends/posts", {
       params: {
         tags,
