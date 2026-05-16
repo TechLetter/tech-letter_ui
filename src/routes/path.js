@@ -3,6 +3,7 @@ export const PATHS = {
   LOGIN: "/login",
   LOGIN_SUCCESS: "/login/success",
   BOOKMARKS: "/bookmarks",
+  TRENDS: "/trends",
   CHATBOT: "/chatbot",
   ADMIN: "/admin",
   PRIVACY: "/privacy",

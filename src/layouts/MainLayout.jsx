@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { RiRobot2Line } from "react-icons/ri";
+import { RiLineChartLine, RiRobot2Line } from "react-icons/ri";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { PATHS } from "../routes/path";
 import { useAuth } from "../hooks/useAuth";
@@ -58,6 +58,18 @@ export default function MainLayout() {
           </button>
           <div className="flex items-center gap-1.5 sm:gap-3">
             <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => navigate(PATHS.TRENDS)}
+              className="group focus:outline-none"
+            >
+              <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors group-hover:border-indigo-200 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:group-hover:border-indigo-800 dark:group-hover:bg-indigo-950/40 dark:group-hover:text-indigo-300">
+                <RiLineChartLine className="text-lg" />
+                <span className="hidden sm:inline text-sm font-bold">
+                  트렌드
+                </span>
+              </div>
+            </button>
             <button
               onClick={() => {
                 if (!isAuthenticatedUser) {
