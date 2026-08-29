@@ -103,7 +103,8 @@ export default function Trends() {
           interval,
         });
         if (ignore) return;
-        setSeries(response?.data?.series || []);
+        // v2 는 `series` 대신 `items` 를 쓴다(04 §3.7).
+        setSeries(response?.data?.items || []);
       } catch (error) {
         console.log("Failed to fetch trend series:", error);
         if (!ignore) {
@@ -140,7 +141,7 @@ export default function Trends() {
           page_size: TREND_POST_PAGE_SIZE,
         });
         if (ignore) return;
-        setPosts(response?.data?.data || []);
+        setPosts(response?.data?.items || []);
       } catch (error) {
         console.log("Failed to fetch trend posts:", error);
         if (!ignore) {

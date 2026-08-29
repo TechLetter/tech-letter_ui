@@ -27,7 +27,7 @@ export default function UsersTab() {
     try {
       const data = await getUsers({ page, page_size: pageSize });
       setUsers(data.items || []);
-      setTotalPages(Math.ceil((data.total || 0) / pageSize));
+      setTotalPages(data.total_pages || 0);
     } catch (error) {
       showToast(handleAdminError(error), "error");
     } finally {
@@ -49,7 +49,7 @@ export default function UsersTab() {
       try {
         await grantCredit(selectedUser.user_code, {
           amount,
-          expired_at: expiresAt,
+          expires_at: expiresAt,
         });
         showToast(
           `${selectedUser.name}에게 크레딧 ${amount}개를 지급했습니다.`,
@@ -82,7 +82,7 @@ export default function UsersTab() {
       render: (credits) => (
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-medium">
           <RiCoinLine />
-          {credits ?? 0}
+          {credits?.remaining ?? 0}
         </span>
       ),
     },

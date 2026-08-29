@@ -57,16 +57,15 @@ export default function Home() {
         blog_id: selectedBlogId,
         tags: selectedTags,
       });
-      const data = res.data;
+      const { items, page: current, total_pages } = res.data;
 
-      if (data.data.length < PAGE_SIZE) setHasMore(false);
+      // 서버가 총 페이지 수를 준다. `items.length < PAGE_SIZE` 로 추론하지
+      // 않는다 — 마지막 페이지가 정확히 꽉 찬 경우를 틀리게 판단했다.
+      setHasMore(current < total_pages);
 
-      setPosts((prevPosts) => {
-        if (resetPosts) {
-          return mergeUniqueByKey([], data.data, "id");
-        }
-        return mergeUniqueByKey(prevPosts, data.data, "id");
-      });
+      setPosts((prevPosts) =>
+        mergeUniqueByKey(resetPosts ? [] : prevPosts, items, "id")
+      );
     } catch (err) {
       console.log(err);
     } finally {

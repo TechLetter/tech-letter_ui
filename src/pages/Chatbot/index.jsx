@@ -2,26 +2,25 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { PATHS } from "../../routes/path";
-import chatbotApi from "../../api/chatbotApi";
+import chatApi, { chatErrorMessage } from "../../api/chatApi";
+import { ErrorCode } from "../../api/apiError";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
 import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
 import { RiAddLine, RiMenuLine } from "react-icons/ri";
 
-const buildMessageFromSession = (sessionId, msg, idx) => {
-  const metadata = msg.metadata || {};
-  return {
-    id: `${sessionId}-${idx}`,
-    role: msg.role,
-    content: msg.content,
-    createdAt: msg.created_at,
-    sources: metadata.sources || [],
-    agent: metadata.agent || null,
-    guard: metadata.guard || null,
-    memory: metadata.memory || null,
-  };
-};
+// v2 는 메시지 메타데이터를 `metadata` 중첩이 아니라 평탄화해서 준다(04 §3.5).
+const buildMessageFromSession = (sessionId, msg, idx) => ({
+  id: `${sessionId}-${idx}`,
+  role: msg.role,
+  content: msg.content,
+  createdAt: msg.created_at,
+  sources: msg.sources || [],
+  agent: msg.agent || null,
+  guard: msg.guard || null,
+  memory: msg.memory || null,
+});
 
 const mergeActivity = (activities = [], nextActivity) => {
   const nextActivities = [...activities];
@@ -85,7 +84,7 @@ export default function Chatbot() {
 
     const loadSuggestedQuestions = async () => {
       try {
-        const questions = await chatbotApi.getSuggestedQuestions();
+        const questions = await chatApi.getSuggestedQuestions();
         setSuggestedQuestions(
           (questions || [])
             .filter((question) => question?.text)
@@ -131,7 +130,7 @@ export default function Chatbot() {
       setIsLoadingSession(true);
 
       try {
-        const session = await chatbotApi.getSessionDetail(sessionId);
+        const session = await chatApi.getSessionDetail(sessionId);
         const formattedMessages = (session.messages || []).map((msg, idx) =>
           buildMessageFromSession(sessionId, msg, idx)
         );
@@ -149,7 +148,7 @@ export default function Chatbot() {
         setMessages(formattedMessages);
       } catch (err) {
         console.error("세션 로드 실패:", err);
-        setError(err);
+        setError(new Error(chatErrorMessage(err)));
       } finally {
         setIsLoadingSession(false);
       }
@@ -194,7 +193,7 @@ export default function Chatbot() {
 
     // 빈 세션이 없으면 새로 생성
     try {
-      const newSession = await chatbotApi.createSession();
+      const newSession = await chatApi.createSession();
       setSessions((prev) => [{ ...newSession, isEmptySession: true }, ...prev]);
       setCurrentSessionId(newSession.id);
       setMessages([]);
@@ -244,7 +243,7 @@ export default function Chatbot() {
       let sessionId = currentSessionId;
       if (!sessionId) {
         try {
-          const newSession = await chatbotApi.createSession();
+          const newSession = await chatApi.createSession();
           setSessions((prev) => [
             { ...newSession, isEmptySession: true },
             ...prev,
@@ -285,7 +284,7 @@ export default function Chatbot() {
       setMessages((prev) => [...prev, streamingBotMsg]);
 
       try {
-        const data = await chatbotApi.streamChatRequest(query, sessionId, {
+        const data = await chatApi.streamChatRequest(query, sessionId, {
           onActivity: (activity) => {
             setMessages((prev) =>
               prev.map((message) =>
@@ -321,8 +320,8 @@ export default function Chatbot() {
           prev.map((message) => (message.id === botMessageId ? botMsg : message))
         );
 
-        if (data.remaining_credits !== undefined) {
-          updateCredits(data.remaining_credits);
+        if (data.credits) {
+          updateCredits(data.credits);
         }
 
         setSessions((prev) =>
@@ -339,7 +338,7 @@ export default function Chatbot() {
       } catch (err) {
         console.error("Chatbot Error:", err);
 
-        if (err.status === 401) {
+        if (err.code === ErrorCode.AUTH_REQUIRED || err.code === ErrorCode.AUTH_INVALID_TOKEN) {
           setMessages((prev) =>
             prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
           );
@@ -347,7 +346,7 @@ export default function Chatbot() {
           return;
         }
 
-        if (err.code === "insufficient_credits" || err.status === 402) {
+        if (err.code === ErrorCode.CREDIT_INSUFFICIENT) {
           setShowCreditsModal(true);
           setMessages((prev) =>
             prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
@@ -355,7 +354,7 @@ export default function Chatbot() {
           return;
         }
 
-        if (err.code === "policy_blocked") {
+        if (err.code === ErrorCode.POLICY_BLOCKED) {
           setInputValue(query);
           setMessages((prev) =>
             prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
@@ -364,7 +363,7 @@ export default function Chatbot() {
           setMessages((prev) => prev.filter((m) => m.id !== botMessageId));
         }
 
-        setError(err);
+        setError(new Error(chatErrorMessage(err)));
       } finally {
         setIsLoading(false);
       }
@@ -397,7 +396,7 @@ export default function Chatbot() {
         onNewChat={handleNewChat}
         onDeleteSession={handleDeleteSession}
         onSessionsLoaded={handleSessionsLoaded}
-        credits={user?.credits}
+        credits={user?.credits?.remaining}
         isOpen={isSidebarOpen}
         onToggle={setIsSidebarOpen}
         isMobileOpen={isMobileSidebarOpen}
@@ -424,9 +423,9 @@ export default function Chatbot() {
             <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
               {currentSession?.title || "AI 챗봇"}
             </div>
-            {user?.credits !== undefined && (
+            {user?.credits && (
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                남은 크레딧 {user.credits}
+                남은 크레딧 {user.credits.remaining}
               </div>
             )}
           </div>

@@ -1,7 +1,9 @@
 import PropTypes from "prop-types";
 import {
-  RiFileTextLine,
   RiBookOpenLine,
+  RiCpuLine,
+  RiFileTextLine,
+  RiPulseLine,
   RiQuestionAnswerLine,
   RiUserLine,
 } from "react-icons/ri";
@@ -14,6 +16,9 @@ const TABS = [
   { id: "blogs", label: "블로그", icon: RiBookOpenLine },
   { id: "users", label: "사용자", icon: RiUserLine },
   { id: "suggestedQuestions", label: "추천 질문", icon: RiQuestionAnswerLine },
+  // 운영 대시보드 (04 §6, D20)
+  { id: "ops", label: "운영", icon: RiPulseLine },
+  { id: "llm", label: "모델", icon: RiCpuLine },
 ];
 
 export default function AdminTabs({ activeTab, onTabChange }) {
@@ -43,11 +48,6 @@ export default function AdminTabs({ activeTab, onTabChange }) {
 }
 
 AdminTabs.propTypes = {
-  activeTab: PropTypes.oneOf([
-    "posts",
-    "blogs",
-    "users",
-    "suggestedQuestions",
-  ]).isRequired,
+  activeTab: PropTypes.oneOf(TABS.map((tab) => tab.id)).isRequired,
   onTabChange: PropTypes.func.isRequired,
 };
