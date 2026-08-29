@@ -40,7 +40,10 @@ export default function PostCard({
   };
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:border-indigo-300/80 dark:hover:border-indigo-500/50 hover:shadow-md">
+    <div
+      data-testid="post-card"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:border-indigo-300/80 dark:hover:border-indigo-500/50 hover:shadow-md"
+    >
       {/* 썸네일 이미지 */}
       <div className="relative h-32 sm:h-40 md:h-40 overflow-hidden">
         {postThumbnailUrl ? (

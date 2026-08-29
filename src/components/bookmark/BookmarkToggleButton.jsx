@@ -49,6 +49,9 @@ export default function BookmarkToggleButton({
   return (
     <button
       type="button"
+      data-testid="bookmark-toggle"
+      aria-pressed={isBookmarked}
+      aria-label={isBookmarked ? "북마크 해제" : "북마크 추가"}
       onClick={handleToggleBookmark}
       disabled={loading}
       className={`flex items-center justify-center rounded-full p-1.5 transition-colors ${
