@@ -4,6 +4,8 @@ import PostsTab from "./components/PostsTab";
 import BlogsTab from "./components/BlogsTab";
 import UsersTab from "./components/UsersTab";
 import SuggestedQuestionsTab from "./components/SuggestedQuestionsTab";
+import OpsTab from "./components/OpsTab";
+import LlmModelsTab from "./components/LlmModelsTab";
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("posts");
@@ -18,6 +20,10 @@ export default function Admin() {
         return <UsersTab />;
       case "suggestedQuestions":
         return <SuggestedQuestionsTab />;
+      case "ops":
+        return <OpsTab />;
+      case "llm":
+        return <LlmModelsTab />;
       default:
         return <PostsTab />;
     }

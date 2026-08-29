@@ -6,7 +6,7 @@ import {
   RiMenuLine,
   RiCloseLine,
 } from "react-icons/ri";
-import chatbotApi from "../../../api/chatbotApi";
+import chatApi from "../../../api/chatApi";
 import CreditsBadge from "../../../components/chatbot/CreditsBadge";
 
 /**
@@ -35,7 +35,7 @@ export default function SessionSidebar({
     const loadSessions = async () => {
       setIsLoading(true);
       try {
-        const data = await chatbotApi.getSessionList();
+        const data = await chatApi.getSessionList();
         onSessionsLoaded(data.items || []);
       } catch (error) {
         console.error("세션 목록 로드 실패:", error);
@@ -52,7 +52,7 @@ export default function SessionSidebar({
 
     setDeletingId(sessionId);
     try {
-      await chatbotApi.deleteSession(sessionId);
+      await chatApi.deleteSession(sessionId);
       onDeleteSession(sessionId);
     } catch (error) {
       console.error("세션 삭제 실패:", error);

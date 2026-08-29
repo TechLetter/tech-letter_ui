@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import authApi from "../api/authApi";
+import { onSessionExpired } from "../api/client";
 import {
   getAccessToken,
   setAccessToken,
@@ -64,9 +65,20 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  // 크레딧 잔액 로컬 업데이트 (채팅 응답 후 사용)
-  const updateCredits = useCallback((newCredits) => {
-    setUser((prev) => (prev ? { ...prev, credits: newCredits } : prev));
+  // 어떤 요청에서든 401 이 나면 로그인 상태를 비운다. 만료된 토큰으로
+  // 화면만 로그인된 것처럼 보이던 상태를 없앤다.
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        setUser(null);
+        setError("세션이 만료되었어요. 다시 로그인해 주세요.");
+      }),
+    []
+  );
+
+  /** 채팅 응답의 `credits` 객체를 그대로 반영한다(04 §3.6). */
+  const updateCredits = useCallback((credits) => {
+    setUser((prev) => (prev ? { ...prev, credits } : prev));
   }, []);
 
   const isAdmin = user?.role === "admin";

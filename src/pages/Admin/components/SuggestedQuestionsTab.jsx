@@ -10,11 +10,11 @@ import {
 import Badge from "../../../components/common/Badge";
 import Table from "../../../components/common/Table";
 import {
-  createChatbotSuggestedQuestion,
-  deleteChatbotSuggestedQuestion,
-  getChatbotSuggestedQuestions,
+  createSuggestedQuestion,
+  deleteSuggestedQuestion,
+  getSuggestedQuestions,
   handleAdminError,
-  updateChatbotSuggestedQuestion,
+  updateSuggestedQuestion,
 } from "../../../api/adminApi";
 import { showToast } from "../../../provider/toastModalBridge";
 import { formatKSTDateTime } from "../../../utils/timeutils";
@@ -40,12 +40,12 @@ export default function SuggestedQuestionsTab() {
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getChatbotSuggestedQuestions();
-      setQuestions(data || []);
+      const { items = [] } = await getSuggestedQuestions();
+      setQuestions(items);
       if (!editingId) {
         setDraft(createEmptyDraft(
-          data?.length
-            ? Math.max(...data.map((question) => question.sort_order || 0)) + 10
+          items.length
+            ? Math.max(...items.map((question) => question.sort_order || 0)) + 10
             : 10
         ));
       }
@@ -90,10 +90,10 @@ export default function SuggestedQuestionsTab() {
         is_active: Boolean(draft.is_active),
       };
       if (editingId) {
-        await updateChatbotSuggestedQuestion(editingId, payload);
+        await updateSuggestedQuestion(editingId, payload);
         showToast("추천 질문이 수정되었습니다.", "success");
       } else {
-        await createChatbotSuggestedQuestion(payload);
+        await createSuggestedQuestion(payload);
         showToast("추천 질문이 추가되었습니다.", "success");
       }
       resetDraft();
@@ -111,7 +111,7 @@ export default function SuggestedQuestionsTab() {
     }
     setSubmitting(true);
     try {
-      await deleteChatbotSuggestedQuestion(question.id);
+      await deleteSuggestedQuestion(question.id);
       showToast("추천 질문이 삭제되었습니다.", "success");
       if (editingId === question.id) {
         resetDraft();

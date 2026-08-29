@@ -35,7 +35,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
     setBlogsLoading(true);
     try {
       const data = await getBlogs({ page: 1, page_size: 100 });
-      setBlogs(data.data || []);
+      setBlogs(data.items || []);
     } catch (error) {
       showToast(handleAdminError(error), "error");
     } finally {

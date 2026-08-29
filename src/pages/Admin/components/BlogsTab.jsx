@@ -43,8 +43,8 @@ export default function BlogsTab() {
     setLoading(true);
     try {
       const data = await getBlogs({ page, page_size: pageSize });
-      setBlogs(data.data || []);
-      setTotalPages(Math.ceil((data.total || 0) / pageSize));
+      setBlogs(data.items || []);
+      setTotalPages(data.total_pages || 0);
       setTotalCount(data.total || 0);
     } catch (error) {
       showToast(handleAdminError(error), "error");

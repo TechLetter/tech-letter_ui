@@ -33,13 +33,8 @@ export default function Bookmarks() {
           page,
           page_size: PAGE_SIZE,
         });
-        const data = response.data;
-        const items = data?.data || [];
-
-        if (items.length < PAGE_SIZE) {
-          setHasMore(false);
-        }
-
+        const { items = [], page: current, total_pages } = response.data;
+        setHasMore(current < total_pages);
         setPosts((prev) => mergeUniqueByKey(prev, items, "id"));
       } catch (error) {
         console.error("Failed to load bookmarks", error);

@@ -72,7 +72,7 @@ export default function PostsTab() {
     const loadBlogs = async () => {
       try {
         const data = await getBlogs({ page: 1, page_size: 100 });
-        setBlogs(data.data || []);
+        setBlogs(data.items || []);
       } catch {
         // 블로그 로드 실패 시 무시 (필터만 비활성화됨)
       }
@@ -87,12 +87,13 @@ export default function PostsTab() {
       const data = await getPosts({
         page,
         page_size: pageSize,
-        status_ai_summarized: filterSummarized,
-        status_embedded: filterEmbedded,
+        summarized: filterSummarized,
+        embedded: filterEmbedded,
         blog_id: filterBlogId || undefined,
       });
-      setPosts(data.data || []);
-      setTotalPages(Math.ceil((data.total || 0) / pageSize));
+      setPosts(data.items || []);
+      // 서버가 총 페이지 수를 계산해 준다(04 §1.2).
+      setTotalPages(data.total_pages || 0);
       setTotalCount(data.total || 0);
     } catch (error) {
       showToast(handleAdminError(error), "error");
@@ -189,16 +190,16 @@ export default function PostsTab() {
       width: "250px",
       render: (status, row) => (
         <div className="flex flex-col gap-1.5">
-          <Badge variant={status?.ai_summarized ? "success" : "warning"}>
-            {status?.ai_summarized ? (
-              <span>요약 완료 {row.aisummary.model_name}</span>
+          <Badge variant={status?.summarized ? "success" : "warning"}>
+            {status?.summarized ? (
+              <span>요약 완료 {row.ai_summary?.model_name || ""}</span>
             ) : (
-              "요약 대기"
+              status?.failed_reason || "요약 대기"
             )}
           </Badge>
           <Badge variant={status?.embedded ? "success" : "warning"}>
             {status?.embedded ? (
-              <span>임베딩 완료 {row.embedding.model_name}</span>
+              <span>임베딩 완료 {row.embedding?.model_name || ""}</span>
             ) : (
               "임베딩 대기"
             )}
@@ -213,8 +214,8 @@ export default function PostsTab() {
       render: (_, row) => (
         <div className="text-xs text-slate-500 space-y-0.5 dark:text-slate-400">
           <div>생성: {formatKSTDateTime(row.created_at)}</div>
-          {row.aisummary?.generated_at && (
-            <div>요약: {formatKSTDateTime(row.aisummary.generated_at)}</div>
+          {row.ai_summary?.generated_at && (
+            <div>요약: {formatKSTDateTime(row.ai_summary.generated_at)}</div>
           )}
           {row.embedding?.embedded_at && (
             <div>임베딩: {formatKSTDateTime(row.embedding.embedded_at)}</div>
