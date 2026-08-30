@@ -171,6 +171,7 @@ export default function SuggestedQuestionsTab() {
       label: "작업",
       width: "120px",
       align: "right",
+      sticky: "right",
       render: (_, row) => (
         <div className="flex justify-end gap-1">
           <button

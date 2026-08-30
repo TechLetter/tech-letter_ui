@@ -155,6 +155,7 @@ export default function OpsTab() {
       label: "",
       width: "120px",
       align: "right",
+      sticky: "right",
       render: (_, row) => (
         <div className="flex justify-end gap-1">
           {row.status === "dead" && (

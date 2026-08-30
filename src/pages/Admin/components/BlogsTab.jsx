@@ -218,6 +218,7 @@ export default function BlogsTab() {
       label: "작업",
       width: "120px",
       align: "right",
+      sticky: "right",
       render: (_, row) => {
         const isLoading = actionLoadingId === row.id;
         return (

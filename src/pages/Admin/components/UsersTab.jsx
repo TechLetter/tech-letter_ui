@@ -94,7 +94,16 @@ export default function UsersTab() {
         <span className="text-slate-600 dark:text-slate-300">{email}</span>
       ),
     },
-    { key: "user_code", label: "사용자코드" },
+    {
+      key: "user_code",
+      label: "사용자코드",
+      width: "180px",
+      render: (userCode) => (
+        <code className="block max-w-[160px] truncate rounded bg-slate-100 px-2 py-1 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+          {userCode}
+        </code>
+      ),
+    },
     {
       key: "role",
       label: "역할",
@@ -131,6 +140,7 @@ export default function UsersTab() {
       label: "액션",
       width: "100px",
       align: "center",
+      sticky: "right",
       render: (_, user) => (
         <button
           onClick={() => handleGrantCredit(user)}

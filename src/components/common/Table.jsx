@@ -4,12 +4,22 @@ import PropTypes from "prop-types";
  * 재사용 가능한 테이블 컴포넌트
  * HTML table 대신 div 기반으로 구현
  *
- * @param {Array} columns - 컬럼 정의 배열 [{ key, label, render?, width?, align? }]
+ * @param {Array} columns - 컬럼 정의 배열 [{ key, label, render?, width?, align?, sticky? }]
+ *   sticky: "right" 를 주면 가로 스크롤 중에도 그 컬럼을 오른쪽에 고정한다(작업 버튼용).
  * @param {Array} data - 데이터 배열
  * @param {boolean} loading - 로딩 상태
  * @param {string} emptyMessage - 데이터 없을 때 메시지
  * @param {function} onRowClick - 행 클릭 핸들러 (optional)
  */
+// 가로 스크롤 중에도 오른쪽에 고정해 둘 컬럼(보통 "작업" 버튼)의 배경·경계선·그림자.
+// sticky 엘리먼트는 스크롤되는 형제 위에 겹쳐 그려지므로 배경이 없으면 뒤 컬럼이 비친다.
+// 그림자는 늘 떠 있다 — "이 아래로 스크롤할 내용이 더 있다"는 신호라, 스크롤을
+// 끝까지 안 해 본 좁은 화면에서 컬럼이 그냥 잘려 보이는 걸 막아 준다.
+const stickyRightClass = (col, bgClass) =>
+  col.sticky === "right"
+    ? `sticky right-0 z-10 ${bgClass} border-l border-slate-200 dark:border-slate-700 shadow-[-6px_0_8px_-4px_rgba(0,0,0,0.15)] dark:shadow-[-6px_0_8px_-4px_rgba(0,0,0,0.5)]`
+    : "";
+
 export default function Table({
   columns,
   data,
@@ -20,9 +30,9 @@ export default function Table({
   // 로딩 스켈레톤
   if (loading) {
     return (
-      <div className="w-full">
+      <div className="w-full overflow-x-auto">
         {/* 헤더 스켈레톤 */}
-        <div className="flex items-center gap-4 px-4 py-3 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex items-center gap-4 px-4 py-3 border-b border-slate-200 bg-slate-50 min-w-fit dark:border-slate-700 dark:bg-slate-800">
           {columns.map((col) => (
             <div
               key={col.key}
@@ -40,7 +50,7 @@ export default function Table({
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="flex items-center gap-4 px-4 py-4 border-b border-slate-100 dark:border-slate-800"
+            className="flex items-center gap-4 px-4 py-4 border-b border-slate-100 min-w-fit dark:border-slate-800"
           >
             {columns.map((col) => (
               <div
@@ -82,7 +92,7 @@ export default function Table({
                 : col.align === "right"
                 ? "text-right"
                 : "text-left"
-            } ${col.className || ""}`}
+            } ${stickyRightClass(col, "bg-slate-50 dark:bg-slate-800")} ${col.className || ""}`}
             style={{ width: col.width || "auto", flex: col.width ? "none" : 1 }}
           >
             {col.label}
@@ -110,7 +120,7 @@ export default function Table({
                   : col.align === "right"
                   ? "text-right"
                   : "text-left"
-              } ${col.className || ""}`}
+              } ${stickyRightClass(col, "bg-white dark:bg-slate-800")} ${col.className || ""}`}
               style={{
                 width: col.width || "auto",
                 flex: col.width ? "none" : 1,
@@ -134,6 +144,7 @@ Table.propTypes = {
       width: PropTypes.string,
       align: PropTypes.oneOf(["left", "center", "right"]),
       className: PropTypes.string,
+      sticky: PropTypes.oneOf(["right"]),
     })
   ).isRequired,
   data: PropTypes.array,

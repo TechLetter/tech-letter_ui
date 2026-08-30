@@ -154,16 +154,6 @@ export default function PostsTab() {
   // 테이블 컬럼 정의
   const columns = [
     {
-      key: "id",
-      label: "ID",
-      width: "180px",
-      render: (id) => (
-        <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded truncate block max-w-[160px] dark:bg-slate-800 dark:text-slate-400">
-          {id}
-        </code>
-      ),
-    },
-    {
       key: "title",
       label: "제목",
       width: "300px",
@@ -223,12 +213,22 @@ export default function PostsTab() {
         </div>
       ),
     },
-
+    {
+      key: "id",
+      label: "ID",
+      width: "180px",
+      render: (id) => (
+        <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded truncate block max-w-[160px] dark:bg-slate-800 dark:text-slate-400">
+          {id}
+        </code>
+      ),
+    },
     {
       key: "actions",
       label: "",
       width: "140px",
       align: "right",
+      sticky: "right",
       render: (_, row) => {
         const isThisRowLoading = actionLoading?.id === row.id;
         return (
