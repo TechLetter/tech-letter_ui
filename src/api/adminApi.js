@@ -2,11 +2,11 @@ import client from "./client";
 import { ApiError, ErrorCode } from "./apiError";
 
 /**
- * 어드민 API (04 §4.4).
+ * 어드민 API.
  *
  * 모든 응답이 `{items, page, page_size, total, total_pages}` 또는
  * `{items, total}` 이다. 409 는 `details.field` 로 어떤 필드가 겹쳤는지
- * 알려준다 — 현행처럼 메시지를 문자열 매칭하지 않는다.
+ * 알려준다.
  */
 
 const ADMIN_BASE = "/api/v1/admin";
@@ -52,7 +52,6 @@ export async function getUsers({ page = 1, page_size = 20 } = {}) {
  * 크레딧 지급.
  *
  * `user_code` 는 `google:<uuid>` 라 경로에 넣기 전에 인코딩해야 한다.
- * 현행은 인코딩 없이 넣어 `:` 가 그대로 나갔다.
  */
 export const grantCredit = (userCode, { amount, expires_at }) =>
   client
@@ -73,7 +72,7 @@ export const updateSuggestedQuestion = (id, data) =>
 export const deleteSuggestedQuestion = (id) =>
   client.delete(`${ADMIN_BASE}/suggested-questions/${id}`).then(unwrap);
 
-// ── Ops: 잡 큐 (신설, 04 §4.4) ──────────────────────────────────
+// ── Ops: 잡 큐 ──────────────────────────────────────────────────
 export const getJobs = ({ page = 1, page_size = 50, status, type } = {}) =>
   client
     .get(`${ADMIN_BASE}/jobs`, {

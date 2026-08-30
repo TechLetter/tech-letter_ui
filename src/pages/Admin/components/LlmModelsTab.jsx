@@ -7,10 +7,9 @@ import { getLlmModels, handleAdminError } from "../../../api/adminApi";
 import { formatKSTDateTime } from "../../../utils/timeutils";
 
 /**
- * 모델 탭 (04 §6, D20).
+ * 모델 탭.
  *
- * "어떤 무료 모델이 실제로 쓸 만한가"를 본다. 챗봇이 사라진 모델을 가리킨 채
- * 방치되던 상황(ISSUE-021)을 눈에 보이게 만드는 것이 목적이다.
+ * 어떤 무료 모델이 실제로 쓸 만한지 성공률·헬스로 보여준다.
  */
 
 const PURPOSES = [
@@ -149,10 +148,6 @@ export default function LlmModelsTab() {
         >
           <RiRefreshLine /> 새로고침
         </button>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          성공률이 낮은 모델부터 보여 준다. 선호 목록은 `SUMMARY_MODEL_PREFERENCE` ·
-          `CHAT_MODEL_PREFERENCE` 로 바꾼다.
-        </p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">

@@ -92,7 +92,7 @@ export default function PostsTab() {
         blog_id: filterBlogId || undefined,
       });
       setPosts(data.items || []);
-      // 서버가 총 페이지 수를 계산해 준다(04 §1.2).
+      // 서버가 총 페이지 수를 계산해 준다.
       setTotalPages(data.total_pages || 0);
       setTotalCount(data.total || 0);
     } catch (error) {

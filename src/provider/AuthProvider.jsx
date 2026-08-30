@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
     []
   );
 
-  /** 채팅 응답의 `credits` 객체를 그대로 반영한다(04 §3.6). */
+  /** 채팅 응답의 `credits` 객체를 그대로 반영한다. */
   const updateCredits = useCallback((credits) => {
     setUser((prev) => (prev ? { ...prev, credits } : prev));
   }, []);

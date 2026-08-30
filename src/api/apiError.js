@@ -1,12 +1,12 @@
 /**
  * API 에러 정규화.
  *
- * v2 에러 봉투는 한 가지다 — `{"error": {code, message, details?}}`.
- * 프론트는 **`code` 만 보고 분기**한다. 현행처럼 메시지 문자열을 부분
- * 매칭하면 서버 문구가 바뀔 때 조용히 깨진다.
+ * 에러 봉투는 한 가지다 — `{"error": {code, message, details?}}`.
+ * 프론트는 **`code` 만 보고 분기**한다. 메시지 문자열을 부분 매칭하면
+ * 서버 문구가 바뀔 때 조용히 깨진다.
  */
 
-/** 04 §1.4 에러 코드 카탈로그. */
+/** 에러 코드 카탈로그. */
 export const ErrorCode = {
   REQUEST_INVALID: "request.invalid",
   AUTH_REQUIRED: "auth.required",

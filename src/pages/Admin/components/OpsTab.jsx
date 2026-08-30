@@ -21,10 +21,9 @@ import {
 import { formatKSTDateTime } from "../../../utils/timeutils";
 
 /**
- * 운영 탭 (04 §6, D20).
+ * 운영 탭.
  *
- * Kafka 시절에는 큐 상태를 보려면 서버에 접속해 CLI 를 쳐야 했고 DLQ 에는
- * 소비자가 아예 없었다(ISSUE-002). 실패한 잡을 여기서 보고 되살린다.
+ * 실패한 잡을 여기서 보고 되살린다.
  */
 
 const STATUS_VARIANT = {

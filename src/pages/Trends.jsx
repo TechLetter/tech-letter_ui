@@ -103,7 +103,7 @@ export default function Trends() {
           interval,
         });
         if (ignore) return;
-        // v2 는 `series` 대신 `items` 를 쓴다(04 §3.7).
+        // 응답은 `items` 키를 쓴다.
         setSeries(response?.data?.items || []);
       } catch (error) {
         console.log("Failed to fetch trend series:", error);

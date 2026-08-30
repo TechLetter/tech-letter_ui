@@ -3,12 +3,10 @@ import { ApiError, ErrorCode, fromEnvelope } from "./apiError";
 import { getAccessToken } from "../utils/authToken";
 
 /**
- * 채팅 API (04 §4.3, §5).
+ * 채팅 API.
  *
- * 경로가 `/chatbot/*` 에서 `/chat/*` 로 옮겨졌고, 응답은 `ChatAnswer` 다 —
- * `credits` 가 객체이고 `session_id`·`message_id` 가 들어 있다.
- *
- * SSE 프레이밍은 그대로다. 파서를 고칠 필요가 없다.
+ * 응답은 `ChatAnswer` 다 — `credits` 가 객체이고 `session_id`·`message_id` 가
+ * 들어 있다.
  */
 
 const chatApi = {
@@ -57,7 +55,7 @@ const chatApi = {
       signal: options.signal,
     });
 
-    // 가드·세션·크레딧 실패는 스트림이 아니라 JSON 에러로 온다(04 §5).
+    // 가드·세션·크레딧 실패는 스트림이 아니라 JSON 에러로 온다.
     if (!response.ok) {
       throw fromEnvelope(await readJson(response), response.status);
     }

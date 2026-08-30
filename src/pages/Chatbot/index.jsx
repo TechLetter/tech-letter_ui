@@ -10,7 +10,7 @@ import SessionSidebar from "./components/SessionSidebar";
 import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
 import { RiAddLine, RiMenuLine } from "react-icons/ri";
 
-// v2 는 메시지 메타데이터를 `metadata` 중첩이 아니라 평탄화해서 준다(04 §3.5).
+// 메시지 메타데이터는 `metadata` 로 중첩되지 않고 평탄화되어 온다.
 const buildMessageFromSession = (sessionId, msg, idx) => ({
   id: `${sessionId}-${idx}`,
   role: msg.role,

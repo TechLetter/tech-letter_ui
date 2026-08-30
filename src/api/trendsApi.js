@@ -1,6 +1,6 @@
 import apiClient from "./client";
 
-/** `series` 키가 `items` 로 바뀌었다(04 §3.7). 나머지 구조는 그대로다. */
+/** 응답의 시리즈 데이터는 `items` 키에 담겨 온다. */
 const trendsApi = {
   getRisingTags: ({ period = "180d", limit = 5 } = {}) =>
     apiClient.get("/api/v1/trends/rising", { params: { period, limit } }),
