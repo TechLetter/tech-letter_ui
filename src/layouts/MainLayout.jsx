@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { RiLineChartLine, RiRobot2Line } from "react-icons/ri";
+import { RiCpuLine, RiLineChartLine, RiRobot2Line } from "react-icons/ri";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { PATHS } from "../routes/path";
 import { useAuth } from "../hooks/useAuth";
@@ -133,6 +133,16 @@ export default function MainLayout() {
               {infoOpen && (
                 <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 focus:outline-none z-50 p-1">
                   <div className="space-y-0.5">
+                    <button
+                      onClick={() => {
+                        navigate(PATHS.MODEL_STATUS);
+                        setInfoOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                      <RiCpuLine className="text-base text-slate-400" />
+                      AI 모델 현황
+                    </button>
                     <button
                       onClick={() => {
                         navigate(PATHS.PRIVACY);

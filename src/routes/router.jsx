@@ -8,6 +8,7 @@ const Login = lazy(() => import("../pages/Login"));
 const LoginSuccess = lazy(() => import("../pages/LoginSuccess"));
 const Bookmarks = lazy(() => import("../pages/Bookmarks"));
 const Trends = lazy(() => import("../pages/Trends"));
+const ModelStatus = lazy(() => import("../pages/ModelStatus"));
 const Chatbot = lazy(() => import("../pages/Chatbot"));
 const Admin = lazy(() => import("../pages/Admin"));
 const PrivacyPolicy = lazy(() => import("../pages/PrivacyPolicy"));
@@ -18,6 +19,7 @@ export const ROUTES = [
   { path: PATHS.LOGIN_SUCCESS, element: <LoginSuccess /> },
   { path: PATHS.BOOKMARKS, element: <Bookmarks /> },
   { path: PATHS.TRENDS, element: <Trends /> },
+  { path: PATHS.MODEL_STATUS, element: <ModelStatus /> },
   { path: PATHS.CHATBOT, element: <Chatbot /> },
   {
     path: PATHS.ADMIN,
