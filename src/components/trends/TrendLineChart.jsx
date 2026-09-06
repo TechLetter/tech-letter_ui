@@ -1,11 +1,32 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useChartHover } from "../../hooks/useChartHover";
 
 const CHART_COLORS = ["#4f46e5", "#059669", "#d97706", "#dc2626", "#0891b2"];
+const WIDTH = 720;
+const HEIGHT = 220;
+const PADDING = { top: 18, right: 24, bottom: 34, left: 48 };
+const PLOT_WIDTH = WIDTH - PADDING.left - PADDING.right;
+const PLOT_HEIGHT = HEIGHT - PADDING.top - PADDING.bottom;
 
 export default function TrendLineChart({ series = [], loading = false }) {
   const chartData = useMemo(() => buildChartData(series), [series]);
 
-  if (loading) {
+  // 기간·태그 전환마다 스켈레톤으로 지우면 깜빡여 보인다 — 이전 차트를 흐리게 유지한다.
+  const [lastData, setLastData] = useState(null);
+  if (!loading && chartData.buckets.length > 0 && lastData !== chartData) {
+    setLastData(chartData);
+  }
+  const displayData = loading && lastData ? lastData : chartData;
+  const isStale = loading && lastData != null;
+
+  const { svgRef, hoverIndex, onPointerMove, onPointerLeave } = useChartHover({
+    width: WIDTH,
+    padding: PADDING,
+    plotWidth: PLOT_WIDTH,
+    pointCount: displayData.buckets.length,
+  });
+
+  if (loading && !lastData) {
     return (
       <div className="h-[17rem] self-start rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="h-5 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
@@ -14,7 +35,7 @@ export default function TrendLineChart({ series = [], loading = false }) {
     );
   }
 
-  if (chartData.buckets.length === 0) {
+  if (displayData.buckets.length === 0) {
     return (
       <div className="flex h-[17rem] self-start items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
         표시할 트렌드 데이터가 없습니다.
@@ -22,21 +43,17 @@ export default function TrendLineChart({ series = [], loading = false }) {
     );
   }
 
-  const width = 720;
-  const height = 220;
-  const padding = { top: 18, right: 24, bottom: 34, left: 48 };
-  const plotWidth = width - padding.left - padding.right;
-  const plotHeight = height - padding.top - padding.bottom;
-  const maxValue = Math.max(1, chartData.maxValue);
+  const maxValue = Math.max(1, displayData.maxValue);
   const yTicks = Array.from(new Set([maxValue, Math.floor(maxValue / 2), 0]));
 
   const getX = (index) => {
-    if (chartData.buckets.length === 1) {
-      return padding.left + plotWidth / 2;
+    if (displayData.buckets.length === 1) {
+      return PADDING.left + PLOT_WIDTH / 2;
     }
-    return padding.left + (plotWidth * index) / (chartData.buckets.length - 1);
+    return PADDING.left + (PLOT_WIDTH * index) / (displayData.buckets.length - 1);
   };
-  const getY = (value) => padding.top + plotHeight - (plotHeight * value) / maxValue;
+  const getY = (value) => PADDING.top + PLOT_HEIGHT - (PLOT_HEIGHT * value) / maxValue;
+  const hoveredBucket = hoverIndex != null ? displayData.buckets[hoverIndex] : null;
 
   return (
     <section className="self-start rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -47,7 +64,7 @@ export default function TrendLineChart({ series = [], loading = false }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {chartData.lines.map((line, index) => (
+          {displayData.lines.map((line, index) => (
             <div
               key={line.tag}
               className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
@@ -62,27 +79,31 @@ export default function TrendLineChart({ series = [], loading = false }) {
         </div>
       </div>
 
-      <div className="overflow-hidden">
+      <div className={`relative overflow-hidden transition-opacity ${isStale ? "opacity-50" : ""}`}>
         <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="h-52 w-full sm:h-56"
+          ref={svgRef}
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          className="h-52 w-full touch-none sm:h-56"
           role="img"
           aria-label="태그별 포스트 수 시계열 차트"
+          onPointerMove={onPointerMove}
+          onPointerLeave={onPointerLeave}
         >
           {yTicks.map((tick) => {
             const y = getY(tick);
             return (
               <g key={tick}>
                 <line
-                  x1={padding.left}
-                  x2={width - padding.right}
+                  x1={PADDING.left}
+                  x2={WIDTH - PADDING.right}
                   y1={y}
                   y2={y}
                   stroke="currentColor"
+                  strokeWidth="1"
                   className="text-slate-100 dark:text-slate-800"
                 />
                 <text
-                  x={padding.left - 10}
+                  x={PADDING.left - 10}
                   y={y + 4}
                   textAnchor="end"
                   className="fill-slate-400 text-[11px]"
@@ -93,18 +114,18 @@ export default function TrendLineChart({ series = [], loading = false }) {
             );
           })}
 
-          {chartData.buckets.map((bucket, index) => {
+          {displayData.buckets.map((bucket, index) => {
             const shouldShow =
               index === 0 ||
-              index === chartData.buckets.length - 1 ||
-              index % Math.ceil(chartData.buckets.length / 4) === 0;
+              index === displayData.buckets.length - 1 ||
+              index % Math.ceil(displayData.buckets.length / 4) === 0;
             if (!shouldShow) return null;
             const x = getX(index);
             return (
               <text
                 key={bucket}
                 x={x}
-                y={height - 16}
+                y={HEIGHT - 16}
                 textAnchor="middle"
                 className="fill-slate-400 text-[11px]"
               >
@@ -113,7 +134,19 @@ export default function TrendLineChart({ series = [], loading = false }) {
             );
           })}
 
-          {chartData.lines.map((line, lineIndex) => {
+          {hoveredBucket && (
+            <line
+              x1={getX(hoverIndex)}
+              x2={getX(hoverIndex)}
+              y1={PADDING.top}
+              y2={HEIGHT - PADDING.bottom}
+              stroke="currentColor"
+              strokeWidth="1"
+              className="text-slate-300 dark:text-slate-600"
+            />
+          )}
+
+          {displayData.lines.map((line, lineIndex) => {
             const color = CHART_COLORS[lineIndex % CHART_COLORS.length];
             const path = line.values
               .map((value, index) => {
@@ -127,23 +160,51 @@ export default function TrendLineChart({ series = [], loading = false }) {
                   d={path}
                   fill="none"
                   stroke={color}
-                  strokeWidth="3"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
                 {line.values.map((value, index) => (
                   <circle
-                    key={`${line.tag}-${chartData.buckets[index]}`}
+                    key={`${line.tag}-${displayData.buckets[index]}`}
                     cx={getX(index)}
                     cy={getY(value)}
-                    r="3.5"
+                    r={index === hoverIndex ? "5" : "4"}
                     fill={color}
+                    stroke="white"
+                    strokeWidth="2"
+                    className="dark:stroke-slate-900"
                   />
                 ))}
               </g>
             );
           })}
         </svg>
+
+        {hoveredBucket && (
+          <div
+            className={`pointer-events-none absolute z-10 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-lg dark:border-slate-700 dark:bg-slate-800 ${
+              hoverIndex < displayData.buckets.length / 2 ? "translate-x-3" : "-translate-x-[calc(100%+0.75rem)]"
+            }`}
+            style={{ left: `${(getX(hoverIndex) / WIDTH) * 100}%`, top: PADDING.top }}
+          >
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              {formatBucketLabel(hoveredBucket)}
+            </div>
+            {displayData.lines.map((line, index) => (
+              <div key={line.tag} className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                <span
+                  className="h-2 w-2 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                />
+                <span className="truncate">{line.tag}</span>
+                <span className="ml-auto font-medium text-slate-700 dark:text-slate-300">
+                  {line.values[hoverIndex]}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

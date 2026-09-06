@@ -9,9 +9,8 @@ function statusVariant(status) {
 }
 
 export default function ModelTable({ models, loading, selectedModelId, onSelectModel }) {
-  // "최신 상태"를 모델명 바로 다음에 둔다 — 좁은 화면에서 스크롤 없이 보여야
-  //할 가장 중요한 값이라서다. 대신 sticky는 안 쓴다: sticky 오른쪽 컬럼이
-  // 우측 정렬 숫자 컬럼과 겹치면 그 값이 sticky 배경 밑에 그대로 가려진다.
+  // sticky 오른쪽 컬럼은 우측 정렬 숫자 컬럼과 겹치면 그 값을 가려서 안 쓴다 —
+  // 대신 "최신 상태"를 모델명 바로 다음에 둬서 스크롤 없이 보이게 한다.
   const columns = [
     {
       key: "model_id",
