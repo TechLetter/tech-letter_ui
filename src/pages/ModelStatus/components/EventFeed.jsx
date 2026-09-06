@@ -31,7 +31,7 @@ export default function EventFeed({ events, loading }) {
           아직 기록된 변동 사항이 없습니다.
         </p>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-1 xl:max-h-[480px] xl:overflow-y-auto xl:pr-1">
           {events.map((event, index) => {
             const meta = EVENT_META[event.type] || {
               label: event.type,

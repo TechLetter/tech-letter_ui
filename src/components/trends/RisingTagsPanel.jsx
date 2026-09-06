@@ -50,7 +50,7 @@ export default function RisingTagsPanel({
           표시할 태그가 없습니다.
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2 xl:max-h-[480px] xl:overflow-y-auto xl:pr-1">
           {items.map((item, index) => {
             const isSelected = selectedTags.includes(item.tag);
             const isHiddenInCompactMode =
