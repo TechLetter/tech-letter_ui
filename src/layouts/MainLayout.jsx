@@ -71,6 +71,16 @@ export default function MainLayout() {
               </div>
             </button>
             <button
+              type="button"
+              onClick={() => navigate(PATHS.MODEL_STATUS)}
+              className="group focus:outline-none"
+            >
+              <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors group-hover:border-indigo-200 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:group-hover:border-indigo-800 dark:group-hover:bg-indigo-950/40 dark:group-hover:text-indigo-300">
+                <RiCpuLine className="text-lg" />
+                <span className="hidden sm:inline text-sm font-bold">모델 현황</span>
+              </div>
+            </button>
+            <button
               onClick={() => {
                 if (!isAuthenticatedUser) {
                   showLoginRequiredModal();
@@ -133,16 +143,6 @@ export default function MainLayout() {
               {infoOpen && (
                 <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 focus:outline-none z-50 p-1">
                   <div className="space-y-0.5">
-                    <button
-                      onClick={() => {
-                        navigate(PATHS.MODEL_STATUS);
-                        setInfoOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2 text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                    >
-                      <RiCpuLine className="text-base text-slate-400" />
-                      AI 모델 현황
-                    </button>
                     <button
                       onClick={() => {
                         navigate(PATHS.PRIVACY);
