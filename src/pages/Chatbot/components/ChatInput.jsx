@@ -14,12 +14,16 @@ export default function ChatInput({
   maxLength = 2000,
   value = "",
   onChange,
+  modelOptions = [],
+  selectedModelId = "",
+  onModelChange,
 }) {
   const textareaRef = useRef(null);
 
   // 외부 value와 동기화 (제어 컴포넌트)
   const query = value;
   const setQuery = onChange || (() => {});
+  const setModel = onModelChange || (() => {});
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -121,6 +125,27 @@ export default function ChatInput({
             {query.length}/{maxLength}자 (제한 초과)
           </p>
         )}
+
+        <div className="mt-2 flex items-center gap-2 px-1 text-xs text-slate-500 dark:text-slate-400">
+          <label htmlFor="chat-model-select" className="shrink-0">
+            모델:
+          </label>
+          <select
+            id="chat-model-select"
+            value={selectedModelId}
+            onChange={(event) => setModel(event.target.value)}
+            disabled={isLoading}
+            className="min-w-0 max-w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:focus:border-indigo-500 dark:focus:ring-indigo-900/40"
+            aria-label="답변 모델 선택"
+          >
+            <option value="">자동 (가장 안정적인 모델)</option>
+            {modelOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );

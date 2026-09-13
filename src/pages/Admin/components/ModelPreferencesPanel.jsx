@@ -1,29 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import Badge from "../../../components/common/Badge";
 import {
   getLlmModelPreferences,
   handleAdminError,
   setLlmModelPreference,
 } from "../../../api/adminApi";
+import llmModelsApi from "../../../api/llmModelsApi";
 import { showToast } from "../../../provider/toastModalBridge";
 
-const PREFERENCES = [
-  { value: "summary", label: "요약" },
-  { value: "chat", label: "챗봇 답변" },
-  { value: "planner", label: "챗봇 플래너" },
-];
-
-const SOURCE_LABELS = {
-  database: "DB 설정",
-  settings: "env 기본값",
-};
-
-const emptyPreference = (purpose) => ({
-  purpose,
-  models: [],
-  source: "settings",
-});
+const SUMMARY_PURPOSE = "summary";
+const SUMMARY_LABEL = "요약";
+const MAX_CUSTOM_MODELS = 50;
+const UNAVAILABLE_TOOLTIP = "현재 응답 없음 — 건너뜁니다";
 
 const normalizeModels = (models) =>
   (Array.isArray(models) ? models : [])
@@ -31,178 +19,131 @@ const normalizeModels = (models) =>
     .map((model) => model.trim())
     .filter(Boolean);
 
-const parseDraft = (draft) =>
-  draft
-    .split(/\r?\n/)
-    .map((model) => model.trim())
-    .filter(Boolean);
+const normalizeHealthModels = (items) =>
+  (Array.isArray(items) ? items : [])
+    .filter((item) => typeof item?.model_id === "string")
+    .map((item) => ({ ...item, model_id: item.model_id.trim() }))
+    .filter((item) => item.model_id);
 
-const createPreferenceMap = (items) => {
-  const preferences = Object.fromEntries(
-    PREFERENCES.map(({ value }) => [value, emptyPreference(value)])
-  );
+const parseSummaryPreference = (item, fallbackDefaultModels = []) => {
+  const models = normalizeModels(item?.models);
+  const defaultModels = Array.isArray(item?.default_models)
+    ? normalizeModels(item.default_models)
+    : fallbackDefaultModels;
 
-  (Array.isArray(items) ? items : []).forEach((item) => {
-    if (!preferences[item?.purpose]) return;
-    preferences[item.purpose] = {
-      purpose: item.purpose,
-      models: normalizeModels(item.models),
-      source: item.source || "settings",
-    };
-  });
-
-  return preferences;
+  return {
+    models: models.length > 0 || defaultModels.length === 0 ? models : defaultModels,
+    defaultModels,
+  };
 };
 
-const createDrafts = (preferences) =>
-  Object.fromEntries(
-    PREFERENCES.map(({ value }) => [value, preferences[value].models.join("\n")])
-  );
+const getCustomModels = (models, defaultModels) =>
+  models.slice(Math.min(defaultModels.length, models.length));
 
-function ModelPreferenceCard({
-  preference,
-  draft,
-  observedModelIds,
-  saving,
-  onDraftChange,
-  onAppendModel,
-  onSave,
-  onReset,
+const areSameModels = (left, right) =>
+  left.length === right.length && left.every((model, index) => model === right[index]);
+
+const isUnavailable = (health) => {
+  if (!health) return false;
+  const status = typeof health.latest_status === "string" ? health.latest_status : "";
+  return status.toUpperCase() !== "OK" || Number(health.consecutive_failures) > 0;
+};
+
+function ModelChip({
+  modelId,
+  isDefault,
+  isUnavailable: unavailable,
+  isFirstCustom,
+  isLastCustom,
+  disabled,
+  onMove,
+  onRemove,
 }) {
-  const purpose = PREFERENCES.find((item) => item.value === preference.purpose);
-  const sourceLabel = SOURCE_LABELS[preference.source] || preference.source;
-  const sourceVariant = preference.source === "database" ? "info" : "neutral";
-
   return (
-    <article
-      className="flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"
-      data-testid={`model-preference-${preference.purpose}`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="font-semibold text-slate-900 dark:text-slate-100">{purpose.label}</h3>
-        <Badge variant={sourceVariant}>{sourceLabel}</Badge>
-      </div>
-
-      <div className="mt-4">
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">현재 적용 순서</p>
-        {preference.models.length > 0 ? (
-          <ol className="mt-2 space-y-1 text-sm text-slate-700 dark:text-slate-300">
-            {preference.models.map((model, index) => (
-              <li key={`${model}-${index}`} className="flex min-w-0 gap-2">
-                <span className="w-5 shrink-0 text-right text-slate-400">{index + 1}.</span>
-                <span className="min-w-0 break-all">{model}</span>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">지정된 모델이 없습니다.</p>
-        )}
-      </div>
-
-      <label className="mt-4 block">
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-          편집 목록 (한 줄에 모델 ID 하나)
+    <li className="min-w-0 max-w-full">
+      <div
+        className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-2 text-sm ${
+          isDefault
+            ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/70 dark:bg-indigo-950/50 dark:text-indigo-300"
+            : "border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+        }`}
+      >
+        <span className="min-w-0 break-all">
+          {isDefault ? `기본: ${modelId} 🔒` : modelId}
         </span>
-        <textarea
-          value={draft}
-          onChange={(event) => onDraftChange(event.target.value)}
-          disabled={saving}
-          rows={6}
-          aria-label={`${purpose.label} 모델 선호목록`}
-          className="mt-2 block w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-900/40 dark:disabled:bg-slate-700"
-          placeholder="예: gemini-2.5-flash"
-        />
-      </label>
-
-      <details className="mt-3 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-900/60">
-        <summary className="cursor-pointer text-xs font-medium text-slate-600 dark:text-slate-300">
-          현재 관측된 모델 ({observedModelIds.length})
-        </summary>
-        {observedModelIds.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {observedModelIds.map((modelId) => (
-              <button
-                key={modelId}
-                type="button"
-                disabled={saving}
-                onClick={() => onAppendModel(modelId)}
-                className="max-w-full rounded-full border border-slate-200 bg-white px-2 py-1 text-left text-xs text-slate-600 transition-colors hover:border-indigo-300 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
-                title={`${modelId} 추가`}
-              >
-                <span className="break-all">{modelId}</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            현재 탭에서 관측된 모델이 없습니다.
-          </p>
+        {unavailable && (
+          <span
+            aria-label={UNAVAILABLE_TOOLTIP}
+            className="h-2 w-2 shrink-0 rounded-full bg-red-500"
+            role="img"
+            title={UNAVAILABLE_TOOLTIP}
+          />
         )}
-      </details>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={saving}
-          className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-        >
-          {saving ? "저장 중..." : "저장"}
-        </button>
-        <button
-          type="button"
-          onClick={onReset}
-          disabled={saving}
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
-        >
-          기본값으로 되돌리기
-        </button>
+        {!isDefault && (
+          <span className="ml-1 inline-flex shrink-0 items-center gap-0.5">
+            <button
+              type="button"
+              aria-label={`${modelId} 앞 순서로 이동`}
+              className="rounded-full px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
+              disabled={disabled || isFirstCustom}
+              onClick={() => onMove(-1)}
+              title="앞 순서로 이동"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              aria-label={`${modelId} 뒤 순서로 이동`}
+              className="rounded-full px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
+              disabled={disabled || isLastCustom}
+              onClick={() => onMove(1)}
+              title="뒤 순서로 이동"
+            >
+              →
+            </button>
+            <button
+              type="button"
+              aria-label={`${modelId} 삭제`}
+              className="rounded-full px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+              disabled={disabled}
+              onClick={onRemove}
+              title="삭제"
+            >
+              ✕
+            </button>
+          </span>
+        )}
       </div>
-    </article>
+    </li>
   );
 }
 
-ModelPreferenceCard.propTypes = {
-  preference: PropTypes.shape({
-    purpose: PropTypes.string.isRequired,
-    models: PropTypes.arrayOf(PropTypes.string).isRequired,
-    source: PropTypes.string.isRequired,
-  }).isRequired,
-  draft: PropTypes.string.isRequired,
-  observedModelIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-  saving: PropTypes.bool.isRequired,
-  onDraftChange: PropTypes.func.isRequired,
-  onAppendModel: PropTypes.func.isRequired,
-  onSave: PropTypes.func.isRequired,
-  onReset: PropTypes.func.isRequired,
+ModelChip.propTypes = {
+  modelId: PropTypes.string.isRequired,
+  isDefault: PropTypes.bool.isRequired,
+  isUnavailable: PropTypes.bool.isRequired,
+  isFirstCustom: PropTypes.bool.isRequired,
+  isLastCustom: PropTypes.bool.isRequired,
+  disabled: PropTypes.bool.isRequired,
+  onMove: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
 };
 
-/**
- * 모델 선호목록 패널. 용도(summary/chat/planner)별로 라우터가 우선 시도할 모델 id 목록을 편집한다.
- * 백엔드 `GET/PUT /api/v1/admin/llm-models/preferences` 를 쓰며, DB 에 값이 있으면 서버 env 기본값은 무시된다(source 배지로 구분).
- * 빈 목록을 저장하면 DB 문서를 지워 env 기본값으로 되돌아간다.
- */
-export default function ModelPreferencesPanel({ observedModels = [] }) {
-  const initialPreferences = createPreferenceMap();
-  const [preferences, setPreferences] = useState(initialPreferences);
-  const [drafts, setDrafts] = useState(createDrafts(initialPreferences));
+/** 요약 폴백 순서만 편집하며, 기본값은 서버가 앞에 붙인 순서 그대로 잠근다. */
+export default function ModelPreferencesPanel() {
+  const [models, setModels] = useState([]);
+  const [defaultModels, setDefaultModels] = useState([]);
+  const [savedCustomModels, setSavedCustomModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
-  const [savingPurpose, setSavingPurpose] = useState(null);
-
-  const observedModelIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          observedModels
-            .map((model) => model?.model_id)
-            .filter((modelId) => typeof modelId === "string" && modelId.trim())
-            .map((modelId) => modelId.trim())
-        )
-      ),
-    [observedModels]
-  );
+  const [healthModels, setHealthModels] = useState([]);
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [healthError, setHealthError] = useState("");
+  const [healthRetryKey, setHealthRetryKey] = useState(0);
+  const [selectedModelId, setSelectedModelId] = useState("");
+  const [directModelId, setDirectModelId] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -212,13 +153,16 @@ export default function ModelPreferencesPanel({ observedModels = [] }) {
     getLlmModelPreferences()
       .then((response = {}) => {
         if (ignore) return;
-        const nextPreferences = createPreferenceMap(response.items);
-        setPreferences(nextPreferences);
-        setDrafts(createDrafts(nextPreferences));
+        const summaryItem = Array.isArray(response.items)
+          ? response.items.find((item) => item?.purpose === SUMMARY_PURPOSE)
+          : undefined;
+        const preference = parseSummaryPreference(summaryItem);
+        setModels(preference.models);
+        setDefaultModels(preference.defaultModels);
+        setSavedCustomModels(getCustomModels(preference.models, preference.defaultModels));
       })
       .catch((error) => {
-        if (ignore) return;
-        setLoadError(handleAdminError(error));
+        if (!ignore) setLoadError(handleAdminError(error));
       })
       .finally(() => {
         if (!ignore) setLoading(false);
@@ -229,54 +173,123 @@ export default function ModelPreferencesPanel({ observedModels = [] }) {
     };
   }, [retryKey]);
 
-  const updateDraft = (purpose, value) => {
-    setDrafts((current) => ({ ...current, [purpose]: value }));
+  useEffect(() => {
+    let ignore = false;
+
+    setHealthLoading(true);
+    setHealthError("");
+    llmModelsApi
+      .getModels()
+      .then((response = {}) => {
+        if (ignore) return;
+        setHealthModels(normalizeHealthModels(response?.data?.items ?? response?.items));
+      })
+      .catch((error) => {
+        if (!ignore) setHealthError(handleAdminError(error));
+      })
+      .finally(() => {
+        if (!ignore) setHealthLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [healthRetryKey]);
+
+  const customModels = useMemo(
+    () => getCustomModels(models, defaultModels),
+    [defaultModels, models]
+  );
+  const defaultCount = Math.min(defaultModels.length, models.length);
+  const isDirty = !areSameModels(customModels, savedCustomModels);
+
+  const healthByModelId = useMemo(() => {
+    const healthMap = new Map();
+    healthModels.forEach((health) => healthMap.set(health.model_id, health));
+    return healthMap;
+  }, [healthModels]);
+
+  const candidateModels = useMemo(() => {
+    const selectedModels = new Set(models);
+    return healthModels.filter((health) => !selectedModels.has(health.model_id));
+  }, [healthModels, models]);
+
+  const addModel = (rawModelId) => {
+    const modelId = typeof rawModelId === "string" ? rawModelId.trim() : "";
+    if (!modelId) return false;
+    if (models.includes(modelId)) {
+      showToast("이미 추가된 모델입니다.", "error");
+      return false;
+    }
+    if (customModels.length >= MAX_CUSTOM_MODELS) {
+      showToast("모델은 최대 50개까지 추가할 수 있습니다.", "error");
+      return false;
+    }
+
+    setModels((current) => [...current, modelId]);
+    return true;
   };
 
-  const appendObservedModel = (purpose, modelId) => {
-    setDrafts((current) => {
-      const existing = parseDraft(current[purpose] || "");
-      return { ...current, [purpose]: [...existing, modelId].join("\n") };
+  const handleAddSelectedModel = () => {
+    if (addModel(selectedModelId)) setSelectedModelId("");
+  };
+
+  const handleAddDirectModel = (event) => {
+    event.preventDefault();
+    if (addModel(directModelId)) setDirectModelId("");
+  };
+
+  const moveModel = (index, direction) => {
+    setModels((current) => {
+      const firstCustomIndex = Math.min(defaultModels.length, current.length);
+      const targetIndex = index + direction;
+      if (
+        index < firstCustomIndex ||
+        targetIndex < firstCustomIndex ||
+        targetIndex >= current.length
+      ) {
+        return current;
+      }
+
+      const nextModels = [...current];
+      [nextModels[index], nextModels[targetIndex]] = [
+        nextModels[targetIndex],
+        nextModels[index],
+      ];
+      return nextModels;
     });
   };
 
-  const savePreference = async (purpose, reset = false) => {
-    const preference = PREFERENCES.find((item) => item.value === purpose);
-    if (!preference) return;
+  const removeModel = (index) => {
+    if (index < defaultCount) return;
+    setModels((current) => current.filter((_, modelIndex) => modelIndex !== index));
+  };
 
-    if (reset && !window.confirm(`${preference.label} 선호목록을 env 기본값으로 되돌릴까요?`)) {
-      return;
-    }
+  const applyPreference = (item) => {
+    const preference = parseSummaryPreference(item, defaultModels);
+    setModels(preference.models);
+    setDefaultModels(preference.defaultModels);
+    setSavedCustomModels(getCustomModels(preference.models, preference.defaultModels));
+  };
 
-    const models = reset ? [] : parseDraft(drafts[purpose] || "");
-    if (models.length > 50) {
-      showToast("모델 선호목록은 최대 50개까지 저장할 수 있습니다.", "error");
-      return;
-    }
+  const savePreference = async (reset = false) => {
+    if (reset && !window.confirm("요약에 쓸 모델을 기본값으로 되돌릴까요?")) return;
 
-    setSavingPurpose(purpose);
+    setSaving(true);
     try {
-      const result = await setLlmModelPreference(purpose, models);
-      const nextPreference = {
-        purpose,
-        models: normalizeModels(result?.models ?? models),
-        source: result?.source || (reset ? "settings" : "database"),
-      };
-      setPreferences((current) => ({ ...current, [purpose]: nextPreference }));
-      setDrafts((current) => ({
-        ...current,
-        [purpose]: nextPreference.models.join("\n"),
-      }));
+      const result = await setLlmModelPreference(
+        SUMMARY_PURPOSE,
+        reset ? [] : customModels
+      );
+      applyPreference(result?.data ?? result);
       showToast(
-        reset
-          ? `${preference.label} 선호목록을 기본값으로 되돌렸습니다.`
-          : `${preference.label} 선호목록을 저장했습니다.`,
+        reset ? "요약 모델을 기본값으로 되돌렸습니다." : "요약 모델을 저장했습니다.",
         "success"
       );
     } catch (error) {
       showToast(handleAdminError(error), "error");
     } finally {
-      setSavingPurpose(null);
+      setSaving(false);
     }
   };
 
@@ -284,19 +297,20 @@ export default function ModelPreferencesPanel({ observedModels = [] }) {
     <section
       className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40"
       data-testid="model-preferences-panel"
-      aria-busy={loading}
+      aria-busy={loading || saving}
     >
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">모델 선호목록</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          {SUMMARY_LABEL}에 쓸 모델
+        </h2>
         <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-          선호목록은 실시간 헬스체크를 통과한 모델과 교집합으로 쓰이며, 비어 있으면 헬스 목록 상위
-          모델을 자동 사용한다. DB 값이 있으면 서버 env 는 무시된다.
+          위에서부터 순서대로 시도합니다. 모두 실패하면 그때그때 가장 안정적인 모델을 자동으로 씁니다.
         </p>
       </div>
 
       {loading ? (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
-          선호목록을 불러오는 중입니다.
+          설정을 불러오는 중입니다.
         </div>
       ) : loadError ? (
         <div
@@ -313,30 +327,143 @@ export default function ModelPreferencesPanel({ observedModels = [] }) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {PREFERENCES.map((preference) => (
-            <ModelPreferenceCard
-              key={preference.value}
-              preference={preferences[preference.value]}
-              draft={drafts[preference.value]}
-              observedModelIds={observedModelIds}
-              saving={savingPurpose === preference.value}
-              onDraftChange={(value) => updateDraft(preference.value, value)}
-              onAppendModel={(modelId) => appendObservedModel(preference.value, modelId)}
-              onSave={() => savePreference(preference.value)}
-              onReset={() => savePreference(preference.value, true)}
-            />
-          ))}
-        </div>
+        <>
+          <div
+            className="flex min-w-0 flex-wrap items-center gap-2"
+            data-testid="model-chain"
+            aria-label="모델 시도 순서"
+          >
+            {models.length > 0 ? (
+              <ol className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                {models.map((modelId, index) => (
+                  <ModelChip
+                    key={`${modelId}-${index}`}
+                    modelId={modelId}
+                    isDefault={index < defaultCount}
+                    isUnavailable={isUnavailable(healthByModelId.get(modelId))}
+                    isFirstCustom={index === defaultCount}
+                    isLastCustom={index === models.length - 1}
+                    disabled={saving}
+                    onMove={(direction) => moveModel(index, direction)}
+                    onRemove={() => removeModel(index)}
+                  />
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                지정된 모델이 없습니다. 아래 목록에서 모델을 추가하세요.
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+            <label className="min-w-[min(100%,18rem)] flex-1">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                사용 가능한 모델
+              </span>
+              <select
+                value={selectedModelId}
+                onChange={(event) => setSelectedModelId(event.target.value)}
+                disabled={saving || healthLoading || candidateModels.length === 0}
+                aria-label="사용 가능한 모델에서 선택"
+                data-testid="model-candidate-select"
+                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-900/40 dark:disabled:bg-slate-700"
+              >
+                <option value="">
+                  {healthLoading
+                    ? "모델 목록을 불러오는 중입니다."
+                    : candidateModels.length > 0
+                      ? "모델 선택"
+                      : "추가할 모델이 없습니다."}
+                </option>
+                {candidateModels.map((health) => (
+                  <option key={health.model_id} value={health.model_id}>
+                    {health.model_id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={handleAddSelectedModel}
+              disabled={saving || !selectedModelId || healthLoading}
+              data-testid="model-add-button"
+              className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            >
+              + 모델 추가
+            </button>
+          </div>
+
+          <form
+            className="flex flex-wrap items-end gap-2"
+            onSubmit={handleAddDirectModel}
+          >
+            <label className="min-w-[min(100%,18rem)] flex-1">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                목록에 없는 모델 직접 입력
+              </span>
+              <input
+                type="text"
+                value={directModelId}
+                onChange={(event) => setDirectModelId(event.target.value)}
+                disabled={saving}
+                aria-label="목록에 없는 모델 직접 입력"
+                data-testid="model-direct-input"
+                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-900/40 dark:disabled:bg-slate-700"
+                placeholder="예: 공급자/모델명:free"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={saving || !directModelId.trim()}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              직접 추가
+            </button>
+          </form>
+
+          {healthError && (
+            <div
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-900/60 dark:bg-amber-900/20 dark:text-amber-300"
+              role="alert"
+            >
+              <span>{healthError}</span>
+              <button
+                type="button"
+                onClick={() => setHealthRetryKey((current) => current + 1)}
+                className="font-medium underline underline-offset-2"
+              >
+                목록 다시 시도
+              </button>
+            </div>
+          )}
+
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            기본값은 항상 먼저 시도하며, 추가한 모델은 위 순서대로 시도합니다.
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => savePreference()}
+              disabled={saving || !isDirty}
+              data-testid="model-save-button"
+              className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            >
+              {saving ? "저장 중..." : "저장"}
+            </button>
+            <button
+              type="button"
+              onClick={() => savePreference(true)}
+              disabled={saving}
+              data-testid="model-reset-button"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              기본값으로 되돌리기
+            </button>
+          </div>
+        </>
       )}
     </section>
   );
 }
-
-ModelPreferencesPanel.propTypes = {
-  observedModels: PropTypes.arrayOf(
-    PropTypes.shape({
-      model_id: PropTypes.string,
-    })
-  ),
-};

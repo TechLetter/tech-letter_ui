@@ -9,6 +9,27 @@ import { getAccessToken } from "../utils/authToken";
  * 들어 있다.
  */
 
+const buildChatPayload = (query, sessionId, modelId) => {
+  const payload = { query };
+  if (sessionId) payload.session_id = sessionId;
+
+  if (typeof modelId === "string" && modelId.trim()) {
+    payload.model_id = modelId.trim();
+  }
+  return payload;
+};
+
+const getModelId = (options) => {
+  if (typeof options === "string") return options;
+  return options?.modelId || options?.model_id;
+};
+
+const getSignal = (options) => {
+  if (!options || typeof options !== "object") return undefined;
+  if (options.signal) return options.signal;
+  return typeof options.aborted === "boolean" ? options : undefined;
+};
+
 const chatApi = {
   // ── 세션 ──────────────────────────────────────────────────────
   getSessionList: async (page = 1, pageSize = 20) => {
@@ -39,14 +60,24 @@ const chatApi = {
   },
 
   // ── 대화 ──────────────────────────────────────────────────────
-  streamChatRequest: async (query, sessionId, options = {}) => {
-    const payload = sessionId ? { query, session_id: sessionId } : { query };
+  // 일반 응답 계약도 유지해 SSE를 쓰지 않는 호출자가 같은 모델 선택을 보낼 수 있게 한다.
+  sendChatRequest: async (query, sessionId, options = {}, modelId) => {
+    const response = await apiClient.post(
+      "/api/v1/chat/messages",
+      buildChatPayload(query, sessionId, modelId ?? getModelId(options)),
+      { signal: getSignal(options) }
+    );
+    return response.data;
+  },
+
+  streamChatRequest: async (query, sessionId, options = {}, modelId) => {
+    const payload = buildChatPayload(query, sessionId, modelId ?? getModelId(options));
 
     const response = await fetch(buildApiUrl("/api/v1/chat/messages/stream"), {
       method: "POST",
       headers: buildStreamHeaders(),
       body: JSON.stringify(payload),
-      signal: options.signal,
+      signal: getSignal(options),
     });
 
     // 가드·세션·크레딧 실패는 스트림이 아니라 JSON 에러로 온다.
@@ -148,6 +179,9 @@ const CHAT_MESSAGES = {
 
 export const chatErrorMessage = (error) => {
   if (!(error instanceof ApiError)) return "일시적인 오류가 발생했어요.";
+  if (error.code === ErrorCode.REQUEST_INVALID && error.field === "model_id") {
+    return "선택한 모델을 쓸 수 없습니다. 자동으로 바꿔주세요.";
+  }
   return CHAT_MESSAGES[error.code] || error.message;
 };
 

@@ -4,11 +4,70 @@ import { useAuth } from "../../hooks/useAuth";
 import { PATHS } from "../../routes/path";
 import chatApi from "../../api/chatApi";
 import { ErrorCode, toApiError } from "../../api/apiError";
+import llmModelsApi from "../../api/llmModelsApi";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
 import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
 import { RiAddLine, RiMenuLine } from "react-icons/ri";
+
+const CHAT_MODEL_STORAGE_KEY = "techletter.chat.model";
+
+const readStoredChatModel = () => {
+  try {
+    return window.localStorage.getItem(CHAT_MODEL_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+};
+
+const persistChatModel = (modelId) => {
+  try {
+    if (modelId) {
+      window.localStorage.setItem(CHAT_MODEL_STORAGE_KEY, modelId);
+    } else {
+      window.localStorage.removeItem(CHAT_MODEL_STORAGE_KEY);
+    }
+  } catch {
+    // 사이트 데이터 접근이 막혀도 현재 화면의 선택은 계속 사용할 수 있어야 한다.
+  }
+};
+
+const modelHealthLabel = (item) => {
+  if (!item || typeof item !== "object") return "상태 확인 필요";
+
+  // 공개 헬스 응답은 최신 상태와 연속 실패를 제공하므로
+  // 어드민 전용 상태 필드에 기대지 않고 실제 공개 계약으로 표시한다.
+  const latestStatus =
+    typeof item.latest_status === "string" ? item.latest_status.trim().toUpperCase() : "";
+  const consecutiveFailures = item.consecutive_failures;
+  if (!latestStatus || typeof consecutiveFailures !== "number") {
+    return "상태 확인 필요";
+  }
+
+  return latestStatus === "OK" && consecutiveFailures === 0 ? "" : "응답 불안정";
+};
+
+const normalizeModelOptions = (items) => {
+  const seen = new Set();
+
+  return (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const rawModelId = typeof item === "string" ? item : item?.model_id;
+      if (typeof rawModelId !== "string") return null;
+
+      const modelId = rawModelId.trim();
+      if (!modelId || seen.has(modelId)) return null;
+
+      seen.add(modelId);
+      const healthLabel = modelHealthLabel(item);
+      return {
+        id: modelId,
+        label: healthLabel ? `${modelId} (${healthLabel})` : modelId,
+      };
+    })
+    .filter(Boolean);
+};
 
 // 메시지 메타데이터는 `metadata` 로 중첩되지 않고 평탄화되어 온다.
 const buildMessageFromSession = (sessionId, msg, idx) => ({
@@ -63,6 +122,9 @@ export default function Chatbot() {
 
   // 입력창 제어
   const [inputValue, setInputValue] = useState("");
+  const [selectedModelId, setSelectedModelId] = useState(readStoredChatModel);
+  const [modelOptions, setModelOptions] = useState([]);
+  const [modelCatalogStatus, setModelCatalogStatus] = useState("idle");
 
   // 모달 상태
   const [showCreditsModal, setShowCreditsModal] = useState(false);
@@ -98,6 +160,49 @@ export default function Chatbot() {
 
     loadSuggestedQuestions();
   }, [initialized, isAuthenticated]);
+
+  useEffect(() => {
+    if (!initialized || !isAuthenticated) return;
+
+    let ignore = false;
+    setModelCatalogStatus("loading");
+
+    llmModelsApi
+      .getModels()
+      .then((response) => {
+        if (ignore) return;
+        setModelOptions(normalizeModelOptions(response?.data?.items));
+        setModelCatalogStatus("loaded");
+      })
+      .catch(() => {
+        if (ignore) return;
+        setModelOptions([]);
+        setModelCatalogStatus("error");
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [initialized, isAuthenticated]);
+
+  const handleModelChange = useCallback((modelId) => {
+    const nextModelId = typeof modelId === "string" ? modelId.trim() : "";
+    setSelectedModelId(nextModelId);
+    persistChatModel(nextModelId);
+  }, []);
+
+  useEffect(() => {
+    if (modelCatalogStatus === "error") {
+      // 목록 장애만으로 모델이 사라졌다고 단정하면 저장된 선택을 잃는다.
+      // 현재 화면의 요청만 자동으로 보내고 localStorage 값은 다음 성공 조회까지 보존한다.
+      if (selectedModelId) setSelectedModelId("");
+      return;
+    }
+    if (modelCatalogStatus !== "loaded" || !selectedModelId) return;
+
+    const isAvailable = modelOptions.some((option) => option.id === selectedModelId);
+    if (!isAvailable) handleModelChange("");
+  }, [handleModelChange, modelCatalogStatus, modelOptions, selectedModelId]);
 
   // 세션 목록 로드 콜백
   const handleSessionsLoaded = useCallback((loadedSessions) => {
@@ -225,6 +330,7 @@ export default function Chatbot() {
     async (query) => {
       if (!query.trim()) return;
 
+      const requestedModelId = selectedModelId;
       setError(null);
       setLastQuery(query);
       setInputValue(""); // 입력창 초기화
@@ -278,6 +384,7 @@ export default function Chatbot() {
         },
         guard: null,
         memory: null,
+        requestedModelId: requestedModelId || null,
         isStreaming: true,
         createdAt: new Date().toISOString(),
       };
@@ -285,6 +392,7 @@ export default function Chatbot() {
 
       try {
         const data = await chatApi.streamChatRequest(query, sessionId, {
+          modelId: requestedModelId || undefined,
           onActivity: (activity) => {
             setMessages((prev) =>
               prev.map((message) =>
@@ -313,6 +421,7 @@ export default function Chatbot() {
           agent: data.agent || null,
           guard: data.guard || null,
           memory: data.memory || null,
+          requestedModelId: requestedModelId || null,
           isStreaming: false,
           createdAt: new Date().toISOString(),
         };
@@ -337,8 +446,12 @@ export default function Chatbot() {
         );
       } catch (err) {
         console.error("Chatbot Error:", err);
+        const apiError = toApiError(err);
 
-        if (err.code === ErrorCode.AUTH_REQUIRED || err.code === ErrorCode.AUTH_INVALID_TOKEN) {
+        if (
+          apiError.code === ErrorCode.AUTH_REQUIRED ||
+          apiError.code === ErrorCode.AUTH_INVALID_TOKEN
+        ) {
           setMessages((prev) =>
             prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
           );
@@ -346,7 +459,7 @@ export default function Chatbot() {
           return;
         }
 
-        if (err.code === ErrorCode.CREDIT_INSUFFICIENT) {
+        if (apiError.code === ErrorCode.CREDIT_INSUFFICIENT) {
           setShowCreditsModal(true);
           setMessages((prev) =>
             prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
@@ -354,7 +467,11 @@ export default function Chatbot() {
           return;
         }
 
-        if (err.code === ErrorCode.POLICY_BLOCKED) {
+        if (apiError.code === ErrorCode.REQUEST_INVALID && apiError.field === "model_id") {
+          handleModelChange("");
+        }
+
+        if (apiError.code === ErrorCode.POLICY_BLOCKED) {
           setInputValue(query);
           setMessages((prev) =>
             prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
@@ -363,12 +480,12 @@ export default function Chatbot() {
           setMessages((prev) => prev.filter((m) => m.id !== botMessageId));
         }
 
-        setError(toApiError(err));
+        setError(apiError);
       } finally {
         setIsLoading(false);
       }
     },
-    [currentSessionId, navigate, updateCredits]
+    [currentSessionId, handleModelChange, navigate, selectedModelId, updateCredits]
   );
 
   // 재시도
@@ -460,6 +577,9 @@ export default function Chatbot() {
               isLoading={isLoading}
               value={inputValue}
               onChange={setInputValue}
+              modelOptions={modelOptions}
+              selectedModelId={selectedModelId}
+              onModelChange={handleModelChange}
             />
           </>
         )}
