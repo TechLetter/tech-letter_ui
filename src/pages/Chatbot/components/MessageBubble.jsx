@@ -13,6 +13,12 @@ import SourceList from "./SourceList";
  */
 export default function MessageBubble({ message }) {
   const isUser = message.role === "user";
+  const requestedModelId =
+    typeof message.requestedModelId === "string" ? message.requestedModelId : "";
+  const actualModelId =
+    typeof message.agent?.model_id === "string" ? message.agent.model_id : "";
+  const usedModelFallback =
+    !isUser && requestedModelId && actualModelId && requestedModelId !== actualModelId;
 
   return (
     <div
@@ -39,6 +45,15 @@ export default function MessageBubble({ message }) {
           ) : (
             <>
               <SecurityNotice guard={message.guard} />
+              {usedModelFallback && (
+                <p
+                  className="mb-2 text-xs text-slate-500 dark:text-slate-400"
+                  role="status"
+                >
+                  고른 모델이 응답하지 않아 <span className="break-all">{actualModelId}</span>로
+                  답했습니다.
+                </p>
+              )}
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
