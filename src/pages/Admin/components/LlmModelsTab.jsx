@@ -5,6 +5,7 @@ import Table from "../../../components/common/Table";
 import { showToast } from "../../../provider/toastModalBridge";
 import { getLlmModels, handleAdminError } from "../../../api/adminApi";
 import { formatKSTDateTime } from "../../../utils/timeutils";
+import ModelPreferencesPanel from "./ModelPreferencesPanel";
 
 /**
  * 모델 탭.
@@ -149,6 +150,8 @@ export default function LlmModelsTab() {
           <RiRefreshLine /> 새로고침
         </button>
       </div>
+
+      <ModelPreferencesPanel observedModels={models} />
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <Table

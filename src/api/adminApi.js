@@ -35,8 +35,6 @@ export async function getBlogs({ page = 1, page_size = 100, is_active } = {}) {
 
 export const createBlog = (data) => client.post(`${ADMIN_BASE}/blogs`, data).then(unwrap);
 export const updateBlog = (id, data) => client.put(`${ADMIN_BASE}/blogs/${id}`, data).then(unwrap);
-export const activateBlog = (id) =>
-  client.post(`${ADMIN_BASE}/blogs/${id}/activate`).then(unwrap);
 
 export const deleteBlog = (id, { delete_posts = false } = {}) =>
   client
@@ -89,6 +87,12 @@ export const deleteJob = (id) => client.delete(`${ADMIN_BASE}/jobs/${id}`).then(
 // ── Ops: 모델 성적 · 백필 (신설) ────────────────────────────────
 export const getLlmModels = ({ purpose } = {}) =>
   client.get(`${ADMIN_BASE}/llm-models`, { params: { purpose } }).then(unwrap);
+export const getLlmModelPreferences = () =>
+  client.get(`${ADMIN_BASE}/llm-models/preferences`).then(unwrap);
+export const setLlmModelPreference = (purpose, models) =>
+  client
+    .put(`${ADMIN_BASE}/llm-models/preferences/${encodeURIComponent(purpose)}`, { models })
+    .then(unwrap);
 
 export const getBackfillStatus = () =>
   client.get(`${ADMIN_BASE}/backfill/summary`).then(unwrap);

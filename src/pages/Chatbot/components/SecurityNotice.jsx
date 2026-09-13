@@ -1,7 +1,8 @@
 import { RiShieldCheckLine } from "react-icons/ri";
+import { ErrorCode } from "../../../api/apiError";
 
 export default function SecurityNotice({ guard, error }) {
-  const isPolicyBlocked = error?.code === "policy_blocked";
+  const isPolicyBlocked = error?.code === ErrorCode.POLICY_BLOCKED;
   const showSanitized = guard?.action === "sanitize";
 
   if (!isPolicyBlocked && !showSanitized) return null;

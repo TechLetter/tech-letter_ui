@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { chatErrorMessage } from "../../../api/chatApi";
+import { ErrorCode } from "../../../api/apiError";
 import MessageBubble from "./MessageBubble";
 import SecurityNotice from "./SecurityNotice";
 import { RiRobot2Line, RiRefreshLine, RiLightbulbLine } from "react-icons/ri";
@@ -98,9 +100,9 @@ export default function ChatWindow({
             <div className="my-4 rounded-xl bg-red-50 p-4 text-center dark:bg-red-900/20">
               <SecurityNotice error={error} />
               <p className="text-red-800 text-sm mb-2 dark:text-red-300">
-                {error.message || "오류가 발생했습니다."}
+                {chatErrorMessage(error)}
               </p>
-              {onRetry && error.code !== "invalid_request" && (
+              {onRetry && error.code !== ErrorCode.REQUEST_INVALID && (
                 <button
                   onClick={onRetry}
                   className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-red-200 rounded-md text-red-600 text-sm hover:bg-red-50 dark:bg-slate-800 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
