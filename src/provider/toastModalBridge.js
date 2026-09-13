@@ -10,8 +10,8 @@ export function unbindToastModalHandler() {
   toastModalHandler = null;
 }
 
-export function showToast(message) {
+export function showToast(message, variant = "info") {
   if (toastModalHandler) {
-    toastModalHandler(message);
+    toastModalHandler(message, variant);
   }
 }

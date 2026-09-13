@@ -39,12 +39,6 @@ const chatApi = {
   },
 
   // ── 대화 ──────────────────────────────────────────────────────
-  sendChatRequest: async (query, sessionId, signal) => {
-    const payload = sessionId ? { query, session_id: sessionId } : { query };
-    const response = await apiClient.post("/api/v1/chat/messages", payload, { signal });
-    return response.data;
-  },
-
   streamChatRequest: async (query, sessionId, options = {}) => {
     const payload = sessionId ? { query, session_id: sessionId } : { query };
 

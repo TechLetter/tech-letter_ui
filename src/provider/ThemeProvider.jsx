@@ -5,7 +5,12 @@ import { ThemeContext } from "./ThemeContext";
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     // 사용자가 마지막으로 고른 테마를 우선 복원해 초기 깜빡임을 줄인다.
-    const savedTheme = localStorage.getItem("theme");
+    let savedTheme = null;
+    try {
+      savedTheme = localStorage.getItem("theme");
+    } catch {
+      // 저장소를 사용할 수 없으면 시스템 선호 테마로 대체한다.
+    }
     if (savedTheme) {
       return savedTheme;
     }
@@ -23,7 +28,11 @@ export function ThemeProvider({ children }) {
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("theme", theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // 저장소를 사용할 수 없는 환경에서도 화면 테마는 유지한다.
+    }
   }, [theme]);
 
   const toggleTheme = () => {

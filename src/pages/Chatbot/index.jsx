@@ -2,8 +2,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { PATHS } from "../../routes/path";
-import chatApi, { chatErrorMessage } from "../../api/chatApi";
-import { ErrorCode } from "../../api/apiError";
+import chatApi from "../../api/chatApi";
+import { ErrorCode, toApiError } from "../../api/apiError";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
@@ -148,7 +148,7 @@ export default function Chatbot() {
         setMessages(formattedMessages);
       } catch (err) {
         console.error("세션 로드 실패:", err);
-        setError(new Error(chatErrorMessage(err)));
+        setError(toApiError(err));
       } finally {
         setIsLoadingSession(false);
       }
@@ -252,7 +252,7 @@ export default function Chatbot() {
           sessionId = newSession.id;
         } catch (err) {
           console.error("세션 생성 실패:", err);
-          setError(new Error("세션 생성에 실패했습니다. 다시 시도해 주세요."));
+          setError(toApiError(err));
           setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
           setIsLoading(false);
           return;
@@ -363,7 +363,7 @@ export default function Chatbot() {
           setMessages((prev) => prev.filter((m) => m.id !== botMessageId));
         }
 
-        setError(new Error(chatErrorMessage(err)));
+        setError(toApiError(err));
       } finally {
         setIsLoading(false);
       }

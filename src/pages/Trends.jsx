@@ -10,6 +10,8 @@ const MAX_SELECTED_TAGS = 5;
 const TREND_POST_PAGE_SIZE = 8;
 const DEFAULT_TREND_PERIOD = "180d";
 const ALLOWED_TREND_PERIODS = new Set(["30d", "180d", "365d", "3y"]);
+const DEFAULT_TREND_INTERVAL = "week";
+const ALLOWED_TREND_INTERVALS = new Set(["day", "week", "month"]);
 
 export default function Trends() {
   const [period, setPeriod] = useUrlState("period", DEFAULT_TREND_PERIOD, {
@@ -18,7 +20,16 @@ export default function Trends() {
     serialize: (value) =>
       ALLOWED_TREND_PERIODS.has(value) ? value : DEFAULT_TREND_PERIOD,
   });
-  const [interval, setInterval] = useUrlState("interval", "week");
+  const [bucketInterval, setBucketInterval] = useUrlState(
+    "interval",
+    DEFAULT_TREND_INTERVAL,
+    {
+      parse: (value) =>
+        ALLOWED_TREND_INTERVALS.has(value) ? value : DEFAULT_TREND_INTERVAL,
+      serialize: (value) =>
+        ALLOWED_TREND_INTERVALS.has(value) ? value : DEFAULT_TREND_INTERVAL,
+    }
+  );
   const [selectedTags, setSelectedTags] = useUrlState("tags", [], {
     parse: (value) => (value ? value.split(",").filter(Boolean) : []),
     serialize: (value) =>
@@ -100,7 +111,7 @@ export default function Trends() {
         const response = await trendsApi.getSeries({
           tags: chartTags,
           period,
-          interval,
+          interval: bucketInterval,
         });
         if (ignore) return;
         // 응답은 `items` 키를 쓴다.
@@ -120,7 +131,7 @@ export default function Trends() {
     return () => {
       ignore = true;
     };
-  }, [chartTags, interval, period]);
+  }, [bucketInterval, chartTags, period]);
 
   useEffect(() => {
     let ignore = false;
@@ -163,10 +174,10 @@ export default function Trends() {
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <TrendControls
         period={period}
-        interval={interval}
+        interval={bucketInterval}
         isOverviewMode={isOverviewMode}
         onChangePeriod={setPeriod}
-        onChangeInterval={setInterval}
+        onChangeInterval={setBucketInterval}
       />
 
       {trendError && (

@@ -17,13 +17,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dark mode specific styles */
-.dark :root {
-  color-scheme: dark;
-  color: #e2e8f0;
-  background-color: #0f172a;
-}
-
 html,
 body {
   margin: 0;
@@ -35,6 +28,12 @@ body {
   overflow-x: hidden;
   background-color: white;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 네이티브 컨트롤·스크롤바도 다크로 그리도록 색 구성표를 선언한다.
+   (.dark :root 는 자기 자신의 자손을 가리킬 수 없어 무효였던 셀렉터라 제거했고, 그 안에 있던 선언을 여기로 옮겼다) */
+.dark {
+  color-scheme: dark;
 }
 
 .dark body {
