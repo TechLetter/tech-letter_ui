@@ -3,12 +3,14 @@ import { RiRefreshLine } from "react-icons/ri";
 import llmModelsApi from "../../api/llmModelsApi";
 import { useUrlState } from "../../hooks/useUrlState";
 import EventFeed from "./components/EventFeed";
-import ModelHistoryChart from "./components/ModelHistoryChart";
+import ModelHistoryModal from "./components/ModelHistoryModal";
 import ModelTable from "./components/ModelTable";
 import SummaryCards from "./components/SummaryCards";
 
 const DEFAULT_PERIOD = "1m";
 const ALLOWED_PERIODS = new Set(["1d", "1w", "1m", "1y"]);
+const DEFAULT_METRIC = "uptime";
+const ALLOWED_METRICS = new Set(["uptime", "latency"]);
 
 export default function ModelStatus() {
   const [selectedModelId, setSelectedModelId] = useUrlState("model", null, {
@@ -18,6 +20,10 @@ export default function ModelStatus() {
   const [period, setPeriod] = useUrlState("period", DEFAULT_PERIOD, {
     parse: (value) => (ALLOWED_PERIODS.has(value) ? value : DEFAULT_PERIOD),
     serialize: (value) => (ALLOWED_PERIODS.has(value) ? value : DEFAULT_PERIOD),
+  });
+  const [metric, setMetric] = useUrlState("metric", DEFAULT_METRIC, {
+    parse: (value) => (ALLOWED_METRICS.has(value) ? value : DEFAULT_METRIC),
+    serialize: (value) => (ALLOWED_METRICS.has(value) ? value : DEFAULT_METRIC),
   });
 
   const [summary, setSummary] = useState(null);
@@ -118,17 +124,6 @@ export default function ModelStatus() {
 
       <SummaryCards summary={summary} loading={loadingOverview} />
 
-      {selectedModelId && (
-        <ModelHistoryChart
-          modelId={selectedModelId}
-          points={history}
-          period={period}
-          loading={loadingHistory}
-          onChangePeriod={setPeriod}
-          onClose={() => setSelectedModelId(null)}
-        />
-      )}
-
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <ModelTable
@@ -140,6 +135,19 @@ export default function ModelStatus() {
         </div>
         <EventFeed events={events} loading={loadingOverview} />
       </div>
+
+      {selectedModelId && (
+        <ModelHistoryModal
+          modelId={selectedModelId}
+          points={history}
+          period={period}
+          metric={metric}
+          loading={loadingHistory}
+          onChangePeriod={setPeriod}
+          onChangeMetric={setMetric}
+          onClose={() => setSelectedModelId(null)}
+        />
+      )}
     </div>
   );
 }

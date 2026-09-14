@@ -5,6 +5,7 @@ import { PATHS } from "../../routes/path";
 import chatApi from "../../api/chatApi";
 import { ErrorCode, toApiError } from "../../api/apiError";
 import llmModelsApi from "../../api/llmModelsApi";
+import { sortModelsByHealth } from "../../utils/modelHealth";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
@@ -175,17 +176,20 @@ export default function Chatbot() {
     persistChatModel(nextModelId);
   }, []);
 
+  // "자동" 이라는 별도 항목을 목록에 보여주는 대신, 처음 열었을 때나 고른
+  // 모델이 카탈로그에서 사라졌을 때 지금 제일 상태 좋은 모델로 조용히
+  // 채워 넣는다 — 사용자는 항상 실제 모델 이름 하나가 선택된 상태만 본다.
+  // 목록 조회 자체가 실패했을 때는(에러) 판단할 근거가 없으니 지금 값을
+  // 그대로 둔다.
   useEffect(() => {
-    if (modelCatalogStatus === "error") {
-      // 목록 장애만으로 모델이 사라졌다고 단정하면 저장된 선택을 잃는다.
-      // 현재 화면의 요청만 자동으로 보내고 localStorage 값은 다음 성공 조회까지 보존한다.
-      if (selectedModelId) setSelectedModelId("");
-      return;
-    }
-    if (modelCatalogStatus !== "loaded" || !selectedModelId) return;
+    if (modelCatalogStatus !== "loaded") return;
 
-    const isAvailable = modelOptions.some((option) => option.model_id === selectedModelId);
-    if (!isAvailable) handleModelChange("");
+    const isAvailable =
+      selectedModelId && modelOptions.some((option) => option.model_id === selectedModelId);
+    if (isAvailable) return;
+
+    const autoPick = sortModelsByHealth(modelOptions)[0]?.model_id;
+    if (autoPick) handleModelChange(autoPick);
   }, [handleModelChange, modelCatalogStatus, modelOptions, selectedModelId]);
 
   // 세션 목록 로드 콜백
