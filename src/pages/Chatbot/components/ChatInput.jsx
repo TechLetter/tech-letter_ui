@@ -1,5 +1,10 @@
 import { useRef, useEffect } from "react";
-import { RiArrowUpLine, RiLoader4Line } from "react-icons/ri";
+import { RiArrowDownSLine, RiArrowUpLine, RiLoader4Line } from "react-icons/ri";
+import ModelDropdown from "../../../components/common/ModelDropdown";
+import ModelStatusDot from "../../../components/common/ModelStatusDot";
+import { classifyModelHealth } from "../../../utils/modelHealth";
+
+const AUTO_MODEL_OPTION = { id: "", label: "자동 (가장 안정적인 모델)" };
 
 /**
  * ChatInput 컴포넌트
@@ -100,6 +105,36 @@ export default function ChatInput({
             style={{ minHeight: "24px" }}
           />
 
+          <ModelDropdown
+            options={modelOptions}
+            onSelect={setModel}
+            selectedId={selectedModelId}
+            leadingOption={AUTO_MODEL_OPTION}
+            placement="top"
+            align="right"
+            disabled={isLoading}
+            trigger={({ open, toggle }) => (
+              <button
+                type="button"
+                onClick={toggle}
+                disabled={isLoading}
+                aria-label="답변 모델 선택"
+                aria-expanded={open}
+                className="mb-0.5 flex h-9 max-w-[9.5rem] flex-shrink-0 items-center gap-1 rounded-full bg-black/5 px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15 sm:h-8"
+              >
+                {selectedModelId && (
+                  <ModelStatusDot
+                    level={classifyModelHealth(
+                      modelOptions.find((option) => option.model_id === selectedModelId)
+                    )}
+                  />
+                )}
+                <span className="min-w-0 truncate">{selectedModelId || "자동"}</span>
+                <RiArrowDownSLine className="shrink-0 text-sm" />
+              </button>
+            )}
+          />
+
           <button
             type="submit"
             disabled={!isSendable}
@@ -125,27 +160,6 @@ export default function ChatInput({
             {query.length}/{maxLength}자 (제한 초과)
           </p>
         )}
-
-        <div className="mt-2 flex items-center gap-2 px-1 text-xs text-slate-500 dark:text-slate-400">
-          <label htmlFor="chat-model-select" className="shrink-0">
-            모델:
-          </label>
-          <select
-            id="chat-model-select"
-            value={selectedModelId}
-            onChange={(event) => setModel(event.target.value)}
-            disabled={isLoading}
-            className="min-w-0 max-w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:focus:border-indigo-500 dark:focus:ring-indigo-900/40"
-            aria-label="답변 모델 선택"
-          >
-            <option value="">자동 (가장 안정적인 모델)</option>
-            {modelOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
     </div>
   );

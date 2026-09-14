@@ -7,6 +7,8 @@ import {
 } from "../../../api/adminApi";
 import llmModelsApi from "../../../api/llmModelsApi";
 import { showToast } from "../../../provider/toastModalBridge";
+import ModelDropdown from "../../../components/common/ModelDropdown";
+import { HEALTH_DOT_CLASS, HEALTH_LEVEL, classifyModelHealth } from "../../../utils/modelHealth";
 
 const SUMMARY_PURPOSE = "summary";
 const SUMMARY_LABEL = "요약";
@@ -43,16 +45,17 @@ const getCustomModels = (models, defaultModels) =>
 const areSameModels = (left, right) =>
   left.length === right.length && left.every((model, index) => model === right[index]);
 
-const isUnavailable = (health) => {
-  if (!health) return false;
-  const status = typeof health.latest_status === "string" ? health.latest_status : "";
-  return status.toUpperCase() !== "OK" || Number(health.consecutive_failures) > 0;
+// 헬스 기록이 아예 없거나(unknown) 정상(healthy)이면 점을 안 찍는다.
+// 눈에 띄어야 할 건 degraded/down뿐이다.
+const warningLevel = (health) => {
+  const level = classifyModelHealth(health);
+  return level === HEALTH_LEVEL.HEALTHY || level === HEALTH_LEVEL.UNKNOWN ? null : level;
 };
 
 function ModelChip({
   modelId,
   isDefault,
-  isUnavailable: unavailable,
+  warningLevel: level,
   isFirstCustom,
   isLastCustom,
   disabled,
@@ -71,10 +74,10 @@ function ModelChip({
         <span className="min-w-0 break-all">
           {isDefault ? `기본: ${modelId} 🔒` : modelId}
         </span>
-        {unavailable && (
+        {level && (
           <span
             aria-label={UNAVAILABLE_TOOLTIP}
-            className="h-2 w-2 shrink-0 rounded-full bg-red-500"
+            className={`h-2 w-2 shrink-0 rounded-full ${HEALTH_DOT_CLASS[level]}`}
             role="img"
             title={UNAVAILABLE_TOOLTIP}
           />
@@ -121,7 +124,7 @@ function ModelChip({
 ModelChip.propTypes = {
   modelId: PropTypes.string.isRequired,
   isDefault: PropTypes.bool.isRequired,
-  isUnavailable: PropTypes.bool.isRequired,
+  warningLevel: PropTypes.oneOf(["degraded", "down"]),
   isFirstCustom: PropTypes.bool.isRequired,
   isLastCustom: PropTypes.bool.isRequired,
   disabled: PropTypes.bool.isRequired,
@@ -141,7 +144,6 @@ export default function ModelPreferencesPanel() {
   const [healthLoading, setHealthLoading] = useState(true);
   const [healthError, setHealthError] = useState("");
   const [healthRetryKey, setHealthRetryKey] = useState(0);
-  const [selectedModelId, setSelectedModelId] = useState("");
   const [directModelId, setDirectModelId] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -228,10 +230,6 @@ export default function ModelPreferencesPanel() {
 
     setModels((current) => [...current, modelId]);
     return true;
-  };
-
-  const handleAddSelectedModel = () => {
-    if (addModel(selectedModelId)) setSelectedModelId("");
   };
 
   const handleAddDirectModel = (event) => {
@@ -340,7 +338,7 @@ export default function ModelPreferencesPanel() {
                     key={`${modelId}-${index}`}
                     modelId={modelId}
                     isDefault={index < defaultCount}
-                    isUnavailable={isUnavailable(healthByModelId.get(modelId))}
+                    warningLevel={warningLevel(healthByModelId.get(modelId))}
                     isFirstCustom={index === defaultCount}
                     isLastCustom={index === models.length - 1}
                     disabled={saving}
@@ -356,42 +354,29 @@ export default function ModelPreferencesPanel() {
             )}
           </div>
 
-          <div className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-            <label className="min-w-[min(100%,18rem)] flex-1">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                사용 가능한 모델
-              </span>
-              <select
-                value={selectedModelId}
-                onChange={(event) => setSelectedModelId(event.target.value)}
-                disabled={saving || healthLoading || candidateModels.length === 0}
-                aria-label="사용 가능한 모델에서 선택"
-                data-testid="model-candidate-select"
-                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-900/40 dark:disabled:bg-slate-700"
-              >
-                <option value="">
-                  {healthLoading
-                    ? "모델 목록을 불러오는 중입니다."
-                    : candidateModels.length > 0
-                      ? "모델 선택"
-                      : "추가할 모델이 없습니다."}
-                </option>
-                {candidateModels.map((health) => (
-                  <option key={health.model_id} value={health.model_id}>
-                    {health.model_id}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              type="button"
-              onClick={handleAddSelectedModel}
-              disabled={saving || !selectedModelId || healthLoading}
-              data-testid="model-add-button"
-              className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-            >
-              + 모델 추가
-            </button>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              사용 가능한 모델
+            </span>
+            <ModelDropdown
+              options={candidateModels}
+              onSelect={addModel}
+              loading={healthLoading}
+              disabled={saving}
+              emptyMessage="추가할 모델이 없습니다."
+              trigger={({ open, toggle }) => (
+                <button
+                  type="button"
+                  onClick={toggle}
+                  disabled={saving || healthLoading || candidateModels.length === 0}
+                  aria-expanded={open}
+                  data-testid="model-add-button"
+                  className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                >
+                  {healthLoading ? "모델 목록을 불러오는 중..." : "+ 모델 추가"}
+                </button>
+              )}
+            />
           </div>
 
           <form
