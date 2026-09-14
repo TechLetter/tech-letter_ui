@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { RiAddLine } from "react-icons/ri";
 import {
   getLlmModelPreferences,
   handleAdminError,
@@ -8,7 +9,14 @@ import {
 import llmModelsApi from "../../../api/llmModelsApi";
 import { showToast } from "../../../provider/toastModalBridge";
 import ModelDropdown from "../../../components/common/ModelDropdown";
-import { HEALTH_DOT_CLASS, HEALTH_LEVEL, classifyModelHealth } from "../../../utils/modelHealth";
+import ModelStatusDot from "../../../components/common/ModelStatusDot";
+import {
+  HEALTH_DOT_CLASS,
+  HEALTH_LEVEL,
+  classifyModelHealth,
+  formatModelMeta,
+  sortModelsByHealth,
+} from "../../../utils/modelHealth";
 
 const SUMMARY_PURPOSE = "summary";
 const SUMMARY_LABEL = "요약";
@@ -52,7 +60,11 @@ const warningLevel = (health) => {
   return level === HEALTH_LEVEL.HEALTHY || level === HEALTH_LEVEL.UNKNOWN ? null : level;
 };
 
-function ModelChip({
+// 칩을 가로로 늘어놓으면 "순서 없는 태그 묶음"처럼 보인다. 여기는 "위에서부터
+// 순서대로 시도한다"는 게 핵심이라, 번호를 붙인 세로 목록으로 그 순서를 눈에
+// 보이게 한다. 화살표도 ↑↓ 로 — 세로 목록에서 좌우보다 위아래가 더 직관적이다.
+function ModelRow({
+  order,
   modelId,
   isDefault,
   warningLevel: level,
@@ -63,15 +75,18 @@ function ModelChip({
   onRemove,
 }) {
   return (
-    <li className="min-w-0 max-w-full">
+    <li>
       <div
-        className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-2 text-sm ${
+        className={`flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
           isDefault
             ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/70 dark:bg-indigo-950/50 dark:text-indigo-300"
             : "border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         }`}
       >
-        <span className="min-w-0 break-all">
+        <span className="w-4 shrink-0 text-right text-xs font-medium text-slate-400 dark:text-slate-500">
+          {order}
+        </span>
+        <span className="min-w-0 flex-1 truncate">
           {isDefault ? `기본: ${modelId} 🔒` : modelId}
         </span>
         {level && (
@@ -83,26 +98,26 @@ function ModelChip({
           />
         )}
         {!isDefault && (
-          <span className="ml-1 inline-flex shrink-0 items-center gap-0.5">
+          <span className="ml-1 flex shrink-0 items-center gap-0.5">
             <button
               type="button"
-              aria-label={`${modelId} 앞 순서로 이동`}
+              aria-label={`${modelId} 위로 이동`}
               className="rounded-full px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
               disabled={disabled || isFirstCustom}
               onClick={() => onMove(-1)}
-              title="앞 순서로 이동"
+              title="위로 이동"
             >
-              ←
+              ↑
             </button>
             <button
               type="button"
-              aria-label={`${modelId} 뒤 순서로 이동`}
+              aria-label={`${modelId} 아래로 이동`}
               className="rounded-full px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
               disabled={disabled || isLastCustom}
               onClick={() => onMove(1)}
-              title="뒤 순서로 이동"
+              title="아래로 이동"
             >
-              →
+              ↓
             </button>
             <button
               type="button"
@@ -121,7 +136,8 @@ function ModelChip({
   );
 }
 
-ModelChip.propTypes = {
+ModelRow.propTypes = {
+  order: PropTypes.number.isRequired,
   modelId: PropTypes.string.isRequired,
   isDefault: PropTypes.bool.isRequired,
   warningLevel: PropTypes.oneOf(["degraded", "down"]),
@@ -215,6 +231,10 @@ export default function ModelPreferencesPanel() {
     const selectedModels = new Set(models);
     return healthModels.filter((health) => !selectedModels.has(health.model_id));
   }, [healthModels, models]);
+
+  // "모두 실패하면 자동" 이 지금 이 순간 실제로 어떤 모델을 가리키는지.
+  // 되돌리기 버튼을 누르지 않고도, 목록을 짜기 전에도 늘 보여야 한다.
+  const autoPick = useMemo(() => sortModelsByHealth(healthModels)[0] ?? null, [healthModels]);
 
   const addModel = (rawModelId) => {
     const modelId = typeof rawModelId === "string" ? rawModelId.trim() : "";
@@ -326,57 +346,57 @@ export default function ModelPreferencesPanel() {
         </div>
       ) : (
         <>
-          <div
-            className="flex min-w-0 flex-wrap items-center gap-2"
-            data-testid="model-chain"
-            aria-label="모델 시도 순서"
-          >
-            {models.length > 0 ? (
-              <ol className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                {models.map((modelId, index) => (
-                  <ModelChip
-                    key={`${modelId}-${index}`}
-                    modelId={modelId}
-                    isDefault={index < defaultCount}
-                    warningLevel={warningLevel(healthByModelId.get(modelId))}
-                    isFirstCustom={index === defaultCount}
-                    isLastCustom={index === models.length - 1}
-                    disabled={saving}
-                    onMove={(direction) => moveModel(index, direction)}
-                    onRemove={() => removeModel(index)}
-                  />
-                ))}
-              </ol>
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                지정된 모델이 없습니다. 아래 목록에서 모델을 추가하세요.
+          <div data-testid="model-chain" aria-label="모델 시도 순서">
+            <ol className="flex min-w-0 flex-col gap-1.5">
+              {models.map((modelId, index) => (
+                <ModelRow
+                  key={`${modelId}-${index}`}
+                  order={index + 1}
+                  modelId={modelId}
+                  isDefault={index < defaultCount}
+                  warningLevel={warningLevel(healthByModelId.get(modelId))}
+                  isFirstCustom={index === defaultCount}
+                  isLastCustom={index === models.length - 1}
+                  disabled={saving}
+                  onMove={(direction) => moveModel(index, direction)}
+                  onRemove={() => removeModel(index)}
+                />
+              ))}
+              <li>
+                <ModelDropdown
+                  options={candidateModels}
+                  onSelect={addModel}
+                  loading={healthLoading}
+                  disabled={saving}
+                  emptyMessage="추가할 모델이 없습니다."
+                  trigger={({ open, toggle }) => (
+                    <button
+                      type="button"
+                      onClick={toggle}
+                      disabled={saving || healthLoading || candidateModels.length === 0}
+                      aria-expanded={open}
+                      data-testid="model-add-button"
+                      className="flex w-full items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-indigo-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50/60 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-indigo-400 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30"
+                    >
+                      <span className="w-4 shrink-0 text-right text-xs font-medium text-slate-400 dark:text-slate-500">
+                        {models.length + 1}
+                      </span>
+                      <RiAddLine className="shrink-0" />
+                      {healthLoading ? "모델 목록을 불러오는 중..." : "모델 추가"}
+                    </button>
+                  )}
+                />
+              </li>
+            </ol>
+
+            {autoPick && (
+              <p className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 pl-6 text-xs text-slate-500 dark:text-slate-400">
+                <span>↓ 여기까지 모두 실패하면 자동 전환 — 지금은</span>
+                <ModelStatusDot level={classifyModelHealth(autoPick)} />
+                <span className="min-w-0 truncate font-mono">{autoPick.model_id}</span>
+                {formatModelMeta(autoPick) && <span>({formatModelMeta(autoPick)})</span>}
               </p>
             )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              사용 가능한 모델
-            </span>
-            <ModelDropdown
-              options={candidateModels}
-              onSelect={addModel}
-              loading={healthLoading}
-              disabled={saving}
-              emptyMessage="추가할 모델이 없습니다."
-              trigger={({ open, toggle }) => (
-                <button
-                  type="button"
-                  onClick={toggle}
-                  disabled={saving || healthLoading || candidateModels.length === 0}
-                  aria-expanded={open}
-                  data-testid="model-add-button"
-                  className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                >
-                  {healthLoading ? "모델 목록을 불러오는 중..." : "+ 모델 추가"}
-                </button>
-              )}
-            />
           </div>
 
           <form
@@ -422,10 +442,6 @@ export default function ModelPreferencesPanel() {
               </button>
             </div>
           )}
-
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            기본값은 항상 먼저 시도하며, 추가한 모델은 위 순서대로 시도합니다.
-          </p>
 
           <div className="flex flex-wrap gap-2">
             <button
