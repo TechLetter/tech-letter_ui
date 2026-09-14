@@ -33,22 +33,10 @@ const persistChatModel = (modelId) => {
   }
 };
 
-const modelHealthLabel = (item) => {
-  if (!item || typeof item !== "object") return "상태 확인 필요";
-
-  // 공개 헬스 응답은 최신 상태와 연속 실패를 제공하므로
-  // 어드민 전용 상태 필드에 기대지 않고 실제 공개 계약으로 표시한다.
-  const latestStatus =
-    typeof item.latest_status === "string" ? item.latest_status.trim().toUpperCase() : "";
-  const consecutiveFailures = item.consecutive_failures;
-  if (!latestStatus || typeof consecutiveFailures !== "number") {
-    return "상태 확인 필요";
-  }
-
-  return latestStatus === "OK" && consecutiveFailures === 0 ? "" : "응답 불안정";
-};
-
-const normalizeModelOptions = (items) => {
+// 상태 판정·정렬은 modelHealth.js 가 담당한다(어드민 화면과 동일 기준을 쓴다).
+// 여기서는 model_id 중복 제거와 문자열 다듬기만 한다 — 원본 헬스 필드는
+// 그대로 들고 있어야 드롭다운이 LED·uptime·지연을 보여줄 수 있다.
+const normalizeHealthItems = (items) => {
   const seen = new Set();
 
   return (Array.isArray(items) ? items : [])
@@ -60,11 +48,7 @@ const normalizeModelOptions = (items) => {
       if (!modelId || seen.has(modelId)) return null;
 
       seen.add(modelId);
-      const healthLabel = modelHealthLabel(item);
-      return {
-        id: modelId,
-        label: healthLabel ? `${modelId} (${healthLabel})` : modelId,
-      };
+      return typeof item === "string" ? { model_id: modelId } : { ...item, model_id: modelId };
     })
     .filter(Boolean);
 };
@@ -171,7 +155,7 @@ export default function Chatbot() {
       .getModels()
       .then((response) => {
         if (ignore) return;
-        setModelOptions(normalizeModelOptions(response?.data?.items));
+        setModelOptions(normalizeHealthItems(response?.data?.items));
         setModelCatalogStatus("loaded");
       })
       .catch(() => {
@@ -200,7 +184,7 @@ export default function Chatbot() {
     }
     if (modelCatalogStatus !== "loaded" || !selectedModelId) return;
 
-    const isAvailable = modelOptions.some((option) => option.id === selectedModelId);
+    const isAvailable = modelOptions.some((option) => option.model_id === selectedModelId);
     if (!isAvailable) handleModelChange("");
   }, [handleModelChange, modelCatalogStatus, modelOptions, selectedModelId]);
 
