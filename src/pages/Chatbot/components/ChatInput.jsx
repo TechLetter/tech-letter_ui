@@ -4,8 +4,6 @@ import ModelDropdown from "../../../components/common/ModelDropdown";
 import ModelStatusDot from "../../../components/common/ModelStatusDot";
 import { classifyModelHealth } from "../../../utils/modelHealth";
 
-const AUTO_MODEL_OPTION = { id: "", label: "자동 (가장 안정적인 모델)" };
-
 /**
  * ChatInput 컴포넌트
  * ChatGPT 모바일 스타일: 둥근 알약(Pill) 형태, 회색 배경.
@@ -109,7 +107,6 @@ export default function ChatInput({
             options={modelOptions}
             onSelect={setModel}
             selectedId={selectedModelId}
-            leadingOption={AUTO_MODEL_OPTION}
             placement="top"
             align="right"
             disabled={isLoading}
@@ -120,7 +117,7 @@ export default function ChatInput({
                 disabled={isLoading}
                 aria-label="답변 모델 선택"
                 aria-expanded={open}
-                className="mb-0.5 flex h-9 max-w-[9.5rem] flex-shrink-0 items-center gap-1 rounded-full bg-black/5 px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15 sm:h-8"
+                className="mb-0.5 flex h-9 flex-shrink-0 items-center gap-1 rounded-full bg-black/5 px-2 text-xs font-medium text-slate-600 transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15 sm:h-8 sm:max-w-[9.5rem] sm:px-2.5"
               >
                 {selectedModelId && (
                   <ModelStatusDot
@@ -129,7 +126,9 @@ export default function ChatInput({
                     )}
                   />
                 )}
-                <span className="min-w-0 truncate">{selectedModelId || "자동"}</span>
+                {/* 모바일에선 모델명이 입력창 자리를 너무 뺏어서, 점+화살표만
+                    남기고 이름은 데스크톱(sm+)에서만 보여준다. */}
+                <span className="hidden min-w-0 truncate sm:inline">{selectedModelId || "모델"}</span>
                 <RiArrowDownSLine className="shrink-0 text-sm" />
               </button>
             )}
