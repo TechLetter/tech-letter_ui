@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { RiCheckLine } from "react-icons/ri";
 import ModelStatusDot from "./ModelStatusDot";
-import { classifyModelHealth, formatModelMeta, sortModelsByHealth } from "../../utils/modelHealth";
+import { classifyModelHealth, sortModelsByHealth } from "../../utils/modelHealth";
 
 /**
  * 모델을 고르는 커스텀 드롭다운. 브라우저 기본 `<select>` 대신 써서 우리
- * 라이트/다크 테마를 그대로 따르고, 각 모델 옆에 상태 LED·uptime·지연을
- * 보여준다. 목록은 정상 → 불안정 → 장애 → 정보없음 순, 같은 상태 안에서는
- * uptime 높은 순 → 지연 낮은 순으로 정렬한다.
+ * 라이트/다크 테마를 그대로 따르고, 각 모델 옆에 상태 LED를 보여준다. 목록은
+ * 정상 → 불안정 → 장애 → 정보없음 순, 같은 상태 안에서는 uptime 높은 순 →
+ * 지연 낮은 순으로 정렬한다 — 수치 자체는 숨기고 순서로만 드러낸다.
+ * 이름이 길면 잘리므로 hover 시 전체 이름이 `title`로 뜬다.
  *
  * 트리거 버튼의 생김새는 페이지마다 다를 수 있어 render prop으로 받는다.
  */
@@ -105,7 +106,6 @@ export default function ModelDropdown({
                 <DropdownRow
                   key={health.model_id}
                   label={health.model_id}
-                  meta={formatModelMeta(health)}
                   level={classifyModelHealth(health)}
                   selected={selectedId === health.model_id}
                   onClick={() => handlePick(health.model_id)}
@@ -119,20 +119,20 @@ export default function ModelDropdown({
   );
 }
 
-function DropdownRow({ label, meta, level, selected, onClick }) {
+function DropdownRow({ label, level, selected, onClick }) {
   return (
     <button
       type="button"
       role="option"
       aria-selected={selected}
       onClick={onClick}
+      title={label}
       className={`flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 ${
         selected ? "bg-indigo-50 dark:bg-indigo-950/40" : ""
       }`}
     >
       {level && <ModelStatusDot level={level} />}
       <span className="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">{label}</span>
-      {meta && <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{meta}</span>}
       {selected && <RiCheckLine className="shrink-0 text-indigo-600 dark:text-indigo-400" />}
     </button>
   );
@@ -140,7 +140,6 @@ function DropdownRow({ label, meta, level, selected, onClick }) {
 
 DropdownRow.propTypes = {
   label: PropTypes.string.isRequired,
-  meta: PropTypes.string,
   level: PropTypes.oneOf(["healthy", "degraded", "down", "unknown"]),
   selected: PropTypes.bool.isRequired,
   onClick: PropTypes.func.isRequired,

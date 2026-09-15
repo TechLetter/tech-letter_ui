@@ -117,6 +117,7 @@ export default function ChatInput({
                 disabled={isLoading}
                 aria-label="답변 모델 선택"
                 aria-expanded={open}
+                title={selectedModelId}
                 className="mb-0.5 flex h-9 flex-shrink-0 items-center gap-1 rounded-full bg-black/5 px-2 text-xs font-medium text-slate-600 transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15 sm:h-8 sm:max-w-[9.5rem] sm:px-2.5"
               >
                 {selectedModelId && (

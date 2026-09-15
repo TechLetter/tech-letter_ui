@@ -86,7 +86,7 @@ function ModelRow({
         <span className="w-4 shrink-0 text-right text-xs font-medium text-slate-400 dark:text-slate-500">
           {order}
         </span>
-        <span className="min-w-0 flex-1 truncate">
+        <span className="min-w-0 flex-1 truncate" title={modelId}>
           {isDefault ? `기본: ${modelId} 🔒` : modelId}
         </span>
         {level && (
@@ -393,7 +393,9 @@ export default function ModelPreferencesPanel() {
               <p className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 pl-6 text-xs text-slate-500 dark:text-slate-400">
                 <span>↓ 여기까지 모두 실패하면 자동 전환 — 지금은</span>
                 <ModelStatusDot level={classifyModelHealth(autoPick)} />
-                <span className="min-w-0 truncate font-mono">{autoPick.model_id}</span>
+                <span className="min-w-0 truncate font-mono" title={autoPick.model_id}>
+                  {autoPick.model_id}
+                </span>
                 {formatModelMeta(autoPick) && <span>({formatModelMeta(autoPick)})</span>}
               </p>
             )}
