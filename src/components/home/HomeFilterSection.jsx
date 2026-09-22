@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   RiArrowDownSLine,
   RiCheckLine,
@@ -32,8 +26,6 @@ const ACTIVE_FILTER_CHIP_CLASS =
   "inline-flex h-8 max-w-full shrink-0 items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 text-xs font-semibold text-indigo-700 dark:border-indigo-900/70 dark:bg-indigo-950/50 dark:text-indigo-300";
 const ACTIVE_FILTER_VALUE_CLASS =
   "max-w-[4.5rem] truncate sm:max-w-[8rem] lg:max-w-[11rem]";
-const HIDDEN_FILTER_COUNT_CHIP_CLASS =
-  "inline-flex h-8 shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400";
 
 export default function HomeFilterSection({
   categoryFilters = [],
@@ -535,6 +527,11 @@ function FilterTabLabel({ label, count }) {
   );
 }
 
+// 예전엔 칩 너비를 실제로 픽셀 단위로 재서(보이지 않는 복제본 + ResizeObserver)
+// 몇 개까지 들어가는지 계산하고 나머지를 "+N"으로 접었다. 필터가 기껏해야
+// 카테고리 1개 + 출처 1개 + 태그 여러 개라 그 정도로 정교할 이유가 없다 —
+// 아래 모바일 탭 줄(FILTER_TABS)과 같은 방식으로, 안 들어가면 그냥 옆으로
+// 스크롤하게 둔다.
 function ActiveFilterSummary({
   selectedCategory,
   selectedBlog,
@@ -543,8 +540,6 @@ function ActiveFilterSummary({
   onClearBlog,
   onClearTag,
 }) {
-  const containerRef = useRef(null);
-  const measurementRef = useRef(null);
   const items = useMemo(
     () =>
       getActiveFilterItems({
@@ -564,45 +559,10 @@ function ActiveFilterSummary({
       onClearTag,
     ]
   );
-  const [visibleCount, setVisibleCount] = useState(items.length);
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    const measurement = measurementRef.current;
-    if (!container || !measurement) return undefined;
-
-    const updateVisibleCount = () => {
-      const nextVisibleCount = calculateVisibleFilterCount({
-        containerWidth: container.clientWidth,
-        measurementElement: measurement,
-        itemCount: items.length,
-      });
-      setVisibleCount((current) =>
-        current === nextVisibleCount ? current : nextVisibleCount
-      );
-    };
-
-    updateVisibleCount();
-
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", updateVisibleCount);
-      return () => window.removeEventListener("resize", updateVisibleCount);
-    }
-
-    const resizeObserver = new ResizeObserver(updateVisibleCount);
-    resizeObserver.observe(container);
-    return () => resizeObserver.disconnect();
-  }, [items]);
-
-  const visibleItems = items.slice(0, visibleCount);
-  const hiddenItems = items.slice(visibleCount);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
-    >
-      {visibleItems.map((item) => (
+    <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+      {items.map((item) => (
         <ActiveFilterChip
           key={item.key}
           label={item.label}
@@ -610,78 +570,8 @@ function ActiveFilterSummary({
           onClear={item.onClear}
         />
       ))}
-      {hiddenItems.length > 0 && (
-        <HiddenFilterCountChip
-          count={hiddenItems.length}
-          hiddenLabels={hiddenItems.map((item) => `${item.label} ${item.value}`)}
-        />
-      )}
-      <div
-        ref={measurementRef}
-        className="pointer-events-none absolute left-0 top-0 flex items-center gap-2 opacity-0"
-        aria-hidden="true"
-      >
-        {items.map((item) => (
-          <MeasuredFilterChip
-            key={item.key}
-            label={item.label}
-            value={item.value}
-          />
-        ))}
-        <HiddenFilterCountChip
-          count={items.length}
-          hiddenLabels={[]}
-          isMeasurement
-        />
-      </div>
     </div>
   );
-}
-
-function calculateVisibleFilterCount({
-  containerWidth,
-  measurementElement,
-  itemCount,
-}) {
-  if (itemCount === 0 || containerWidth <= 0) return 0;
-
-  const chipElements = Array.from(
-    measurementElement.querySelectorAll("[data-filter-chip]")
-  );
-  const moreElement = measurementElement.querySelector("[data-filter-more]");
-  const chipWidths = chipElements.map(
-    (element) => element.getBoundingClientRect().width
-  );
-  const moreWidth = moreElement?.getBoundingClientRect().width || 0;
-  const gap = parseFloat(getComputedStyle(measurementElement).columnGap) || 0;
-  const allWidth = getCombinedWidth(chipWidths, gap);
-
-  if (allWidth <= containerWidth) return itemCount;
-
-  let visibleCount = 0;
-  let usedWidth = 0;
-
-  for (let index = 0; index < chipWidths.length; index += 1) {
-    const chipWidth = chipWidths[index];
-    const nextUsedWidth =
-      usedWidth + (visibleCount > 0 ? gap : 0) + chipWidth;
-    const remainingCount = itemCount - index - 1;
-    const requiredWidth =
-      nextUsedWidth + (remainingCount > 0 ? gap + moreWidth : 0);
-
-    if (requiredWidth > containerWidth) break;
-
-    usedWidth = nextUsedWidth;
-    visibleCount += 1;
-  }
-
-  return visibleCount;
-}
-
-function getCombinedWidth(widths, gap) {
-  return widths.reduce((total, width, index) => {
-    return total + width + (index > 0 ? gap : 0);
-  }, 0);
 }
 
 function getActiveFilterItems({
@@ -728,7 +618,9 @@ function ActiveFilterChip({ label, value, onClear }) {
   return (
     <span className={ACTIVE_FILTER_CHIP_CLASS}>
       <span className="text-indigo-500 dark:text-indigo-400">{label}</span>
-      <span className={ACTIVE_FILTER_VALUE_CLASS}>{value}</span>
+      <span className={ACTIVE_FILTER_VALUE_CLASS} title={value}>
+        {value}
+      </span>
       <button
         type="button"
         onClick={onClear}
@@ -737,31 +629,6 @@ function ActiveFilterChip({ label, value, onClear }) {
       >
         <RiCloseLine className="h-3.5 w-3.5" />
       </button>
-    </span>
-  );
-}
-
-function MeasuredFilterChip({ label, value }) {
-  return (
-    <span className={ACTIVE_FILTER_CHIP_CLASS} data-filter-chip="true">
-      <span className="text-indigo-500 dark:text-indigo-400">{label}</span>
-      <span className={ACTIVE_FILTER_VALUE_CLASS}>{value}</span>
-      <span className="rounded-full p-0.5 text-indigo-500 dark:text-indigo-300">
-        <RiCloseLine className="h-3.5 w-3.5" />
-      </span>
-    </span>
-  );
-}
-
-function HiddenFilterCountChip({ count, hiddenLabels, isMeasurement = false }) {
-  return (
-    <span
-      className={HIDDEN_FILTER_COUNT_CHIP_CLASS}
-      title={hiddenLabels.join(", ")}
-      aria-label={`${count}개 필터 더 있음`}
-      data-filter-more={isMeasurement ? "true" : undefined}
-    >
-      +{count}
     </span>
   );
 }
