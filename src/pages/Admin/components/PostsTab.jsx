@@ -359,16 +359,11 @@ export default function PostsTab() {
         />
       </div>
 
-      {/* 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="pt-4">
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
-        </div>
-      )}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {/* 생성 모달 */}
       <CreatePostModal

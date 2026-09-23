@@ -44,7 +44,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex items-center justify-center gap-1">
+    <div className="flex items-center justify-center gap-1 pt-4">
       {/* 맨 처음 버튼 */}
       <button
         onClick={() => onPageChange(1)}

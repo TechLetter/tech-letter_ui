@@ -1,5 +1,7 @@
 import { RiPriceTag3Line } from "react-icons/ri";
 
+import SegmentedToggle from "../common/SegmentedToggle";
+
 const PERIOD_OPTIONS = [
   { value: "30d", label: "30일" },
   { value: "180d", label: "180일" },
@@ -56,20 +58,12 @@ function SegmentedControl({ label, value, options, onChange }) {
         className="grid min-w-0 flex-1 gap-1 sm:flex sm:flex-none"
         style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
       >
-        {options.map((option) => (
-          <button
-            type="button"
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            className={`min-w-0 truncate rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors sm:rounded-full sm:px-2.5 sm:py-1 ${
-              value === option.value
-                ? "bg-white text-indigo-600 shadow-sm dark:bg-slate-800 dark:text-indigo-300"
-                : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
+        <SegmentedToggle
+          options={options}
+          value={value}
+          onChange={onChange}
+          buttonClassName="min-w-0 truncate rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors sm:rounded-full sm:px-2.5 sm:py-1"
+        />
       </div>
     </div>
   );
