@@ -4,15 +4,9 @@ import PropTypes from "prop-types";
  * 상태 표시용 뱃지 컴포넌트
  * @param {string} variant - success | warning | error | info | neutral
  * @param {string} children - 뱃지 텍스트
- * @param {string} size - sm | md
  */
-export default function Badge({ variant = "neutral", size = "sm", children }) {
-  const baseClasses = "inline-flex items-center font-medium rounded-full";
-
-  const sizeClasses = {
-    sm: "px-2 py-0.5 text-xs",
-    md: "px-2.5 py-1 text-sm",
-  };
+export default function Badge({ variant = "neutral", children }) {
+  const baseClasses = "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium";
 
   const variantClasses = {
     success:
@@ -27,7 +21,7 @@ export default function Badge({ variant = "neutral", size = "sm", children }) {
 
   return (
     <span
-      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]}`}
+      className={`${baseClasses} ${variantClasses[variant]}`}
     >
       {children}
     </span>
@@ -36,6 +30,5 @@ export default function Badge({ variant = "neutral", size = "sm", children }) {
 
 Badge.propTypes = {
   variant: PropTypes.oneOf(["success", "warning", "error", "info", "neutral"]),
-  size: PropTypes.oneOf(["sm", "md"]),
   children: PropTypes.node.isRequired,
 };

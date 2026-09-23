@@ -20,10 +20,8 @@ export default function ModelDropdown({
   loading = false,
   disabled = false,
   emptyMessage = "선택할 수 있는 모델이 없습니다.",
-  leadingOption = null,
   placement = "bottom",
   align = "left",
-  panelClassName = "",
   trigger,
 }) {
   const [open, setOpen] = useState(false);
@@ -80,19 +78,8 @@ export default function ModelDropdown({
           />
           <div
             role="listbox"
-            className={`fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-slate-200 bg-white py-2 shadow-lg sm:absolute sm:inset-x-auto sm:inset-y-auto sm:bottom-auto sm:max-h-72 sm:w-72 sm:rounded-xl sm:border sm:py-1.5 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 ${desktopPositionClass} ${panelClassName}`}
+            className={`fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-slate-200 bg-white py-2 shadow-lg sm:absolute sm:inset-x-auto sm:inset-y-auto sm:bottom-auto sm:max-h-72 sm:w-72 sm:rounded-xl sm:border sm:py-1.5 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 ${desktopPositionClass}`}
           >
-            {leadingOption && (
-              <>
-                <DropdownRow
-                  label={leadingOption.label}
-                  selected={selectedId === leadingOption.id}
-                  onClick={() => handlePick(leadingOption.id)}
-                />
-                <div className="my-1 border-t border-slate-100 dark:border-slate-700" />
-              </>
-            )}
-
             {loading ? (
               <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
                 모델 목록을 불러오는 중입니다.
@@ -160,9 +147,7 @@ ModelDropdown.propTypes = {
   loading: PropTypes.bool,
   disabled: PropTypes.bool,
   emptyMessage: PropTypes.string,
-  leadingOption: PropTypes.shape({ id: PropTypes.string, label: PropTypes.string }),
   placement: PropTypes.oneOf(["top", "bottom"]),
   align: PropTypes.oneOf(["left", "right"]),
-  panelClassName: PropTypes.string,
   trigger: PropTypes.func.isRequired,
 };
