@@ -157,16 +157,6 @@ export default function BlogsTab() {
       ),
     },
     {
-      key: "blog_type",
-      label: "유형",
-      width: "110px",
-      render: (blogType) => (
-        <Badge variant={blogType === "creator" ? "info" : "neutral"}>
-          {blogType === "creator" ? "크리에이터" : "회사"}
-        </Badge>
-      ),
-    },
-    {
       key: "post_count",
       label: "포스트",
       width: "90px",

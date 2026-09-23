@@ -6,23 +6,11 @@ const DEFAULT_FORM = {
   name: "",
   url: "",
   rss_url: "",
-  blog_type: "company",
   is_active: true,
 };
 
-const BLOG_TYPE_OPTIONS = [
-  { value: "company", label: "회사" },
-  { value: "creator", label: "개인/크리에이터" },
-];
-
-const BLOG_TYPE_VALUES = new Set(BLOG_TYPE_OPTIONS.map((option) => option.value));
-
 function normalizeUrl(value) {
   return value.trim().replace(/\/+$/, "");
-}
-
-function getBlogTypeValue(value) {
-  return BLOG_TYPE_VALUES.has(value) ? value : "company";
 }
 
 function isValidUrl(value) {
@@ -61,7 +49,6 @@ export default function BlogFormModal({
       name: blog?.name || "",
       url: blog?.url || "",
       rss_url: blog?.rss_url || "",
-      blog_type: getBlogTypeValue(blog?.blog_type),
       is_active: blog?.is_active ?? true,
     });
     setError("");
@@ -82,9 +69,6 @@ export default function BlogFormModal({
     if (!formData.rss_url.trim()) return "RSS URL을 입력해주세요.";
     if (!isValidUrl(formData.url.trim())) return "유효한 블로그 URL을 입력해주세요.";
     if (!isValidUrl(formData.rss_url.trim())) return "유효한 RSS URL을 입력해주세요.";
-    if (!BLOG_TYPE_VALUES.has(formData.blog_type)) {
-      return "블로그 유형은 회사 또는 개인/크리에이터만 선택할 수 있습니다.";
-    }
 
     const normalizedUrl = normalizeUrl(formData.url);
     const normalizedRssUrl = normalizeUrl(formData.rss_url);
@@ -114,7 +98,6 @@ export default function BlogFormModal({
       name: formData.name.trim(),
       url: formData.url.trim(),
       rss_url: formData.rss_url.trim(),
-      blog_type: getBlogTypeValue(formData.blog_type),
       is_active: formData.is_active,
     });
   };
@@ -190,23 +173,6 @@ export default function BlogFormModal({
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
-              유형
-            </label>
-            <select
-              name="blog_type"
-              value={formData.blog_type}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-            >
-              {BLOG_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
 
           <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
             <input
