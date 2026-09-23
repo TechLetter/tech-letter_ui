@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { RiCloseLine } from "react-icons/ri";
+
+import SegmentedToggle from "../../../components/common/SegmentedToggle";
 import { useChartHover } from "../../../hooks/useChartHover";
 
 const PERIOD_OPTIONS = [
@@ -78,36 +80,18 @@ export default function ModelHistoryModal({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-950">
-              {METRIC_OPTIONS.map((option) => (
-                <button
-                  type="button"
-                  key={option.value}
-                  onClick={() => onChangeMetric(option.value)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    metric === option.value
-                      ? "bg-white text-indigo-600 shadow-sm dark:bg-slate-800 dark:text-indigo-300"
-                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+              <SegmentedToggle
+                options={METRIC_OPTIONS}
+                value={metric}
+                onChange={onChangeMetric}
+              />
             </div>
             <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-950">
-              {PERIOD_OPTIONS.map((option) => (
-                <button
-                  type="button"
-                  key={option.value}
-                  onClick={() => onChangePeriod(option.value)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    period === option.value
-                      ? "bg-white text-indigo-600 shadow-sm dark:bg-slate-800 dark:text-indigo-300"
-                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+              <SegmentedToggle
+                options={PERIOD_OPTIONS}
+                value={period}
+                onChange={onChangePeriod}
+              />
             </div>
             <button
               type="button"

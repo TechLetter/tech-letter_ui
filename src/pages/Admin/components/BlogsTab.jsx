@@ -288,15 +288,11 @@ export default function BlogsTab() {
         />
       </div>
 
-      {totalPages > 1 && (
-        <div className="pt-4">
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
-        </div>
-      )}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       <BlogFormModal
         open={formState.open}

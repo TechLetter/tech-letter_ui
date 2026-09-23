@@ -180,16 +180,11 @@ export default function UsersTab() {
         />
       </div>
 
-      {/* 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="pt-4">
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
-        </div>
-      )}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {/* 크레딧 지급 모달 */}
       <GrantCreditModal
