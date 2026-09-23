@@ -23,7 +23,7 @@ export default function PrivacyPolicy() {
             <br />
             <br />
             <span className="text-sm text-slate-500 dark:text-slate-400 font-normal">
-              본 방침은 2026년 1월 15일부터 시행됩니다.
+              본 방침은 2026년 9월 24일부터 시행됩니다.
             </span>
           </p>
 
@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
                     <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400 text-sm">
                       <li>
                         <strong>항목:</strong> 이메일 주소, 이름(또는 닉네임),
-                        프로필 이미지, 소셜 로그인 식별자(Provider Sub)
+                        소셜 로그인 식별자(Provider Sub)
                       </li>
                       <li>
                         <strong>목적:</strong> 회원 식별, 서비스 제공(뉴스레터,
