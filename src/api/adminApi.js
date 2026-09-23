@@ -58,10 +58,9 @@ export const grantCredit = (userCode, { amount, expires_at }) =>
 
 // ── Suggested questions ─────────────────────────────────────────
 // 경로가 `/admin/chatbot/suggested-questions` 에서 옮겨졌다.
-export const getSuggestedQuestions = ({ include_inactive = true } = {}) =>
-  client
-    .get(`${ADMIN_BASE}/suggested-questions`, { params: { include_inactive } })
-    .then(unwrap);
+// 어드민 목록은 비활성 질문까지 준다(서버 기본값).
+export const getSuggestedQuestions = () =>
+  client.get(`${ADMIN_BASE}/suggested-questions`).then(unwrap);
 
 export const createSuggestedQuestion = (data) =>
   client.post(`${ADMIN_BASE}/suggested-questions`, data).then(unwrap);
