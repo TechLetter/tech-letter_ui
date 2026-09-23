@@ -5,19 +5,38 @@ on:
     branches:
       - main
 
+# 배포가 겹치면 컨테이너 교체가 서로를 덮어쓴다. 앞선 배포를 끝까지 기다린다.
+concurrency:
+  group: ui-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: [self-hosted, Linux, ARM64, techletter-prod]
     environment: production
+    # 잡 레벨에 둔다 — VITE_API_BASE_URL_PROD는 production 환경 변수라 워크플로
+    # 최상위에서는 비어 보인다. 빌드 ARG로 번들에 박히고, compose가 매 명령마다
+    # 파일을 해석하므로 모든 스텝에 필요하다.
+    env:
+      COMPOSE_FILE: docker-compose.prod.yml
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_PROD }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Stop existing application and Run new version
-        env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_PROD }}
+      - name: Build image
+        # 기존 컨테이너가 계속 서비스하는 동안 빌드한다. 예전에는 `down` 뒤에
+        # 빌드해서 배포마다 2~4분 동안 사이트가 완전히 멈췄다.
+        run: docker compose build --pull
 
-        run: |
-          docker-compose -f docker-compose.prod.yml down
-          docker-compose -f docker-compose.prod.yml up -d --build
+      - name: Swap container
+        run: docker compose up -d --no-build --wait --wait-timeout 60 --remove-orphans
+
+      - name: Smoke
+        run: docker exec techletter_nginx wget -qO- http://localhost/ | grep -q '<div id="root">'
+
+      - name: Prune old image
+        # 태그가 `latest` 하나라 교체된 옛 이미지는 dangling으로 남는다.
+        if: success()
+        run: docker image prune -f

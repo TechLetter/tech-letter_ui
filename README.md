@@ -23,11 +23,11 @@ npm run build # production mode build
 
 ## 배포
 
-`main` 브랜치에 push하면 self-hosted runner가 아래 명령으로 배포한다. 컨테이너를 내렸다가 다시 올리므로 다운타임이 발생한다.
+`main` 브랜치에 push하면 self-hosted runner가 배포한다. 기존 컨테이너가 서비스하는 동안 이미지를 먼저 빌드하고, 그다음 컨테이너만 교체하므로 끊김은 재생성 수 초뿐이다.
 
 ```sh
-docker-compose -f docker-compose.prod.yml down
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml build --pull
+docker compose -f docker-compose.prod.yml up -d --no-build --wait
 ```
 
 `VITE_API_BASE_URL`은 `Dockerfile`의 build ARG로 프론트 번들에 포함된다. 런타임 환경 변수로는 바뀌지 않으며 값을 변경하면 다시 빌드해야 한다. `nginx.conf`는 SPA fallback만 제공하고 `/api` 프록시는 Traefik이 담당한다.
