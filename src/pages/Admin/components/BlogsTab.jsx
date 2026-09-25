@@ -1,14 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import {
-  RiAddLine,
-  RiDeleteBinLine,
-  RiEditLine,
-  RiExternalLinkLine,
-  RiRefreshLine,
-} from "react-icons/ri";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { RiAddLine, RiDeleteBinLine, RiEditLine, RiRssLine } from "react-icons/ri";
 import Table from "../../../components/common/Table";
-import Pagination from "../../../components/common/Pagination";
-import Badge from "../../../components/common/Badge";
 import {
   createBlog,
   deleteBlog,
@@ -18,16 +10,55 @@ import {
 } from "../../../api/adminApi";
 import { showToast } from "../../../provider/toastModalBridge";
 import { useUrlState } from "../../../hooks/useUrlState";
-import { formatKSTDateTime } from "../../../utils/timeutils";
+import { Dot, IconAction, PrimaryButton, RefreshButton, RelTime, SearchBox, StateTabs, Toolbar } from "./AdminKit";
 import BlogFormModal from "./BlogFormModal";
 import DeleteBlogModal from "./DeleteBlogModal";
+
+// 블로그는 50개 남짓이라 한 번에 받아 화면에서 거르고 정렬한다.
+const STATES = [
+  { id: "all", label: "전체" },
+  { id: "failing", label: "실패", tone: "amber" },
+  { id: "paused", label: "중지", tone: "slate" },
+];
+
+const isFailing = (blog) => blog.is_active && blog.consecutive_failures > 0;
+const matchesState = (blog, state) =>
+  state === "failing" ? isFailing(blog) : state === "paused" ? !blog.is_active : true;
+// 손봐야 할 것부터: 실패 → 중지 → 이름순.
+const rank = (blog) => (isFailing(blog) ? 0 : blog.is_active ? 2 : 1);
+
+function host(url) {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+/** 짧은 오류 이름. 전체 문장은 툴팁으로. */
+function shortError(error = "") {
+  const status = error.match(/\b(4\d\d|5\d\d)\b/);
+  if (status) return `HTTP ${status[1]}`;
+  return error.split(":")[0].slice(0, 24) || "오류";
+}
+
+function statusCell(blog) {
+  if (!blog.is_active) return <Dot tone="slate" label="수집 중지" />;
+  if (!isFailing(blog)) return <Dot tone="emerald" label="정상" />;
+  const tip = `${blog.consecutive_failures}회 연속 실패 · ${blog.last_fetch_error || ""}`;
+  return (
+    <span className="flex min-w-0 items-center gap-2" title={tip}>
+      <Dot tone="amber" label={tip} />
+      <span className="truncate text-xs tabular-nums text-amber-700 dark:text-amber-300">
+        {shortError(blog.last_fetch_error)} · {blog.consecutive_failures}회
+      </span>
+    </span>
+  );
+}
 
 export default function BlogsTab() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageSize] = useState(20);
   const [formState, setFormState] = useState({
     open: false,
     mode: "create",
@@ -36,26 +67,37 @@ export default function BlogsTab() {
   const [deleteState, setDeleteState] = useState({ open: false, blog: null });
   const [submitting, setSubmitting] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
-
-  const [page, setPage] = useUrlState("blogPage", 1, { parse: Number });
+  const [state, setState] = useUrlState("state", "all");
+  const [query, setQuery] = useUrlState("q", "");
 
   const fetchBlogs = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getBlogs({ page, page_size: pageSize });
+      const data = await getBlogs({ page: 1, page_size: 100 });
       setBlogs(data.items || []);
-      setTotalPages(data.total_pages || 0);
-      setTotalCount(data.total || 0);
     } catch (error) {
       showToast(handleAdminError(error), "error");
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize]);
+  }, []);
 
   useEffect(() => {
     fetchBlogs();
   }, [fetchBlogs]);
+
+  const searched = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return blogs.filter((b) => !q || `${b.name} ${b.url}`.toLowerCase().includes(q));
+  }, [blogs, query]);
+  const shown = useMemo(
+    () =>
+      searched
+        .filter((b) => matchesState(b, state))
+        .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name)),
+    [searched, state]
+  );
+  const counts = Object.fromEntries(STATES.map((item) => [item.id, searched.filter((b) => matchesState(b, item.id)).length]));
 
   const openCreateModal = () => {
     setFormState({ open: true, mode: "create", blog: null });
@@ -122,167 +164,83 @@ export default function BlogsTab() {
     {
       key: "name",
       label: "블로그",
-      width: "220px",
       render: (name, row) => (
-        <div className="space-y-1">
-          <a
-            href={row.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 font-medium text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400"
-          >
-            <span className="truncate">{name}</span>
-            <RiExternalLinkLine className="flex-shrink-0 text-slate-400" />
-          </a>
-          <div className="truncate text-xs text-slate-500 dark:text-slate-400">
-            {row.url}
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <a href={row.url} target="_blank" rel="noopener noreferrer" className="min-w-0 truncate">
+              <span className="font-medium text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400">
+                {name}
+              </span>
+            </a>
+            <a
+              href={row.rss_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${name} RSS`}
+              title={row.rss_url}
+              className="shrink-0"
+            >
+              <RiRssLine className="h-3.5 w-3.5 text-slate-300 hover:text-orange-500 dark:text-slate-600" />
+            </a>
           </div>
+          <div className="truncate text-xs text-slate-500 dark:text-slate-400">{host(row.url)}</div>
         </div>
-      ),
-    },
-    {
-      key: "rss_url",
-      label: "RSS",
-      width: "280px",
-      render: (rssUrl) => (
-        <a
-          href={rssUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-        >
-          <span className="truncate">{rssUrl}</span>
-          <RiExternalLinkLine className="flex-shrink-0" />
-        </a>
       ),
     },
     {
       key: "post_count",
       label: "포스트",
-      width: "90px",
+      width: "64px",
       align: "right",
-      render: (postCount) => (
-        <span className="font-medium text-slate-900 dark:text-slate-100">
-          {(postCount || 0).toLocaleString()}개
-        </span>
+      render: (count) => (
+        <span className="tabular-nums text-slate-700 dark:text-slate-200">{(count || 0).toLocaleString()}</span>
       ),
     },
-    {
-      key: "is_active",
-      label: "수집",
-      width: "90px",
-      render: (isActive) => (
-        <Badge variant={isActive ? "success" : "warning"}>
-          {isActive ? "활성" : "중지"}
-        </Badge>
-      ),
-    },
-    {
-      key: "last_fetched_at",
-      label: "최근 수집",
-      width: "170px",
-      render: (lastFetchedAt, row) => (
-        <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
-          <div>{lastFetchedAt ? formatKSTDateTime(lastFetchedAt) : "-"}</div>
-          {row.last_fetch_error && (
-            <div className="line-clamp-2 text-red-500 dark:text-red-400">
-              {row.last_fetch_error}
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "id",
-      label: "ID",
-      width: "180px",
-      className: "hidden lg:block",
-      render: (id) => (
-        <code className="block max-w-[160px] truncate rounded bg-slate-100 px-2 py-1 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-          {id}
-        </code>
-      ),
-    },
+    { key: "status", label: "상태", width: "150px", render: (_, row) => statusCell(row) },
+    { key: "last_fetched_at", label: "최근 수집", width: "84px", render: (iso) => <RelTime iso={iso} /> },
     {
       key: "actions",
-      label: "작업",
-      width: "120px",
+      label: "",
+      width: "76px",
       align: "right",
       sticky: "right",
-      render: (_, row) => {
-        const isLoading = actionLoadingId === row.id;
-        return (
-          <div className="flex justify-end gap-1">
-            <button
-              type="button"
-              onClick={() => openEditModal(row)}
-              disabled={isLoading}
-              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
-              title="수정"
-            >
-              <RiEditLine />
-            </button>
-            <button
-              type="button"
-              onClick={() => openDeleteModal(row)}
-              disabled={isLoading}
-              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-              title="삭제"
-            >
-              <RiDeleteBinLine />
-            </button>
-          </div>
-        );
-      },
+      render: (_, row) => (
+        <div className="flex justify-end gap-0.5">
+          <IconAction onClick={() => openEditModal(row)} disabled={actionLoadingId === row.id} label="수정">
+            <RiEditLine className="h-4 w-4" />
+          </IconAction>
+          <IconAction onClick={() => openDeleteModal(row)} disabled={actionLoadingId === row.id} label="삭제" tone="rose">
+            <RiDeleteBinLine className="h-4 w-4" />
+          </IconAction>
+        </div>
+      ),
     },
   ];
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            블로그 관리
-          </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            총 {totalCount.toLocaleString()}개
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={fetchBlogs}
-            disabled={loading}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            <RiRefreshLine className={loading ? "animate-spin" : ""} />
-            새로고침
-          </button>
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-          >
-            <RiAddLine />
-            추가
-          </button>
-        </div>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-        <Table
-          columns={columns}
-          data={blogs}
-          loading={loading}
-          emptyMessage="등록된 블로그가 없습니다."
-        />
-      </div>
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
+      <Toolbar
+        left={
+          <StateTabs
+            tabs={STATES.map((item) => ({ ...item, count: counts[item.id] }))}
+            value={state}
+            onChange={(id) => setState(id === "all" ? undefined : id)}
+          />
+        }
+        right={
+          <>
+            <SearchBox id="blog-search" value={query} onChange={(v) => setQuery(v.trim() || undefined)} placeholder="블로그 검색" />
+            <RefreshButton onClick={fetchBlogs} loading={loading} />
+            <PrimaryButton onClick={openCreateModal} icon={<RiAddLine className="h-4 w-4" />}>
+              추가
+            </PrimaryButton>
+          </>
+        }
       />
+
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <Table columns={columns} data={shown} loading={loading} emptyMessage="해당 블로그 없음" />
+      </div>
 
       <BlogFormModal
         open={formState.open}

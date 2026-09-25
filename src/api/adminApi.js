@@ -14,9 +14,19 @@ const ADMIN_BASE = "/api/v1/admin";
 const unwrap = (response) => response.data;
 
 // ── Posts ───────────────────────────────────────────────────────
-export async function getPosts({ page = 1, page_size = 20, summarized, embedded, blog_id, q } = {}) {
+export async function getPosts({
+  page = 1,
+  page_size = 20,
+  summarized,
+  embedded,
+  failed,
+  blog_id,
+  q,
+} = {}) {
   return client
-    .get(`${ADMIN_BASE}/posts`, { params: { page, page_size, summarized, embedded, blog_id, q } })
+    .get(`${ADMIN_BASE}/posts`, {
+      params: { page, page_size, summarized, embedded, failed, blog_id, q },
+    })
     .then(unwrap);
 }
 

@@ -1,15 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  RiRefreshLine,
-  RiDeleteBinLine,
-  RiSparklingLine,
-  RiDatabase2Line,
-  RiAddLine,
-  RiExternalLinkLine,
-} from "react-icons/ri";
+import { RiDeleteBinLine, RiSparklingLine, RiDatabase2Line, RiAddLine } from "react-icons/ri";
 import Table from "../../../components/common/Table";
-import Badge from "../../../components/common/Badge";
 import Pagination from "../../../components/common/Pagination";
 import {
   getPosts,
@@ -20,42 +12,71 @@ import {
   handleAdminError,
 } from "../../../api/adminApi";
 import { showToast } from "../../../provider/toastModalBridge";
-import { formatKSTDateTime } from "../../../utils/timeutils";
-import { useUrlState, parseBool } from "../../../hooks/useUrlState";
+import { useUrlState } from "../../../hooks/useUrlState";
+import { exactTime } from "../adminFormat";
+import {
+  CONTROL,
+  Dot,
+  IconAction,
+  PrimaryButton,
+  RefreshButton,
+  RelTime,
+  SearchBox,
+  StateTabs,
+  Toolbar,
+} from "./AdminKit";
 import CreatePostModal from "./CreatePostModal";
+
+const PAGE_SIZE = 20;
+// 상태 탭 → 목록 API 조건. 요약 대기에는 영구 실패도 섞여 있다(실패 탭이 따로 있다).
+const STATES = [
+  { id: "all", label: "전체", params: {} },
+  { id: "unsummarized", label: "요약 대기", tone: "slate", params: { summarized: false } },
+  { id: "unembedded", label: "임베딩 대기", tone: "amber", params: { embedded: false } },
+  { id: "failed", label: "실패", tone: "rose", params: { failed: true } },
+];
+
+function summaryDot(post) {
+  if (post.status?.summarized) {
+    const s = post.ai_summary || {};
+    return <Dot tone="emerald" label={["요약", s.model_name, exactTime(s.generated_at)].filter(Boolean).join(" · ")} />;
+  }
+  if (post.status?.failed_reason) return <Dot tone="rose" label={`요약 실패 · ${post.status.failed_reason}`} />;
+  return <Dot tone="slate" label="요약 대기" />;
+}
+
+function embeddingDot(post) {
+  if (post.status?.embedded) {
+    const e = post.embedding || {};
+    return <Dot tone="emerald" label={["임베딩", e.model_name, exactTime(e.embedded_at)].filter(Boolean).join(" · ")} />;
+  }
+  return <Dot tone="slate" label="임베딩 대기" />;
+}
 
 export default function PostsTab() {
   const [, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageSize] = useState(20);
+  const [counts, setCounts] = useState({});
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  const [blogs, setBlogs] = useState([]);
 
-  // URL 동기화되는 필터/페이지 상태
   const [page, setPage] = useUrlState("page", 1, { parse: Number });
-  const [filterSummarized] = useUrlState("summarized", undefined, {
-    parse: parseBool,
-  });
-  const [filterEmbedded] = useUrlState("embedded", undefined, {
-    parse: parseBool,
-  });
-  const [filterBlogId] = useUrlState("blog", "");
+  const [state] = useUrlState("state", "all");
+  const [blogId] = useUrlState("blog", "");
+  const [query] = useUrlState("q", "");
 
-  // 필터 변경 + 페이지 리셋을 한번에 처리 (batching 문제 방지)
-  const handleFilterChange = useCallback(
+  // 필터를 바꾸면 페이지는 처음으로.
+  const setFilter = useCallback(
     (key, value) => {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          next.delete("page"); // 페이지 리셋
-          if (value === undefined || value === null || value === "") {
-            next.delete(key);
-          } else {
-            next.set(key, String(value));
-          }
+          next.delete("page");
+          if (!value || value === "all") next.delete(key);
+          else next.set(key, String(value));
           return next;
         },
         { replace: true }
@@ -64,43 +85,31 @@ export default function PostsTab() {
     [setSearchParams]
   );
 
-  // 블로그 목록 (필터 드롭다운용)
-  const [blogs, setBlogs] = useState([]);
-
-  // 블로그 목록 로드 (최초 1회)
   useEffect(() => {
-    const loadBlogs = async () => {
-      try {
-        const data = await getBlogs({ page: 1, page_size: 100 });
-        setBlogs(data.items || []);
-      } catch {
-        // 블로그 로드 실패 시 무시 (필터만 비활성화됨)
-      }
-    };
-    loadBlogs();
+    getBlogs({ page: 1, page_size: 100 })
+      .then((data) => setBlogs((data.items || []).sort((a, b) => a.name.localeCompare(b.name))))
+      .catch(() => {});
   }, []);
 
-  // 포스트 목록 조회
   const fetchPosts = useCallback(async () => {
     setLoading(true);
+    const base = { blog_id: blogId || undefined, q: query || undefined };
+    const current = STATES.find((item) => item.id === state) || STATES[0];
     try {
-      const data = await getPosts({
-        page,
-        page_size: pageSize,
-        summarized: filterSummarized,
-        embedded: filterEmbedded,
-        blog_id: filterBlogId || undefined,
-      });
+      // 탭 옆 개수는 같은 블로그·검색 조건으로 센다.
+      const [data, ...totals] = await Promise.all([
+        getPosts({ ...base, ...current.params, page, page_size: PAGE_SIZE }),
+        ...STATES.map((item) => getPosts({ ...base, ...item.params, page: 1, page_size: 1 })),
+      ]);
       setPosts(data.items || []);
-      // 서버가 총 페이지 수를 계산해 준다.
       setTotalPages(data.total_pages || 0);
-      setTotalCount(data.total || 0);
+      setCounts(Object.fromEntries(STATES.map((item, i) => [item.id, totals[i].total])));
     } catch (error) {
       showToast(handleAdminError(error), "error");
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, filterSummarized, filterEmbedded, filterBlogId]);
+  }, [page, state, blogId, query]);
 
   useEffect(() => {
     fetchPosts();
@@ -151,121 +160,49 @@ export default function PostsTab() {
     fetchPosts();
   };
 
-  // 테이블 컬럼 정의
   const columns = [
     {
       key: "title",
       label: "제목",
-      width: "300px",
       render: (title, row) => (
-        <div className="space-y-1">
-          <a
-            href={row.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-slate-900 hover:text-indigo-600 flex items-center gap-1 group dark:text-slate-100 dark:hover:text-indigo-400"
-          >
-            <span className="line-clamp-1">{title}</span>
-            <RiExternalLinkLine className="text-slate-400 group-hover:text-indigo-600 flex-shrink-0 dark:text-slate-500 dark:group-hover:text-indigo-400" />
+        <div className="min-w-0 space-y-0.5">
+          <a href={row.link} target="_blank" rel="noopener noreferrer" title={`${title}\n${row.id}`} className="block">
+            <span className="line-clamp-1 font-medium text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400">
+              {title}
+            </span>
           </a>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            {row.blog_name || "-"}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      label: "상태",
-      width: "250px",
-      render: (status, row) => (
-        <div className="flex flex-col gap-1.5">
-          <Badge variant={status?.summarized ? "success" : "warning"}>
-            {status?.summarized ? (
-              <span>요약 완료 {row.ai_summary?.model_name || ""}</span>
-            ) : (
-              status?.failed_reason || "요약 대기"
-            )}
-          </Badge>
-          <Badge variant={status?.embedded ? "success" : "warning"}>
-            {status?.embedded ? (
-              <span>임베딩 완료 {row.embedding?.model_name || ""}</span>
-            ) : (
-              "임베딩 대기"
-            )}
-          </Badge>
-        </div>
-      ),
-    },
-    {
-      key: "timestamps",
-      label: "시간 정보",
-      width: "180px",
-      render: (_, row) => (
-        <div className="text-xs text-slate-500 space-y-0.5 dark:text-slate-400">
-          <div>생성: {formatKSTDateTime(row.created_at)}</div>
-          {row.ai_summary?.generated_at && (
-            <div>요약: {formatKSTDateTime(row.ai_summary.generated_at)}</div>
-          )}
-          {row.embedding?.embedded_at && (
-            <div>임베딩: {formatKSTDateTime(row.embedding.embedded_at)}</div>
+          <div className="truncate text-xs text-slate-500 dark:text-slate-400">{row.blog_name || "-"}</div>
+          {row.status?.failed_reason && (
+            <div className="truncate text-xs text-rose-600 dark:text-rose-400" title={row.status.failed_reason}>
+              {row.status.failed_reason}
+            </div>
           )}
         </div>
       ),
     },
-    {
-      key: "id",
-      label: "ID",
-      width: "180px",
-      render: (id) => (
-        <code className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded truncate block max-w-[160px] dark:bg-slate-800 dark:text-slate-400">
-          {id}
-        </code>
-      ),
-    },
+    { key: "published_at", label: "발행", width: "84px", render: (iso) => <RelTime iso={iso} /> },
+    { key: "created_at", label: "수집", width: "84px", render: (iso) => <RelTime iso={iso} /> },
+    { key: "summary", label: "요약", width: "48px", align: "center", render: (_, row) => summaryDot(row) },
+    { key: "embedding", label: "임베딩", width: "56px", align: "center", render: (_, row) => embeddingDot(row) },
     {
       key: "actions",
       label: "",
-      width: "140px",
+      width: "112px",
       align: "right",
       sticky: "right",
       render: (_, row) => {
-        const isThisRowLoading = actionLoading?.id === row.id;
+        const busy = actionLoading?.id === row.id;
         return (
-          <div className="flex items-center justify-end gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSummarize(row);
-              }}
-              disabled={isThisRowLoading}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-900/30"
-              title="AI 요약 트리거"
-            >
-              <RiSparklingLine className="text-base" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEmbed(row);
-              }}
-              disabled={isThisRowLoading}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30"
-              title="임베딩 트리거"
-            >
-              <RiDatabase2Line className="text-base" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(row);
-              }}
-              disabled={isThisRowLoading}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30"
-              title="삭제"
-            >
-              <RiDeleteBinLine className="text-base" />
-            </button>
+          <div className="flex items-center justify-end gap-0.5">
+            <IconAction onClick={() => handleSummarize(row)} disabled={busy} label="요약 다시 하기" tone="amber">
+              <RiSparklingLine className="h-4 w-4" />
+            </IconAction>
+            <IconAction onClick={() => handleEmbed(row)} disabled={busy} label="임베딩 다시 하기" tone="blue">
+              <RiDatabase2Line className="h-4 w-4" />
+            </IconAction>
+            <IconAction onClick={() => handleDelete(row)} disabled={busy} label="삭제" tone="rose">
+              <RiDeleteBinLine className="h-4 w-4" />
+            </IconAction>
           </div>
         );
       },
@@ -274,98 +211,47 @@ export default function PostsTab() {
 
   return (
     <div className="space-y-4">
-      {/* 헤더 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            포스트 관리
-          </h2>
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            총{" "}
-            <span className="font-medium text-slate-700 dark:text-slate-200">
-              {totalCount.toLocaleString()}
-            </span>
-            건
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {/* 블로그 필터 */}
-          <select
-            value={filterBlogId}
-            onChange={(e) => handleFilterChange("blog", e.target.value)}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
-          >
-            <option value="">블로그: 전체</option>
-            {blogs.map((blog) => (
-              <option key={blog.id} value={blog.id}>
-                {blog.name} ({blog.url})
-              </option>
-            ))}
-          </select>
-          {/* 요약/임베딩 필터 */}
-          <select
-            value={
-              filterSummarized === undefined ? "" : filterSummarized.toString()
-            }
-            onChange={(e) => {
-              const val = e.target.value;
-              handleFilterChange("summarized", val === "" ? undefined : val);
-            }}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
-          >
-            <option value="">요약 상태: 전체</option>
-            <option value="true">요약 완료</option>
-            <option value="false">요약 대기</option>
-          </select>
-          <select
-            value={
-              filterEmbedded === undefined ? "" : filterEmbedded.toString()
-            }
-            onChange={(e) => {
-              const val = e.target.value;
-              handleFilterChange("embedded", val === "" ? undefined : val);
-            }}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
-          >
-            <option value="">임베딩 상태: 전체</option>
-            <option value="true">임베딩 완료</option>
-            <option value="false">임베딩 대기</option>
-          </select>
-          <button
-            onClick={fetchPosts}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            <RiRefreshLine className={loading ? "animate-spin" : ""} />
-            새로고침
-          </button>
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors dark:bg-indigo-500 dark:hover:bg-indigo-600"
-          >
-            <RiAddLine />
-            포스트 추가
-          </button>
-        </div>
-      </div>
-
-      {/* 테이블 */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-        <Table
-          columns={columns}
-          data={posts}
-          loading={loading}
-          emptyMessage="등록된 포스트가 없습니다."
-        />
-      </div>
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
+      <Toolbar
+        left={
+          <StateTabs
+            tabs={STATES.map((item) => ({ ...item, count: counts[item.id] }))}
+            value={state}
+            onChange={(id) => setFilter("state", id)}
+          />
+        }
+        right={
+          <>
+            <SearchBox id="post-search" value={query} onChange={(v) => setFilter("q", v.trim())} placeholder="제목 검색" />
+            <label htmlFor="post-blog" className="sr-only">
+              블로그
+            </label>
+            <select
+              id="post-blog"
+              value={blogId}
+              onChange={(e) => setFilter("blog", e.target.value)}
+              className={`${CONTROL} w-36 px-2`}
+            >
+              <option value="">블로그 전체</option>
+              {blogs.map((blog) => (
+                <option key={blog.id} value={blog.id}>
+                  {blog.name}
+                </option>
+              ))}
+            </select>
+            <RefreshButton onClick={fetchPosts} loading={loading} />
+            <PrimaryButton onClick={() => setCreateModalOpen(true)} icon={<RiAddLine className="h-4 w-4" />}>
+              추가
+            </PrimaryButton>
+          </>
+        }
       />
 
-      {/* 생성 모달 */}
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <Table columns={columns} data={posts} loading={loading} emptyMessage="해당 포스트 없음" />
+      </div>
+
+      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+
       <CreatePostModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
