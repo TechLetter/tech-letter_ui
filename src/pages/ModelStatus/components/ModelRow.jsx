@@ -8,7 +8,6 @@ import {
   statusDetail,
 } from "../modelFormat";
 import ModalityIcons from "./ModalityIcons";
-import ModelDetail from "./ModelDetail";
 import UptimeBars from "./UptimeBars";
 
 export default function ModelRow({ model, days, expanded, onToggle }) {
@@ -23,8 +22,10 @@ export default function ModelRow({ model, days, expanded, onToggle }) {
 
   return (
     <li
-      className={`min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 ${
-        expanded ? "lg:col-span-2" : ""
+      className={`min-w-0 rounded-xl border bg-white shadow-sm dark:bg-slate-900 ${
+        expanded
+          ? "border-indigo-300 ring-1 ring-indigo-300 dark:border-indigo-500/60 dark:ring-indigo-500/60"
+          : "border-slate-200 dark:border-slate-800"
       } ${down && !expanded ? "opacity-60" : ""}`}
       data-testid="model-row"
     >
@@ -60,7 +61,6 @@ export default function ModelRow({ model, days, expanded, onToggle }) {
         )}
         <UptimeBars days={days} daily={model.daily} />
       </button>
-      {expanded && <ModelDetail model={model} />}
     </li>
   );
 }

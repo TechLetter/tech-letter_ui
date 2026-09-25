@@ -69,14 +69,14 @@ function ExternalLink({ href, children }) {
   );
 }
 
-/** 펼친 카드의 아래쪽. 설명·링크 / 스펙·벤치마크 / 우리 헬스체크. */
+/** 고른 카드가 있는 줄 바로 아래에 한 줄을 다 써서 편다. 설명·링크 / 스펙·벤치마크 / 우리 헬스체크. */
 export default function ModelDetail({ model }) {
   const info = model.info || {};
   const provider = [info.provider, info.quantization].filter(Boolean).join(" · ");
   const inputs = (info.input_modalities || []).join(" · ");
 
   return (
-    <div className="grid gap-6 border-t border-slate-100 px-4 pb-4 pt-4 lg:grid-cols-3 dark:border-slate-800">
+    <div className="grid gap-6 p-4 lg:grid-cols-3">
       <div className="space-y-3">
         {info.description && (
           <p className="text-[13px] leading-5 text-slate-600 dark:text-slate-300">
