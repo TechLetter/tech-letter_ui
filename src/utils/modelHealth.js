@@ -65,15 +65,3 @@ export function sortModelsByHealth(items) {
     return latencyA - latencyB;
   });
 }
-
-/** 목록 옆에 보여줄 보조 문구. "99.8% · 0.9s" 처럼. 정보가 없으면 빈 문자열. */
-export function formatModelMeta(health) {
-  const parts = [];
-  if (typeof health?.uptime_24h === "number") {
-    parts.push(`${health.uptime_24h.toFixed(1)}%`);
-  }
-  if (typeof health?.avg_latency_ms === "number") {
-    parts.push(`${(health.avg_latency_ms / 1000).toFixed(1)}s`);
-  }
-  return parts.join(" · ");
-}

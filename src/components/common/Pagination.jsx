@@ -6,6 +6,9 @@ import {
   RiArrowRightDoubleLine,
 } from "react-icons/ri";
 
+/** 표 한 페이지에 보여 줄 행 수. 서버에 page_size로 넘기는 값도 이것을 쓴다. */
+export const DEFAULT_PAGE_SIZE = 10;
+
 /**
  * 페이지네이션 컴포넌트
  * @param {number} currentPage - 현재 페이지 (1-indexed)

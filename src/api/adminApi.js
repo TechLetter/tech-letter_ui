@@ -93,14 +93,7 @@ export const retryJobsBulk = (body) =>
   client.post(`${ADMIN_BASE}/jobs/retry-bulk`, body).then(unwrap);
 export const deleteJob = (id) => client.delete(`${ADMIN_BASE}/jobs/${id}`).then(unwrap);
 
-// ── Ops: 모델 선호목록 · 백필 ──────────────────────────────────
-export const getLlmModelPreferences = () =>
-  client.get(`${ADMIN_BASE}/llm-models/preferences`).then(unwrap);
-export const setLlmModelPreference = (purpose, models) =>
-  client
-    .put(`${ADMIN_BASE}/llm-models/preferences/${encodeURIComponent(purpose)}`, { models })
-    .then(unwrap);
-
+// ── Ops: 백필 ───────────────────────────────────────────────────
 export const getBackfillStatus = () =>
   client.get(`${ADMIN_BASE}/backfill/summary`).then(unwrap);
 export const runSummaryBackfill = (body) =>

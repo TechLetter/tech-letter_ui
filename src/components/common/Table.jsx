@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
+import Pagination, { DEFAULT_PAGE_SIZE } from "./Pagination";
 
 /**
  * 재사용 가능한 테이블 컴포넌트
@@ -11,6 +12,10 @@ import PropTypes from "prop-types";
  * @param {boolean} loading - 로딩 상태
  * @param {string} emptyMessage - 데이터 없을 때 메시지
  * @param {function} onRowClick - 행 클릭 핸들러 (optional)
+ * @param {Object} pagination - 서버가 나눠 주는 목록이면 { page, totalPages, onPageChange }.
+ *   없으면 `data`를 전부 받은 것으로 보고 `pageSize`(기본 10)씩 화면에서 나눈다.
+ *
+ * 카드 테두리와 아래 페이지네이션까지 여기서 그린다 — 모든 표가 같은 모양이어야 한다.
  */
 // 가로 스크롤 중에도 오른쪽에 고정해 둘 컬럼(보통 "작업" 버튼)의 배경·경계선.
 // sticky 엘리먼트는 스크롤되는 형제 위에 겹쳐 그려지므로 배경이 없으면 뒤 컬럼이 비친다.
@@ -50,7 +55,31 @@ const cellStyle = (col) => ({
   minWidth: col.width ? undefined : FLEXIBLE_COLUMN_MIN_WIDTH,
 });
 
-export default function Table({
+export default function Table({ pagination, pageSize = DEFAULT_PAGE_SIZE, data, ...props }) {
+  const [clientPage, setClientPage] = useState(1);
+  // 거르거나 다시 불러와 목록이 바뀌면 첫 페이지로.
+  useEffect(() => setClientPage(1), [data]);
+
+  const rows = data || [];
+  const clientPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const page = pagination ? pagination.page : Math.min(clientPage, clientPages);
+  const shown = pagination ? rows : rows.slice((page - 1) * pageSize, page * pageSize);
+
+  return (
+    <div>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <TableBody data={shown} {...props} />
+      </div>
+      <Pagination
+        currentPage={page}
+        totalPages={pagination ? pagination.totalPages : clientPages}
+        onPageChange={pagination ? pagination.onPageChange : setClientPage}
+      />
+    </div>
+  );
+}
+
+function TableBody({
   columns,
   data,
   loading = false,
@@ -183,4 +212,10 @@ Table.propTypes = {
   loading: PropTypes.bool,
   emptyMessage: PropTypes.string,
   onRowClick: PropTypes.func,
+  pagination: PropTypes.shape({
+    page: PropTypes.number.isRequired,
+    totalPages: PropTypes.number.isRequired,
+    onPageChange: PropTypes.func.isRequired,
+  }),
+  pageSize: PropTypes.number,
 };

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { RiDeleteBinLine, RiSparklingLine, RiDatabase2Line, RiAddLine } from "react-icons/ri";
 import Table from "../../../components/common/Table";
-import Pagination from "../../../components/common/Pagination";
+import { DEFAULT_PAGE_SIZE } from "../../../components/common/Pagination";
 import {
   getPosts,
   getBlogs,
@@ -14,9 +14,11 @@ import {
 import { showToast } from "../../../provider/toastModalBridge";
 import { useUrlState } from "../../../hooks/useUrlState";
 import { exactTime } from "../adminFormat";
+import llmModelsApi from "../../../api/llmModelsApi";
+import { displayName } from "../../../utils/modelName";
 import {
   CONTROL,
-  Dot,
+  Tip,
   IconAction,
   PrimaryButton,
   RefreshButton,
@@ -27,7 +29,6 @@ import {
 } from "./AdminKit";
 import CreatePostModal from "./CreatePostModal";
 
-const PAGE_SIZE = 20;
 // 상태 탭 → 목록 API 조건. 요약 대기에는 영구 실패도 섞여 있다(실패 탭이 따로 있다).
 const STATES = [
   { id: "all", label: "전체", params: {} },
@@ -36,21 +37,31 @@ const STATES = [
   { id: "failed", label: "실패", tone: "rose", params: { failed: true } },
 ];
 
-function summaryDot(post) {
+/** 점 하나에 상태, 툴팁에 어떤 모델로 언제 했는지. */
+function StatusDot({ tone, lines }) {
+  return (
+    <Tip content={lines}>
+      <span aria-hidden="true" className={`m-1 inline-block h-2 w-2 rounded-full ${DOT_TONES[tone]}`} />
+    </Tip>
+  );
+}
+const DOT_TONES = { emerald: "bg-emerald-500", rose: "bg-rose-500", slate: "bg-slate-300 dark:bg-slate-600" };
+
+function summaryDot(post, modelName) {
   if (post.status?.summarized) {
     const s = post.ai_summary || {};
-    return <Dot tone="emerald" label={["요약", s.model_name, exactTime(s.generated_at)].filter(Boolean).join(" · ")} />;
+    return <StatusDot tone="emerald" lines={["요약 완료", modelName(s.model_name), exactTime(s.generated_at)]} />;
   }
-  if (post.status?.failed_reason) return <Dot tone="rose" label={`요약 실패 · ${post.status.failed_reason}`} />;
-  return <Dot tone="slate" label="요약 대기" />;
+  if (post.status?.failed_reason) return <StatusDot tone="rose" lines={["요약 실패", post.status.failed_reason]} />;
+  return <StatusDot tone="slate" lines={["요약 대기"]} />;
 }
 
 function embeddingDot(post) {
   if (post.status?.embedded) {
     const e = post.embedding || {};
-    return <Dot tone="emerald" label={["임베딩", e.model_name, exactTime(e.embedded_at)].filter(Boolean).join(" · ")} />;
+    return <StatusDot tone="emerald" lines={["임베딩 완료", e.model_name, exactTime(e.embedded_at)]} />;
   }
-  return <Dot tone="slate" label="임베딩 대기" />;
+  return <StatusDot tone="slate" lines={["임베딩 대기"]} />;
 }
 
 export default function PostsTab() {
@@ -62,6 +73,7 @@ export default function PostsTab() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
   const [blogs, setBlogs] = useState([]);
+  const [models, setModels] = useState([]);
 
   const [page, setPage] = useUrlState("page", 1, { parse: Number });
   const [state] = useUrlState("state", "all");
@@ -85,6 +97,20 @@ export default function PostsTab() {
     [setSearchParams]
   );
 
+  // 요약 모델 id를 공식 이름으로 보여 주려고.
+  useEffect(() => {
+    llmModelsApi
+      .getModels()
+      .then((res) => setModels(res?.data?.items || []))
+      .catch(() => {});
+  }, []);
+  const modelName = (id) => {
+    if (!id) return "";
+    const found = models.find((m) => m.model_id === id);
+    const { provider, name } = displayName(found || { model_id: id });
+    return provider ? `${provider} · ${name}` : name;
+  };
+
   useEffect(() => {
     getBlogs({ page: 1, page_size: 100 })
       .then((data) => setBlogs((data.items || []).sort((a, b) => a.name.localeCompare(b.name))))
@@ -98,7 +124,7 @@ export default function PostsTab() {
     try {
       // 탭 옆 개수는 같은 블로그·검색 조건으로 센다.
       const [data, ...totals] = await Promise.all([
-        getPosts({ ...base, ...current.params, page, page_size: PAGE_SIZE }),
+        getPosts({ ...base, ...current.params, page, page_size: DEFAULT_PAGE_SIZE }),
         ...STATES.map((item) => getPosts({ ...base, ...item.params, page: 1, page_size: 1 })),
       ]);
       setPosts(data.items || []);
@@ -182,7 +208,7 @@ export default function PostsTab() {
     },
     { key: "published_at", label: "발행", width: "84px", render: (iso) => <RelTime iso={iso} /> },
     { key: "created_at", label: "수집", width: "84px", render: (iso) => <RelTime iso={iso} /> },
-    { key: "summary", label: "요약", width: "48px", align: "center", render: (_, row) => summaryDot(row) },
+    { key: "summary", label: "요약", width: "48px", align: "center", render: (_, row) => summaryDot(row, modelName) },
     { key: "embedding", label: "임베딩", width: "56px", align: "center", render: (_, row) => embeddingDot(row) },
     {
       key: "actions",
@@ -246,11 +272,13 @@ export default function PostsTab() {
         }
       />
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <Table columns={columns} data={posts} loading={loading} emptyMessage="해당 포스트 없음" />
-      </div>
-
-      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+      <Table
+        columns={columns}
+        data={posts}
+        loading={loading}
+        emptyMessage="해당 포스트 없음"
+        pagination={{ page, totalPages, onPageChange: setPage }}
+      />
 
       <CreatePostModal
         open={createModalOpen}

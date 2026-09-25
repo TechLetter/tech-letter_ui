@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { RiCloseLine, RiRefreshLine, RiSearchLine } from "react-icons/ri";
 import { exactTime, relativeTime } from "../adminFormat";
 
@@ -10,6 +11,49 @@ const DOT_TONE = {
   rose: "bg-rose-500",
   slate: "bg-slate-300 dark:bg-slate-600",
 };
+
+/**
+ * 마우스를 올리거나 포커스하면 바로 뜨는 툴팁. 표는 가로 스크롤 영역이라 안에 absolute로
+ * 그리면 잘린다 — body에 fixed로 그린다. `content`는 여러 줄이면 배열로.
+ */
+export function Tip({ content, children }) {
+  const ref = useRef(null);
+  const [at, setAt] = useState(null);
+  const show = () => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) setAt({ x: rect.left + rect.width / 2, y: rect.bottom + 6 });
+  };
+  const lines = Array.isArray(content) ? content.filter(Boolean) : [content];
+  return (
+    <span
+      ref={ref}
+      tabIndex={0}
+      aria-label={lines.join(" · ")}
+      onMouseEnter={show}
+      onMouseLeave={() => setAt(null)}
+      onFocus={show}
+      onBlur={() => setAt(null)}
+      className="inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+    >
+      {children}
+      {at &&
+        createPortal(
+          <div
+            role="tooltip"
+            style={{ left: at.x, top: at.y }}
+            className="pointer-events-none fixed z-[60] -translate-x-1/2 rounded-md bg-slate-900 px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lg tabular-nums dark:bg-slate-700"
+          >
+            {lines.map((line, i) => (
+              <div key={i} className={i === 0 ? "font-medium" : "text-slate-300"}>
+                {line}
+              </div>
+            ))}
+          </div>,
+          document.body
+        )}
+    </span>
+  );
+}
 
 export function Dot({ tone, label }) {
   return (
@@ -162,10 +206,10 @@ export function Toolbar({ left, right }) {
 }
 
 /** 상대 시간. 정확한 시각은 툴팁으로. */
-export function RelTime({ iso }) {
-  if (!iso) return <span className="text-slate-300 dark:text-slate-600">-</span>;
+export function RelTime({ iso, title }) {
+  if (!iso) return <span title={title} className="text-slate-300 dark:text-slate-600">-</span>;
   return (
-    <span title={exactTime(iso)} className="text-xs whitespace-nowrap tabular-nums text-slate-500 dark:text-slate-400">
+    <span title={title || exactTime(iso)} className="text-xs whitespace-nowrap tabular-nums text-slate-500 dark:text-slate-400">
       {relativeTime(iso)}
     </span>
   );
