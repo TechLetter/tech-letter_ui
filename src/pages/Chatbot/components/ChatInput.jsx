@@ -3,6 +3,7 @@ import { RiArrowDownSLine, RiArrowUpLine, RiLoader4Line } from "react-icons/ri";
 import ModelDropdown from "../../../components/common/ModelDropdown";
 import ModelStatusDot from "../../../components/common/ModelStatusDot";
 import { classifyModelHealth } from "../../../utils/modelHealth";
+import { displayName } from "../../../utils/modelName";
 
 /**
  * ChatInput 컴포넌트
@@ -69,6 +70,7 @@ export default function ChatInput({
   };
 
   const isOverLimit = query.length > maxLength;
+  const selectedModel = modelOptions.find((option) => option.model_id === selectedModelId);
   const isSendable = query.trim().length > 0 && !isOverLimit && !isLoading;
 
   return (
@@ -119,18 +121,14 @@ export default function ChatInput({
                 aria-label="답변 모델 선택"
                 aria-expanded={open}
                 title={selectedModelId}
-                className="mb-0.5 flex h-9 flex-shrink-0 items-center gap-1 rounded-full bg-black/5 px-2 text-xs font-medium text-slate-600 transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15 sm:h-8 sm:max-w-[9.5rem] sm:px-2.5"
+                className="mb-0.5 flex h-9 flex-shrink-0 items-center gap-1 rounded-full bg-black/5 px-2 text-xs font-medium text-slate-600 transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15 sm:h-8 sm:max-w-[11.5rem] sm:px-2.5"
               >
-                {selectedModelId && (
-                  <ModelStatusDot
-                    level={classifyModelHealth(
-                      modelOptions.find((option) => option.model_id === selectedModelId)
-                    )}
-                  />
-                )}
+                {selectedModel && <ModelStatusDot level={classifyModelHealth(selectedModel)} />}
                 {/* 모바일에선 모델명이 입력창 자리를 너무 뺏어서, 점+화살표만
                     남기고 이름은 데스크톱(sm+)에서만 보여준다. */}
-                <span className="hidden min-w-0 truncate sm:inline">{selectedModelId || "모델"}</span>
+                <span className="hidden min-w-0 truncate sm:inline">
+                  {selectedModel ? displayName(selectedModel).name : selectedModelId || "모델"}
+                </span>
                 <RiArrowDownSLine className="shrink-0 text-sm" />
               </button>
             )}

@@ -1,12 +1,7 @@
 import ModelStatusDot from "../../../components/common/ModelStatusDot";
 import { classifyModelHealth } from "../../../utils/modelHealth";
-import {
-  displayName,
-  formatContext,
-  formatLatency,
-  formatMonth,
-  statusDetail,
-} from "../modelFormat";
+import { displayName } from "../../../utils/modelName";
+import { formatContext, formatLatency, formatMonth, statusDetail } from "../modelFormat";
 import ModalityIcons from "./ModalityIcons";
 import UptimeBars from "./UptimeBars";
 

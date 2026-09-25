@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { displayName } from "../../../utils/modelName";
 import SecurityNotice from "./SecurityNotice";
 import SourceList from "./SourceList";
 
@@ -10,7 +11,7 @@ import SourceList from "./SourceList";
  * @param {Object} props
  * @param {Object} props.message
  */
-export default function MessageBubble({ message }) {
+export default function MessageBubble({ message, models = [] }) {
   const isUser = message.role === "user";
   const requestedModelId =
     typeof message.requestedModelId === "string" ? message.requestedModelId : "";
@@ -49,8 +50,11 @@ export default function MessageBubble({ message }) {
                   className="mb-2 text-xs text-slate-500 dark:text-slate-400"
                   role="status"
                 >
-                  고른 모델이 응답하지 않아 <span className="break-all">{actualModelId}</span>로
-                  답했습니다.
+                  고른 모델이 응답하지 않아{" "}
+                  <span className="break-all font-medium" title={actualModelId}>
+                    {displayName(models.find((m) => m.model_id === actualModelId) || { model_id: actualModelId }).name}
+                  </span>
+                  로 답했습니다.
                 </p>
               )}
               <ReactMarkdown

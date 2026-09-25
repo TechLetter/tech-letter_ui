@@ -35,18 +35,13 @@ export default function Trends() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
-      <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          주간 기술 흐름
-        </h2>
-        {data && (
-          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-            {timeutils.formatLocalDate(data.period.from_at)} ~{" "}
-            {timeutils.formatLocalDate(data.period.to)} · {data.blog_count}개 회사의{" "}
-            {data.post_count}개 글
-          </p>
-        )}
-      </header>
+      {data && (
+        <p className="px-1 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+          {timeutils.formatLocalDate(data.period.from_at)} – {timeutils.formatLocalDate(data.period.to)}
+          <span className="text-slate-300 dark:text-slate-600"> · </span>
+          {data.blog_count}개 블로그 · {data.post_count}개 글
+        </p>
+      )}
 
       {loading && (
         <div className="grid gap-4 md:grid-cols-2">

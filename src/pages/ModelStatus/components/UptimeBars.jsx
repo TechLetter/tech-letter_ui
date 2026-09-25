@@ -5,11 +5,12 @@ function barTone(uptime) {
   return "bg-rose-500 dark:bg-rose-400";
 }
 
-/** 하루 한 칸. 기록이 없는 날은 회색이다. */
+/** 하루 한 칸. 기록이 없는 날은 회색이다. 스크린리더에는 숨긴다 — 카드 버튼의
+ * 이름에 날짜 30개가 섞였다. 30일 가용률은 카드 오른쪽 숫자가 읽힌다. */
 export default function UptimeBars({ days, daily }) {
   const byDate = Object.fromEntries((daily || []).map((d) => [d.date, d.uptime]));
   return (
-    <div className="flex h-6 items-stretch gap-[2px]">
+    <div aria-hidden="true" className="flex h-6 items-stretch gap-[2px]">
       {days.map((date) => {
         const uptime = byDate[date];
         const label = `${date.slice(5).replace("-", "월 ")}일 · ${
@@ -19,7 +20,6 @@ export default function UptimeBars({ days, daily }) {
           <span
             key={date}
             title={label}
-            aria-label={label}
             className={`flex-1 rounded-[2px] ${barTone(uptime)}`}
           />
         );

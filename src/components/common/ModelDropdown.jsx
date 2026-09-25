@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { RiCheckLine } from "react-icons/ri";
 import ModelStatusDot from "./ModelStatusDot";
 import { classifyModelHealth, isSelectableModel, sortModelsByHealth } from "../../utils/modelHealth";
+import { displayName } from "../../utils/modelName";
 
 /**
  * 모델을 고르는 커스텀 드롭다운. 브라우저 기본 `<select>` 대신 써서 우리
@@ -93,7 +94,9 @@ export default function ModelDropdown({
               sorted.map((health) => (
                 <DropdownRow
                   key={health.model_id}
-                  label={health.model_id}
+                  label={displayName(health).name}
+                  provider={displayName(health).provider}
+                  modelId={health.model_id}
                   level={classifyModelHealth(health)}
                   selected={selectedId === health.model_id}
                   unavailable={selectableOnly && !isSelectableModel(health)}
@@ -108,7 +111,7 @@ export default function ModelDropdown({
   );
 }
 
-function DropdownRow({ label, level, selected, unavailable = false, onClick }) {
+function DropdownRow({ label, provider = "", modelId, level, selected, unavailable = false, onClick }) {
   return (
     <button
       type="button"
@@ -117,13 +120,16 @@ function DropdownRow({ label, level, selected, unavailable = false, onClick }) {
       aria-disabled={unavailable}
       disabled={unavailable}
       onClick={onClick}
-      title={unavailable ? `${label} — 지금 사용할 수 없습니다` : label}
+      title={unavailable ? `${modelId} — 지금 사용할 수 없습니다` : modelId}
       className={`flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
         unavailable ? "cursor-not-allowed opacity-50" : "hover:bg-slate-50 dark:hover:bg-slate-700"
       } ${selected ? "bg-indigo-50 dark:bg-indigo-950/40" : ""}`}
     >
       {level && <ModelStatusDot level={level} />}
-      <span className="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">
+        {provider && <span className="text-slate-400 dark:text-slate-500">{provider} · </span>}
+        {label}
+      </span>
       {selected && <RiCheckLine className="shrink-0 text-indigo-600 dark:text-indigo-400" />}
     </button>
   );
@@ -131,6 +137,8 @@ function DropdownRow({ label, level, selected, unavailable = false, onClick }) {
 
 DropdownRow.propTypes = {
   label: PropTypes.string.isRequired,
+  provider: PropTypes.string,
+  modelId: PropTypes.string.isRequired,
   level: PropTypes.oneOf(["healthy", "degraded", "down", "unknown"]),
   selected: PropTypes.bool.isRequired,
   unavailable: PropTypes.bool,
