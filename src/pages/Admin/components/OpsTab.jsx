@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { RiDeleteBin6Line, RiRestartLine } from "react-icons/ri";
-import Pagination from "../../../components/common/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../components/common/Pagination";
 import { PATHS } from "../../../routes/path";
 import { showToast } from "../../../provider/toastModalBridge";
 import {
@@ -22,7 +22,6 @@ import { Dot, IconAction, RefreshButton, RelTime, StateTabs, Toolbar } from "./A
  * 운영 탭. 파이프라인(수집 → 요약 → 임베딩)이 멈췄는지, 멈췄다면 왜인지.
  */
 
-const PAGE_SIZE = 20;
 const LISTS = [
   { id: "dead", label: "실패", tone: "rose" },
   { id: "pending", label: "대기", tone: "amber" },
@@ -124,7 +123,7 @@ export default function OpsTab() {
     setLoading(true);
     try {
       // 실패는 오류별로 묶어 보여 주려고 한 번에 받는다(평소 몇 건 안 된다).
-      const size = list === "dead" ? 100 : PAGE_SIZE;
+      const size = list === "dead" ? 100 : DEFAULT_PAGE_SIZE;
       const [jobStats, backfillStatus, blogPage, jobPage] = await Promise.all([
         getJobStats(),
         getBackfillStatus(),
@@ -328,7 +327,7 @@ export default function OpsTab() {
           )}
           <Pagination
             currentPage={page}
-            totalPages={Math.max(1, Math.ceil(total / PAGE_SIZE))}
+            totalPages={Math.max(1, Math.ceil(total / DEFAULT_PAGE_SIZE))}
             onPageChange={setPage}
           />
         </>

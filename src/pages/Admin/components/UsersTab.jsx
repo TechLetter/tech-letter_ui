@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { RiCoinLine, RiShieldUserLine } from "react-icons/ri";
 import Table from "../../../components/common/Table";
-import Pagination from "../../../components/common/Pagination";
+import { DEFAULT_PAGE_SIZE } from "../../../components/common/Pagination";
 import { getUsers, grantCredit, handleAdminError } from "../../../api/adminApi";
 import { showToast } from "../../../provider/toastModalBridge";
 import { useUrlState } from "../../../hooks/useUrlState";
@@ -12,7 +12,6 @@ export default function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
-  const [pageSize] = useState(20);
 
   // URL 동기화되는 페이지 상태
   const [page, setPage] = useUrlState("userPage", 1, { parse: Number });
@@ -24,7 +23,7 @@ export default function UsersTab() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getUsers({ page, page_size: pageSize });
+      const data = await getUsers({ page, page_size: DEFAULT_PAGE_SIZE });
       setUsers(data.items || []);
       setTotalPages(data.total_pages || 0);
     } catch (error) {
@@ -32,7 +31,7 @@ export default function UsersTab() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize]);
+  }, [page]);
 
   useEffect(() => {
     fetchUsers();
@@ -123,11 +122,13 @@ export default function UsersTab() {
         <RefreshButton onClick={fetchUsers} loading={loading} />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <Table columns={columns} data={users} loading={loading} emptyMessage="사용자 없음" />
-      </div>
-
-      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+      <Table
+        columns={columns}
+        data={users}
+        loading={loading}
+        emptyMessage="사용자 없음"
+        pagination={{ page, totalPages, onPageChange: setPage }}
+      />
 
       <GrantCreditModal
         isOpen={showGrantModal}

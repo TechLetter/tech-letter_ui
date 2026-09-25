@@ -10,6 +10,7 @@ import {
 } from "../../../api/adminApi";
 import { showToast } from "../../../provider/toastModalBridge";
 import { useUrlState } from "../../../hooks/useUrlState";
+import { exactTime } from "../adminFormat";
 import { Dot, IconAction, PrimaryButton, RefreshButton, RelTime, SearchBox, StateTabs, Toolbar } from "./AdminKit";
 import BlogFormModal from "./BlogFormModal";
 import DeleteBlogModal from "./DeleteBlogModal";
@@ -197,7 +198,18 @@ export default function BlogsTab() {
       ),
     },
     { key: "status", label: "상태", width: "150px", render: (_, row) => statusCell(row) },
-    { key: "last_fetched_at", label: "최근 수집", width: "84px", render: (iso) => <RelTime iso={iso} /> },
+    {
+      // RSS를 읽은 때(`last_fetched_at`)는 새 글이 없어도 바뀐다. 실제로 새 글이 들어온 때를 보인다.
+      key: "last_post_at",
+      label: "새 글",
+      width: "84px",
+      render: (iso, row) => (
+        <RelTime
+          iso={iso}
+          title={`마지막 새 글 ${exactTime(iso) || "-"}\n마지막 확인 ${exactTime(row.last_fetched_at) || "-"}`}
+        />
+      ),
+    },
     {
       key: "actions",
       label: "",
@@ -238,9 +250,7 @@ export default function BlogsTab() {
         }
       />
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <Table columns={columns} data={shown} loading={loading} emptyMessage="해당 블로그 없음" />
-      </div>
+      <Table columns={columns} data={shown} loading={loading} emptyMessage="해당 블로그 없음" />
 
       <BlogFormModal
         open={formState.open}
