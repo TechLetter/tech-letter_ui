@@ -9,11 +9,11 @@ export const STATE_TABS = [
   ["down", "사용 불가"],
 ];
 
-/** 기본 정렬. 지금 쓸 수 있는 것부터, 같은 상태면 30일 가용률 순. */
+/** 가용률 정렬. 지금 쓸 수 있는 것부터, 같은 상태면 24시간 가용률 순(상태 판정과 같은 숫자). */
 function byUsefulness(a, b) {
   return (
     (STATE_ORDER[a.state] ?? 3) - (STATE_ORDER[b.state] ?? 3) ||
-    (b.uptime_30d ?? -1) - (a.uptime_30d ?? -1) ||
+    (b.uptime_24h ?? -1) - (a.uptime_24h ?? -1) ||
     a.model_id.localeCompare(b.model_id)
   );
 }
@@ -36,7 +36,7 @@ export function metricOf(id) {
 export const SORTS = {
   recommend: { label: "추천순", title: "성능 × 가용성 × 속도 — 요약·챗봇이 모델을 고르는 순서" },
   score: { label: "점수순" },
-  uptime: { label: "가용률", title: "30일 가용률" },
+  uptime: { label: "가용률", title: "24시간 가용률" },
   latency: { label: "응답 시간", key: (m) => (m.state === "down" ? null : m.avg_latency_ms), dir: 1 },
   context: { label: "컨텍스트", key: (m) => m.info?.context_length, dir: -1 },
   newest: { label: "최신", key: createdAt, dir: -1 },
