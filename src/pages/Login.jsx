@@ -11,13 +11,6 @@ export default function Login() {
             <span className="block sm:inline">Tech Letter</span>
             <span className="block sm:inline"> 로그인</span>
           </h1>
-          <p className="text-sm text-gray-600 leading-relaxed dark:text-slate-400">
-            Google 계정으로 간편하게 로그인하고,
-            <span className="hidden sm:inline">&nbsp;</span>
-            <span className="block sm:inline">
-              개인화된 구독 경험을 즐겨보세요.
-            </span>
-          </p>
         </div>
         <div className="space-y-4">
           <GoogleLoginButton />

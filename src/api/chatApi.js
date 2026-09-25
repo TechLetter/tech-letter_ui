@@ -88,7 +88,7 @@ const chatApi = {
       throw new ApiError({ code: ErrorCode.INTERNAL_ERROR, message: "스트림 응답을 읽을 수 없습니다." });
     }
 
-    return readChatStream(response.body, { onActivity: options.onActivity });
+    return readChatStream(response.body);
   },
 };
 
@@ -112,7 +112,7 @@ const readJson = async (response) => {
   }
 };
 
-const readChatStream = async (body, { onActivity } = {}) => {
+const readChatStream = async (body) => {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -121,7 +121,7 @@ const readChatStream = async (body, { onActivity } = {}) => {
   const consume = (block) => {
     const event = parseStreamEvent(block);
     if (!event) return;
-    if (event.type === "activity") onActivity?.(event.data);
+    // `activity` 프레임(처리 과정)은 화면에 보여 주지 않는다.
     if (event.type === "done") answer = event.data;
     // `error` 프레임도 일반 에러와 같은 봉투다.
     if (event.type === "error") throw fromEnvelope(event.data);

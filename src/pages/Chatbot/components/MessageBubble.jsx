@@ -1,6 +1,5 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import AgentActivityPanel from "./AgentActivityPanel";
 import SecurityNotice from "./SecurityNotice";
 import SourceList from "./SourceList";
 
@@ -121,7 +120,6 @@ export default function MessageBubble({ message }) {
               >
                 {message.content}
               </ReactMarkdown>
-              <AgentActivityPanel agent={message.agent} memory={message.memory} />
               <SourceList sources={message.sources} />
             </>
           )}

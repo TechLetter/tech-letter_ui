@@ -56,11 +56,7 @@ export default function Bookmarks() {
 
   return (
     <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto min-h-screen relative">
-      <div className="flex flex-col items-center mt-3 mb-6">
-        <p className="text-xs sm:text-sm text-gray-500">
-          관심 있는 글을 북마크해 한 번에 모아볼 수 있어요.
-        </p>
-      </div>
+      <div className="mt-3 mb-6" />
 
       {showEmptyState && (
         <div className="flex flex-col items-center justify-center py-16 text-gray-500 text-sm">
