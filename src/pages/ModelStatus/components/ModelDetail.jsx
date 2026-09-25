@@ -111,6 +111,12 @@ export default function ModelDetail({ model }) {
 
       <Specs
         rows={[
+          [
+            "추천",
+            model.recommended_rank
+              ? `${model.recommend_score} · ${model.recommended_rank}위`
+              : null,
+          ],
           ["가용률 24h", `${model.uptime_24h}%`],
           ["가용률 30d", model.uptime_30d == null ? "기록 없음" : `${model.uptime_30d}%`],
           ["응답", formatLatency(model.avg_latency_ms)],

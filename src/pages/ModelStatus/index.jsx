@@ -22,8 +22,8 @@ export default function ModelStatus() {
   // 새로고침해도 남고, 챗봇 등에서 `/models?state=healthy`로 걸 수 있게 URL에 둔다.
   const [query, setQuery] = useUrlState("q", "");
   const [state, setState] = useUrlState("state", "all");
-  // 기본은 Intelligence 점수순 — 요약·챗봇이 실제로 고르는 순서와 같다.
-  const [sort, setSort] = useUrlState("sort", "score");
+  // 기본은 추천순 — 서버가 요약·챗봇에 쓰는 순서(`recommended_rank`) 그대로다.
+  const [sort, setSort] = useUrlState("sort", "recommend");
   const [metricId, setMetricId] = useUrlState("metric", "intelligence");
   const metric = useMemo(() => metricOf(metricId), [metricId]);
   const { resetParams } = useUrlParams();

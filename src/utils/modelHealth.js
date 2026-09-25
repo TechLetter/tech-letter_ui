@@ -49,25 +49,19 @@ export function isSelectableModel(health) {
 }
 
 /**
- * 모델 순서. 상태(정상 → 불안정 → 사용 불가) → Intelligence 높은 순(점수 있는 모델 먼저)
- * → 24h 가용률 → 지연. 백엔드가 요약·챗봇 자동 선택에 쓰는 순서(`scouter.rank_models`)와
- * 같다 — 챗봇 선택창 맨 위가 자동으로 고르는 모델이다. 원본 배열은 건드리지 않는다.
+ * 모델 순서. 서버가 요약·챗봇 자동 선택에 쓰는 추천 순위(`recommended_rank`, 성능 × 가용성 ×
+ * 속도)를 그대로 따른다 — 챗봇 선택창 맨 위가 자동으로 고르는 모델이다. 순위가 없는(지금
+ * 응답하지 않는) 모델은 뒤에 상태 → 가용률 순으로. 원본 배열은 건드리지 않는다.
  */
 export function sortModelsByHealth(items) {
   return [...(Array.isArray(items) ? items : [])].sort((a, b) => {
-    const rankDiff = LEVEL_RANK[classifyModelHealth(a)] - LEVEL_RANK[classifyModelHealth(b)];
-    if (rankDiff !== 0) return rankDiff;
+    const rankA = a?.recommended_rank;
+    const rankB = b?.recommended_rank;
+    if ((rankA == null) !== (rankB == null)) return rankA == null ? 1 : -1;
+    if (rankA != null && rankA !== rankB) return rankA - rankB;
 
-    const scoreA = a?.info?.benchmarks?.intelligence;
-    const scoreB = b?.info?.benchmarks?.intelligence;
-    if ((scoreA == null) !== (scoreB == null)) return scoreA == null ? 1 : -1;
-    if (scoreA != null && scoreA !== scoreB) return scoreB - scoreA;
-
-    const uptimeDiff = (b?.uptime_24h ?? 0) - (a?.uptime_24h ?? 0);
-    if (uptimeDiff !== 0) return uptimeDiff;
-
-    const latencyA = a?.avg_latency_ms ?? Number.POSITIVE_INFINITY;
-    const latencyB = b?.avg_latency_ms ?? Number.POSITIVE_INFINITY;
-    return latencyA - latencyB;
+    const levelDiff = LEVEL_RANK[classifyModelHealth(a)] - LEVEL_RANK[classifyModelHealth(b)];
+    if (levelDiff !== 0) return levelDiff;
+    return (b?.uptime_24h ?? 0) - (a?.uptime_24h ?? 0);
   });
 }

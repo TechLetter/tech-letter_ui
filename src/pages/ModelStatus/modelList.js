@@ -34,6 +34,7 @@ export function metricOf(id) {
 
 /** 순서만 정한다. `key`가 없는 모델(사용 불가의 응답 시간 등)은 항상 뒤로. */
 export const SORTS = {
+  recommend: { label: "추천순", title: "성능 × 가용성 × 속도 — 요약·챗봇이 모델을 고르는 순서" },
   score: { label: "점수순" },
   uptime: { label: "가용률", title: "30일 가용률" },
   latency: { label: "응답 시간", key: (m) => (m.state === "down" ? null : m.avg_latency_ms), dir: 1 },
@@ -41,16 +42,20 @@ export const SORTS = {
   newest: { label: "최신", key: createdAt, dir: -1 },
 };
 
-/**
- * 점수순도 "지금 쓸 수 있는가"가 먼저다. 쓸 수 있는 모델(점수순 → 점수 없음) 다음에
- * 사용 불가 모델(같은 규칙). 요약·챗봇이 모델을 고르는 순서(`scouter.rank_models`)와 같다.
- */
+/** 서버가 준 추천 순위(`recommended_rank`). 순위가 없는(지금 응답하지 않는) 모델은 뒤로. */
+function byRecommendation(a, b) {
+  const x = a.recommended_rank;
+  const y = b.recommended_rank;
+  return (x == null) - (y == null) || (x ?? 0) - (y ?? 0) || byUsefulness(a, b);
+}
+
+/** 점수순도 상태(정상 → 불안정 → 사용 불가)가 먼저다. 불안정한 모델이 점수만으로 1위에 서지 않는다. */
 function byScore(key) {
   return (a, b) => {
     const x = key(a);
     const y = key(b);
     return (
-      (a.state === "down") - (b.state === "down") ||
+      (STATE_ORDER[a.state] ?? 3) - (STATE_ORDER[b.state] ?? 3) ||
       (x == null) - (y == null) ||
       (x != null && y != null ? y - x : 0) ||
       byUsefulness(a, b)
@@ -59,7 +64,8 @@ function byScore(key) {
 }
 
 export function sortModels(models, sort, metric) {
-  if (!SORTS[sort] || sort === "score") return [...models].sort(byScore(metric.key));
+  if (!SORTS[sort] || sort === "recommend") return [...models].sort(byRecommendation);
+  if (sort === "score") return [...models].sort(byScore(metric.key));
   const { key, dir } = SORTS[sort];
   if (!key) return [...models].sort(byUsefulness);
   return [...models].sort((a, b) => {
