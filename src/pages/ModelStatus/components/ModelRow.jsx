@@ -11,7 +11,9 @@ export default function ModelRow({ model, days, expanded, onToggle, metric }) {
   const { provider, name } = displayName(model);
   const down = model.state === "down";
   const latency = down ? null : formatLatency(model.avg_latency_ms);
-  const uptime = model.uptime_30d == null ? "기록 없음" : `${model.uptime_30d}%`;
+  // 상태 점과 같은 숫자(24시간)를 보인다. 30일 추세는 아래 막대가 보여 준다.
+  const uptime = `${model.uptime_24h}%`;
+  const uptimeTip = `24시간 가용률${model.uptime_30d == null ? "" : ` · 30일 ${model.uptime_30d}%`}`;
   const meta = [
     formatContext(model.info?.context_length) && `${formatContext(model.info.context_length)} ctx`,
     formatMonth(model.info?.created_at),
@@ -44,7 +46,7 @@ export default function ModelRow({ model, days, expanded, onToggle, metric }) {
           </div>
           <span
             className="shrink-0 text-xs tabular-nums text-slate-600 dark:text-slate-300"
-            title={latency ? "응답 · 30일 가용률" : "30일 가용률"}
+            title={latency ? `헬스체크 응답 시간 · ${uptimeTip}` : uptimeTip}
           >
             {latency && <span className="text-slate-500 dark:text-slate-400">{latency} · </span>}
             {uptime}
