@@ -3,9 +3,11 @@ import { classifyModelHealth } from "../../../utils/modelHealth";
 import { displayName } from "../../../utils/modelName";
 import { formatContext, formatLatency, formatMonth, statusDetail } from "../modelFormat";
 import ModalityIcons from "./ModalityIcons";
+import ScoreBar from "./ScoreBar";
 import UptimeBars from "./UptimeBars";
 
-export default function ModelRow({ model, days, expanded, onToggle }) {
+/** `metric`(벤치마크 정렬일 때 {label, key})이 있으면 둘째 줄 끝에 그 점수 막대를 둔다. */
+export default function ModelRow({ model, days, expanded, onToggle, metric }) {
   const { provider, name } = displayName(model);
   const down = model.state === "down";
   const latency = down ? null : formatLatency(model.avg_latency_ms);
@@ -48,10 +50,15 @@ export default function ModelRow({ model, days, expanded, onToggle }) {
             {uptime}
           </span>
         </div>
-        {model.info && (
+        {(model.info || metric) && (
           <div className="flex items-center gap-2 text-xs tabular-nums text-slate-500 dark:text-slate-400">
             {meta.length > 0 && <span>{meta.join(" · ")}</span>}
-            <ModalityIcons modalities={model.info.input_modalities} />
+            <ModalityIcons modalities={model.info?.input_modalities} />
+            {metric && (
+              <span className="ml-auto">
+                <ScoreBar label={metric.label} value={metric.key(model)} barClass="w-12 sm:w-16 flex-none" />
+              </span>
+            )}
           </div>
         )}
         <UptimeBars days={days} daily={model.daily} />

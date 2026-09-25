@@ -49,13 +49,19 @@ export function isSelectableModel(health) {
 }
 
 /**
- * 헬스 응답 배열을 "정상 우선 → uptime 높은 순 → 지연 낮은 순"으로 정렬한다.
- * 원본 배열은 건드리지 않는다.
+ * 모델 순서. 상태(정상 → 불안정 → 사용 불가) → Intelligence 높은 순(점수 있는 모델 먼저)
+ * → 24h 가용률 → 지연. 백엔드가 요약·챗봇 자동 선택에 쓰는 순서(`scouter.rank_models`)와
+ * 같다 — 챗봇 선택창 맨 위가 자동으로 고르는 모델이다. 원본 배열은 건드리지 않는다.
  */
 export function sortModelsByHealth(items) {
   return [...(Array.isArray(items) ? items : [])].sort((a, b) => {
     const rankDiff = LEVEL_RANK[classifyModelHealth(a)] - LEVEL_RANK[classifyModelHealth(b)];
     if (rankDiff !== 0) return rankDiff;
+
+    const scoreA = a?.info?.benchmarks?.intelligence;
+    const scoreB = b?.info?.benchmarks?.intelligence;
+    if ((scoreA == null) !== (scoreB == null)) return scoreA == null ? 1 : -1;
+    if (scoreA != null && scoreA !== scoreB) return scoreB - scoreA;
 
     const uptimeDiff = (b?.uptime_24h ?? 0) - (a?.uptime_24h ?? 0);
     if (uptimeDiff !== 0) return uptimeDiff;

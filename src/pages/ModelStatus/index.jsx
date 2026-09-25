@@ -6,7 +6,7 @@ import ModelDetail from "./components/ModelDetail";
 import ModelRow from "./components/ModelRow";
 import ModelToolbar from "./components/ModelToolbar";
 import { lastDays } from "./modelFormat";
-import { countByState, matchesQuery, sortModels } from "./modelList";
+import { SORTS, countByState, matchesQuery, sortModels } from "./modelList";
 
 const DAYS = 30;
 const DETAIL_BOX =
@@ -59,6 +59,7 @@ export default function ModelStatus() {
     () => sortModels(state === "all" ? searched : searched.filter((m) => m.state === state), sort),
     [searched, state, sort]
   );
+  const metric = SORTS[sort]?.metric ? SORTS[sort] : null;
   const selected = shown.findIndex((m) => m.model_id === expandedId);
   const rowEndOf = (i) => Math.min(i | 1, shown.length - 1); // 두 칸 그리드에서 i가 있는 줄의 끝
   const checkedLabel = summary?.last_checked_at
@@ -116,6 +117,7 @@ export default function ModelStatus() {
                 <ModelRow
                   model={model}
                   days={days}
+                  metric={metric}
                   expanded={expanded}
                   onToggle={() =>
                     setExpandedId((id) => (id === model.model_id ? null : model.model_id))
