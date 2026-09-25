@@ -69,9 +69,6 @@ function SettingsModalContent({ open, onClose, onDeleted, user }) {
               <h2 className="text-base font-semibold text-gray-900 sm:text-lg dark:text-white">
                 계정 설정
               </h2>
-              <p className="mt-1 text-xs text-gray-500 sm:text-sm dark:text-gray-400">
-                프로필과 계정 관련 설정을 관리할 수 있어요.
-              </p>
             </div>
             <button
               type="button"

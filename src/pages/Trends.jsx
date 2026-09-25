@@ -39,12 +39,8 @@ export default function Trends() {
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
           주간 기술 흐름
         </h2>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          최근 7일 동안 <strong>여러 회사가 함께 다룬 주제</strong> 순입니다.
-          한 회사가 글을 많이 써도 순위가 오르지 않습니다.
-        </p>
         {data && (
-          <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
             {timeutils.formatLocalDate(data.period.from_at)} ~{" "}
             {timeutils.formatLocalDate(data.period.to)} · {data.blog_count}개 회사의{" "}
             {data.post_count}개 글

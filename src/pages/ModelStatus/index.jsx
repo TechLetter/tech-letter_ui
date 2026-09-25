@@ -101,9 +101,6 @@ export default function ModelStatus() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             AI 모델 현황
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-            테크레터가 요약·챗봇에 실제로 후보로 쓰는 OpenRouter 무료 모델들의 헬스체크 기록입니다.
-          </p>
         </div>
         <button
           type="button"

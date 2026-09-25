@@ -66,25 +66,6 @@ const buildMessageFromSession = (sessionId, msg, idx) => ({
   memory: msg.memory || null,
 });
 
-const mergeActivity = (activities = [], nextActivity) => {
-  const nextActivities = [...activities];
-  const exactIndex = nextActivities.findIndex(
-    (activity) =>
-      activity.type === nextActivity.type && activity.label === nextActivity.label
-  );
-  const runningIndex = nextActivities.findIndex(
-    (activity) =>
-      activity.type === nextActivity.type && activity.status === "running"
-  );
-  const targetIndex = exactIndex >= 0 ? exactIndex : runningIndex;
-
-  if (targetIndex >= 0) {
-    nextActivities[targetIndex] = nextActivity;
-    return nextActivities;
-  }
-  return [...nextActivities, nextActivity];
-};
-
 export default function Chatbot() {
   const navigate = useNavigate();
   const { isAuthenticated, initialized, user, updateCredits } = useAuth();
@@ -209,7 +190,6 @@ export default function Chatbot() {
 
   // 현재 세션이 빈 세션인지 확인
   const isCurrentSessionEmpty = messages.length === 0;
-  const hasStreamingMessage = messages.some((message) => message.isStreaming);
   const currentSession = sessions.find((session) => session.id === currentSessionId);
 
   // 세션 선택 시 메시지 로드
@@ -359,17 +339,7 @@ export default function Chatbot() {
         role: "assistant",
         content: "",
         sources: [],
-        agent: {
-          mode: "stream",
-          intent: "pending",
-          activities: [
-            {
-              type: "guard",
-              label: "질문 안전성 확인",
-              status: "running",
-            },
-          ],
-        },
+        agent: null,
         guard: null,
         memory: null,
         requestedModelId: requestedModelId || null,
@@ -381,24 +351,6 @@ export default function Chatbot() {
       try {
         const data = await chatApi.streamChatRequest(query, sessionId, {
           modelId: requestedModelId || undefined,
-          onActivity: (activity) => {
-            setMessages((prev) =>
-              prev.map((message) =>
-                message.id === botMessageId
-                  ? {
-                      ...message,
-                      agent: {
-                        ...(message.agent || {}),
-                        activities: mergeActivity(
-                          message.agent?.activities,
-                          activity
-                        ),
-                      },
-                    }
-                  : message
-              )
-            );
-          },
         });
 
         const botMsg = {
@@ -552,7 +504,7 @@ export default function Chatbot() {
           <>
             <ChatWindow
               messages={messages}
-              isLoading={isLoading && !hasStreamingMessage}
+              isLoading={isLoading}
               error={error}
               onRetry={handleRetry}
               suggestedQuestions={

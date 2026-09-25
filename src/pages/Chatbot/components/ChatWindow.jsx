@@ -39,12 +39,9 @@ export default function ChatWindow({
             <div className="mb-5 rounded-full bg-slate-100 p-5 shadow-inner dark:bg-slate-800 dark:shadow-slate-900/50 sm:mb-6 sm:p-6">
               <RiRobot2Line className="text-5xl text-slate-300 dark:text-slate-600 sm:text-6xl" />
             </div>
-            <h2 className="text-lg font-bold text-slate-800 mb-2 dark:text-slate-200 sm:text-xl">
+            <h2 className="text-lg font-bold text-slate-800 mb-6 dark:text-slate-200 sm:text-xl">
               무엇을 도와드릴까요?
             </h2>
-            <p className="text-slate-500 max-w-xs text-sm sm:text-base dark:text-slate-400 mb-6">
-              궁금한 내용을 입력하시면 AI가 답변해 드립니다.
-            </p>
 
             {/* 추천 질문 */}
             {suggestedQuestions && suggestedQuestions.length > 0 && (
