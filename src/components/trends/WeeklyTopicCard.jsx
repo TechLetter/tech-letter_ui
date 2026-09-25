@@ -3,26 +3,22 @@ import { RiArrowRightSLine, RiExternalLinkLine } from "react-icons/ri";
 import { PATHS } from "../../routes/path";
 import timeutils from "../../utils/timeutils";
 
+/** 지난주보다 다룬 블로그가 몇 곳 늘었나. 지난주 숫자는 툴팁으로. */
 function ChangeBadge({ current, previous }) {
-  if (previous === 0) {
-    return (
-      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300">
-        새로 등장
-      </span>
-    );
-  }
   const delta = current - previous;
+  const tip = `지난주 ${previous}개 블로그`;
   if (delta === 0) {
     return (
-      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-        지난주와 같음
+      <span title={tip} className="px-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+        –
       </span>
     );
   }
   const up = delta > 0;
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+      title={tip}
+      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
         up
           ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300"
           : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
@@ -54,9 +50,7 @@ export default function WeeklyTopicCard({ rank, item }) {
             </Link>
           </div>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {item.blog_count}개 회사 · {item.post_count}개 글
-            <span className="text-slate-300 dark:text-slate-600"> · </span>
-            지난주 {item.previous_blog_count}개 회사
+            {item.blog_count}개 블로그 · {item.post_count}개 글
           </p>
         </div>
         <ChangeBadge current={item.blog_count} previous={item.previous_blog_count} />

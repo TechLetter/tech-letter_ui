@@ -18,6 +18,7 @@ export default function ChatWindow({
   onRetry,
   suggestedQuestions,
   onSuggestedQuestion,
+  models,
 }) {
   const bottomRef = useRef(null);
 
@@ -69,7 +70,7 @@ export default function ChatWindow({
         {/* 메시지 목록 */}
         <div className="flex flex-1 flex-col px-3 sm:px-4 md:px-6">
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
+            <MessageBubble key={msg.id} message={msg} models={models} />
           ))}
 
           {/* 로딩 표시 */}

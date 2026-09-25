@@ -6,6 +6,7 @@ import chatApi from "../../api/chatApi";
 import { ErrorCode, toApiError } from "../../api/apiError";
 import llmModelsApi from "../../api/llmModelsApi";
 import { isSelectableModel, sortModelsByHealth } from "../../utils/modelHealth";
+import CreditsBadge from "../../components/chatbot/CreditsBadge";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
@@ -482,9 +483,10 @@ export default function Chatbot() {
               {currentSession?.title || "AI 챗봇"}
             </div>
             {user?.credits && (
-              <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                남은 크레딧 {user.credits.remaining}
-              </div>
+              <CreditsBadge
+                credits={user.credits.remaining}
+                className="mt-0.5 px-2 py-0 text-[11px]"
+              />
             )}
           </div>
           <button
@@ -512,6 +514,7 @@ export default function Chatbot() {
                 isCurrentSessionEmpty ? suggestedQuestions : null
               }
               onSuggestedQuestion={handleSuggestedQuestion}
+              models={modelOptions}
             />
             <ChatInput
               onSend={handleSend}
