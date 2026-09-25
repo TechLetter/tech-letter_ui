@@ -1,117 +1,96 @@
-import { useEffect, useState } from "react";
-import { RiRefreshLine } from "react-icons/ri";
+import { useEffect, useMemo, useState } from "react";
+import { RiArrowDownSLine, RiRefreshLine } from "react-icons/ri";
 import llmModelsApi from "../../api/llmModelsApi";
-import { useUrlState } from "../../hooks/useUrlState";
-import EventFeed from "./components/EventFeed";
-import ModelHistoryModal from "./components/ModelHistoryModal";
-import ModelTable from "./components/ModelTable";
-import SummaryCards from "./components/SummaryCards";
+import timeutils from "../../utils/timeutils";
+import ModelRow from "./components/ModelRow";
+import { lastDays } from "./modelFormat";
 
-const DEFAULT_PERIOD = "1m";
-const ALLOWED_PERIODS = new Set(["1d", "1w", "1m", "1y"]);
-const DEFAULT_METRIC = "uptime";
-const ALLOWED_METRICS = new Set(["uptime", "latency"]);
+const DAYS = 30;
+const STATE_ORDER = { healthy: 0, degraded: 1, down: 2 };
+
+function byUsefulness(a, b) {
+  return (
+    (STATE_ORDER[a.state] ?? 3) - (STATE_ORDER[b.state] ?? 3) ||
+    (b.uptime_30d ?? -1) - (a.uptime_30d ?? -1) ||
+    a.model_id.localeCompare(b.model_id)
+  );
+}
+
+function Section({ title, count, children }) {
+  return (
+    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-3 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          {title} <span className="text-slate-400">{count}</span>
+        </span>
+        <span>{DAYS}일 가용률</span>
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export default function ModelStatus() {
-  const [selectedModelId, setSelectedModelId] = useUrlState("model", null, {
-    parse: (value) => value || null,
-    serialize: (value) => value || "",
-  });
-  const [period, setPeriod] = useUrlState("period", DEFAULT_PERIOD, {
-    parse: (value) => (ALLOWED_PERIODS.has(value) ? value : DEFAULT_PERIOD),
-    serialize: (value) => (ALLOWED_PERIODS.has(value) ? value : DEFAULT_PERIOD),
-  });
-  const [metric, setMetric] = useUrlState("metric", DEFAULT_METRIC, {
-    parse: (value) => (ALLOWED_METRICS.has(value) ? value : DEFAULT_METRIC),
-    serialize: (value) => (ALLOWED_METRICS.has(value) ? value : DEFAULT_METRIC),
-  });
-
   const [summary, setSummary] = useState(null);
   const [models, setModels] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [loadingOverview, setLoadingOverview] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     let ignore = false;
-
-    async function loadOverview() {
-      setLoadingOverview(true);
+    async function load() {
+      setLoading(true);
       setError("");
       try {
-        const [summaryRes, modelsRes, eventsRes] = await Promise.all([
+        const [summaryRes, modelsRes] = await Promise.all([
           llmModelsApi.getSummary(),
           llmModelsApi.getModels(),
-          llmModelsApi.getEvents({}),
         ]);
         if (ignore) return;
         setSummary(summaryRes?.data || null);
         setModels(modelsRes?.data?.items || []);
-        setEvents(eventsRes?.data?.items || []);
       } catch (err) {
         console.log("Failed to fetch model status:", err);
-        if (!ignore) {
-          setError("모델 상태를 불러오지 못했습니다.");
-        }
+        if (!ignore) setError("모델 상태를 불러오지 못했습니다.");
       } finally {
-        if (!ignore) setLoadingOverview(false);
+        if (!ignore) setLoading(false);
       }
     }
-
-    loadOverview();
+    load();
     return () => {
       ignore = true;
     };
   }, [refreshTick]);
 
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadHistory() {
-      if (!selectedModelId) {
-        setHistory([]);
-        return;
-      }
-      setLoadingHistory(true);
-      try {
-        const response = await llmModelsApi.getHistory(selectedModelId, { period });
-        if (ignore) return;
-        setHistory(response?.data?.items || []);
-      } catch (err) {
-        console.log("Failed to fetch model history:", err);
-        if (!ignore) setHistory([]);
-      } finally {
-        if (!ignore) setLoadingHistory(false);
-      }
-    }
-
-    loadHistory();
-    return () => {
-      ignore = true;
-    };
-  }, [selectedModelId, period]);
+  const days = lastDays(DAYS);
+  const sorted = useMemo(() => [...models].sort(byUsefulness), [models]);
+  const available = sorted.filter((m) => m.state !== "down");
+  const unavailable = sorted.filter((m) => m.state === "down");
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto w-full max-w-4xl space-y-4">
+      <header className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            AI 모델 현황
-          </h1>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">모델 상태</h1>
+          {summary && (
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+              사용 가능 {available.length} / {summary.total_models}
+              {summary.last_checked_at &&
+                ` · ${timeutils.timeDifferenceFromNow(summary.last_checked_at)} 확인`}
+            </p>
+          )}
         </div>
         <button
           type="button"
           onClick={() => setRefreshTick((tick) => tick + 1)}
-          disabled={loadingOverview}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          disabled={loading}
+          aria-label="새로고침"
+          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-slate-300"
         >
-          <RiRefreshLine className={loadingOverview ? "animate-spin" : ""} />
-          새로고침
+          <RiRefreshLine className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
         </button>
-      </div>
+      </header>
 
       {error && (
         <p className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-3 text-sm text-rose-600 dark:border-rose-950/60 dark:bg-rose-950/40 dark:text-rose-300">
@@ -119,31 +98,34 @@ export default function ModelStatus() {
         </p>
       )}
 
-      <SummaryCards summary={summary} loading={loadingOverview} />
+      {loading && models.length === 0 && (
+        <div className="h-72 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/70" />
+      )}
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0">
-          <ModelTable
-            models={models}
-            loading={loadingOverview}
-            selectedModelId={selectedModelId}
-            onSelectModel={setSelectedModelId}
-          />
-        </div>
-        <EventFeed events={events} loading={loadingOverview} />
-      </div>
+      {available.length > 0 && (
+        <Section title="사용 가능" count={available.length}>
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            {available.map((model) => (
+              <ModelRow key={model.model_id} model={model} days={days} />
+            ))}
+          </ul>
+        </Section>
+      )}
 
-      {selectedModelId && (
-        <ModelHistoryModal
-          modelId={selectedModelId}
-          points={history}
-          period={period}
-          metric={metric}
-          loading={loadingHistory}
-          onChangePeriod={setPeriod}
-          onChangeMetric={setMetric}
-          onClose={() => setSelectedModelId(null)}
-        />
+      {unavailable.length > 0 && (
+        <details className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-700 dark:text-slate-200">
+            <span>
+              잠시 사용 불가 <span className="text-slate-400">{unavailable.length}</span>
+            </span>
+            <RiArrowDownSLine className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180" />
+          </summary>
+          <ul className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
+            {unavailable.map((model) => (
+              <ModelRow key={model.model_id} model={model} days={days} />
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   );
