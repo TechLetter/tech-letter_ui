@@ -22,7 +22,7 @@ export const ROUTES = [
   { path: PATHS.MODEL_STATUS, element: <ModelStatus /> },
   { path: PATHS.CHATBOT, element: <Chatbot /> },
   {
-    path: PATHS.ADMIN,
+    path: `${PATHS.ADMIN}/:tab?`,
     element: (
       <AdminRouteProvider>
         <Admin />

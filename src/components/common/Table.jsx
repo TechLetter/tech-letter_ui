@@ -153,7 +153,7 @@ export default function Table({
               key={col.key}
               className={`min-w-0 text-sm text-slate-700 dark:text-slate-300 ${alignClass(
                 col
-              )} ${stickyRightClass(col, "bg-white dark:bg-slate-800", hasOverflow)} ${
+              )} ${stickyRightClass(col, "bg-white dark:bg-slate-900", hasOverflow)} ${
                 col.className || ""
               }`}
               style={cellStyle(col)}

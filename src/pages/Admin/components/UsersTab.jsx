@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { RiRefreshLine, RiCoinLine } from "react-icons/ri";
+import { RiCoinLine, RiShieldUserLine } from "react-icons/ri";
 import Table from "../../../components/common/Table";
-import Badge from "../../../components/common/Badge";
 import Pagination from "../../../components/common/Pagination";
 import { getUsers, grantCredit, handleAdminError } from "../../../api/adminApi";
 import { showToast } from "../../../provider/toastModalBridge";
-import timeutils from "../../../utils/timeutils";
 import { useUrlState } from "../../../hooks/useUrlState";
+import { RefreshButton, RelTime } from "./AdminKit";
 import GrantCreditModal from "./GrantCreditModal";
 
 export default function UsersTab() {
@@ -67,84 +66,49 @@ export default function UsersTab() {
     {
       key: "name",
       label: "이름",
-      width: "150px",
-      render: (name) => (
-        <span className="font-medium text-slate-900 dark:text-slate-100">
-          {name || "-"}
-        </span>
-      ),
-    },
-    {
-      key: "credits",
-      label: "크레딧",
-      width: "100px",
-      align: "center",
-      render: (credits) => (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-medium">
-          <RiCoinLine />
-          {credits?.remaining ?? 0}
+      width: "180px",
+      render: (name, user) => (
+        <span className="flex min-w-0 items-center gap-1.5" title={user.user_code}>
+          <span className="truncate font-medium text-slate-900 dark:text-slate-100">{name || "-"}</span>
+          {user.role === "admin" && (
+            <RiShieldUserLine aria-label="관리자" className="h-4 w-4 shrink-0 text-indigo-500" />
+          )}
         </span>
       ),
     },
     {
       key: "email",
       label: "이메일",
-      width: "200px",
-      render: (email) => (
-        <span className="text-slate-600 dark:text-slate-300">{email}</span>
-      ),
+      render: (email) => <span className="truncate text-slate-600 dark:text-slate-300">{email}</span>,
     },
     {
-      key: "user_code",
-      label: "사용자코드",
-      width: "180px",
-      render: (userCode) => (
-        <code className="block max-w-[160px] truncate rounded bg-slate-100 px-2 py-1 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-          {userCode}
-        </code>
-      ),
-    },
-    {
-      key: "role",
-      label: "역할",
-      width: "100px",
-      align: "center",
-      render: (role) => (
-        <Badge variant={role === "admin" ? "info" : "neutral"}>
-          {role === "admin" ? "관리자" : "사용자"}
-        </Badge>
-      ),
-    },
-    {
-      key: "created_at",
-      label: "가입일",
-      width: "120px",
-      render: (date) => (
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          {timeutils.formatLocalDate(date)}
+      key: "credits",
+      label: "크레딧",
+      width: "72px",
+      align: "right",
+      render: (credits) => (
+        <span
+          className={`inline-flex items-center gap-1 text-sm font-medium tabular-nums ${
+            credits?.remaining ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-500"
+          }`}
+        >
+          <RiCoinLine className="h-3.5 w-3.5" />
+          {credits?.remaining ?? 0}
         </span>
       ),
     },
-    {
-      key: "updated_at",
-      label: "수정일",
-      width: "120px",
-      render: (date) => (
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          {timeutils.formatLocalDate(date)}
-        </span>
-      ),
-    },
+    { key: "created_at", label: "가입", width: "84px", render: (iso) => <RelTime iso={iso} /> },
     {
       key: "actions",
-      label: "액션",
-      width: "100px",
-      align: "center",
+      label: "",
+      width: "72px",
+      align: "right",
       sticky: "right",
       render: (_, user) => (
         <button
+          type="button"
           onClick={() => handleGrantCredit(user)}
-          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+          className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/20"
         >
           <RiCoinLine />
           지급
@@ -155,38 +119,16 @@ export default function UsersTab() {
 
   return (
     <div className="space-y-4">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          사용자 관리
-        </h2>
-        <button
-          onClick={fetchUsers}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          <RiRefreshLine className={loading ? "animate-spin" : ""} />
-          새로고침
-        </button>
+      <div className="flex items-center justify-end">
+        <RefreshButton onClick={fetchUsers} loading={loading} />
       </div>
 
-      {/* 테이블 */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-        <Table
-          columns={columns}
-          data={users}
-          loading={loading}
-          emptyMessage="등록된 사용자가 없습니다."
-        />
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <Table columns={columns} data={users} loading={loading} emptyMessage="사용자 없음" />
       </div>
 
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
+      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
 
-      {/* 크레딧 지급 모달 */}
       <GrantCreditModal
         isOpen={showGrantModal}
         user={selectedUser}
