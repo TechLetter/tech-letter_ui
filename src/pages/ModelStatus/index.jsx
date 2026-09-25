@@ -53,7 +53,7 @@ export default function ModelStatus() {
   const sorted = useMemo(() => [...models].sort(byUsefulness), [models]);
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4">
+    <div className="mx-auto w-full max-w-5xl space-y-4">
       <header className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div>
           <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">모델 상태</h1>
@@ -88,11 +88,12 @@ export default function ModelStatus() {
       )}
 
       {sorted.length > 0 && (
-        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="mb-3 flex justify-end text-xs text-slate-400 dark:text-slate-500">
+        <section>
+          <div className="mb-2 flex justify-end px-1 text-xs text-slate-400 dark:text-slate-500">
             {DAYS}일 가용률
           </div>
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+          {/* 정렬 순서가 왼쪽→오른쪽, 위→아래로 읽히게 행 우선으로 채운다. */}
+          <ul className="grid gap-3 lg:grid-cols-2">
             {sorted.map((model) => (
               <ModelRow key={model.model_id} model={model} days={days} />
             ))}
