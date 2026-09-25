@@ -1,211 +1,87 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import trendsApi from "../api/trendsApi";
-import RisingTagsPanel from "../components/trends/RisingTagsPanel";
-import TrendControls from "../components/trends/TrendControls";
-import TrendLineChart from "../components/trends/TrendLineChart";
-import TrendPostList from "../components/trends/TrendPostList";
-import { useUrlState } from "../hooks/useUrlState";
+import WeeklyTopicCard from "../components/trends/WeeklyTopicCard";
+import timeutils from "../utils/timeutils";
 
-const MAX_SELECTED_TAGS = 5;
-const TREND_POST_PAGE_SIZE = 8;
-const DEFAULT_TREND_PERIOD = "180d";
-const ALLOWED_TREND_PERIODS = new Set(["30d", "180d", "365d", "3y"]);
-const DEFAULT_TREND_INTERVAL = "week";
-const ALLOWED_TREND_INTERVALS = new Set(["day", "week", "month"]);
+const TOPIC_LIMIT = 8;
 
 export default function Trends() {
-  const [period, setPeriod] = useUrlState("period", DEFAULT_TREND_PERIOD, {
-    parse: (value) =>
-      ALLOWED_TREND_PERIODS.has(value) ? value : DEFAULT_TREND_PERIOD,
-    serialize: (value) =>
-      ALLOWED_TREND_PERIODS.has(value) ? value : DEFAULT_TREND_PERIOD,
-  });
-  const [bucketInterval, setBucketInterval] = useUrlState(
-    "interval",
-    DEFAULT_TREND_INTERVAL,
-    {
-      parse: (value) =>
-        ALLOWED_TREND_INTERVALS.has(value) ? value : DEFAULT_TREND_INTERVAL,
-      serialize: (value) =>
-        ALLOWED_TREND_INTERVALS.has(value) ? value : DEFAULT_TREND_INTERVAL,
-    }
-  );
-  const [selectedTags, setSelectedTags] = useUrlState("tags", [], {
-    parse: (value) => (value ? value.split(",").filter(Boolean) : []),
-    serialize: (value) =>
-      Array.isArray(value) && value.length > 0 ? value.join(",") : "",
-  });
-
-  const [risingTags, setRisingTags] = useState([]);
-  const [series, setSeries] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [loadingRising, setLoadingRising] = useState(false);
-  const [loadingSeries, setLoadingSeries] = useState(false);
-  const [loadingPosts, setLoadingPosts] = useState(false);
-  const [trendError, setTrendError] = useState("");
-  const [postsError, setPostsError] = useState("");
-
-  const isOverviewMode = selectedTags.length === 0;
-  const chartTags = useMemo(() => {
-    if (selectedTags.length > 0) {
-      return selectedTags;
-    }
-    return risingTags.slice(0, MAX_SELECTED_TAGS).map((item) => item.tag);
-  }, [risingTags, selectedTags]);
-
-  const toggleTag = useCallback(
-    (tagName) => {
-      if (!tagName) return;
-      if (selectedTags.includes(tagName)) {
-        setSelectedTags(selectedTags.filter((tag) => tag !== tagName));
-        return;
-      }
-      if (selectedTags.length >= MAX_SELECTED_TAGS) return;
-      setSelectedTags([...selectedTags, tagName]);
-    },
-    [selectedTags, setSelectedTags]
-  );
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let ignore = false;
-
-    async function loadRisingTags() {
-      setLoadingRising(true);
-      setTrendError("");
+    async function load() {
+      setLoading(true);
+      setError("");
       try {
-        const response = await trendsApi.getRisingTags({
-          period,
-          limit: 10,
-        });
-        if (ignore) return;
-        setRisingTags(response?.data?.items || []);
-      } catch (error) {
-        console.log("Failed to fetch rising tags:", error);
-        if (!ignore) {
-          setRisingTags([]);
-          setTrendError("트렌드 데이터를 불러오지 못했습니다.");
-        }
+        const response = await trendsApi.getWeekly({ limit: TOPIC_LIMIT });
+        if (!ignore) setData(response?.data || null);
+      } catch (err) {
+        console.log("Failed to fetch weekly trends:", err);
+        if (!ignore) setError("기술 흐름을 불러오지 못했습니다.");
       } finally {
-        if (!ignore) setLoadingRising(false);
+        if (!ignore) setLoading(false);
       }
     }
-
-    loadRisingTags();
+    load();
     return () => {
       ignore = true;
     };
-  }, [period]);
+  }, []);
 
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadSeries() {
-      if (chartTags.length === 0) {
-        setSeries([]);
-        return;
-      }
-
-      setLoadingSeries(true);
-      setTrendError("");
-      try {
-        const response = await trendsApi.getSeries({
-          tags: chartTags,
-          period,
-          interval: bucketInterval,
-        });
-        if (ignore) return;
-        // 응답은 `items` 키를 쓴다.
-        setSeries(response?.data?.items || []);
-      } catch (error) {
-        console.log("Failed to fetch trend series:", error);
-        if (!ignore) {
-          setSeries([]);
-          setTrendError("트렌드 데이터를 불러오지 못했습니다.");
-        }
-      } finally {
-        if (!ignore) setLoadingSeries(false);
-      }
-    }
-
-    loadSeries();
-    return () => {
-      ignore = true;
-    };
-  }, [bucketInterval, chartTags, period]);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadPosts() {
-      if (chartTags.length === 0) {
-        setPosts([]);
-        return;
-      }
-
-      setLoadingPosts(true);
-      setPostsError("");
-      try {
-        const response = await trendsApi.getPosts({
-          tags: chartTags,
-          period,
-          page: 1,
-          page_size: TREND_POST_PAGE_SIZE,
-        });
-        if (ignore) return;
-        setPosts(response?.data?.items || []);
-      } catch (error) {
-        console.log("Failed to fetch trend posts:", error);
-        if (!ignore) {
-          setPosts([]);
-          setPostsError("관련 포스트를 불러오지 못했습니다.");
-        }
-      } finally {
-        if (!ignore) setLoadingPosts(false);
-      }
-    }
-
-    loadPosts();
-    return () => {
-      ignore = true;
-    };
-  }, [chartTags, period]);
+  const items = data?.items || [];
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-4">
-      <TrendControls
-        period={period}
-        interval={bucketInterval}
-        isOverviewMode={isOverviewMode}
-        onChangePeriod={setPeriod}
-        onChangeInterval={setBucketInterval}
-      />
+    <div className="mx-auto w-full max-w-4xl space-y-4">
+      <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          주간 기술 흐름
+        </h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          최근 7일 동안 <strong>여러 회사가 함께 다룬 주제</strong> 순입니다.
+          한 회사가 글을 많이 써도 순위가 오르지 않습니다.
+        </p>
+        {data && (
+          <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+            {timeutils.formatLocalDate(data.period.from_at)} ~{" "}
+            {timeutils.formatLocalDate(data.period.to)} · {data.blog_count}개 회사의{" "}
+            {data.post_count}개 글
+          </p>
+        )}
+      </header>
 
-      {trendError && (
-        <p className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-3 text-sm text-rose-600 dark:border-rose-950/60 dark:bg-rose-950/40 dark:text-rose-300">
-          {trendError}
+      {loading && (
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-48 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/70"
+            />
+          ))}
+        </div>
+      )}
+
+      {!loading && error && (
+        <p className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-4 text-sm text-rose-600 dark:border-rose-950/60 dark:bg-rose-950/40 dark:text-rose-300">
+          {error}
         </p>
       )}
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="order-2 min-w-0 space-y-4 xl:order-1">
-          <TrendLineChart series={series} loading={loadingSeries} />
-          <TrendPostList
-            posts={posts}
-            loading={loadingPosts}
-            error={postsError}
-          />
-        </div>
+      {!loading && !error && items.length === 0 && (
+        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+          최근 7일 동안 올라온 글이 없습니다.
+        </p>
+      )}
 
-        <div className="order-1 xl:sticky xl:top-20 xl:order-2">
-          <RisingTagsPanel
-            items={risingTags}
-            loading={loadingRising}
-            selectedTags={selectedTags}
-            maxSelectedTags={MAX_SELECTED_TAGS}
-            onToggleTag={toggleTag}
-          />
+      {!loading && !error && items.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2">
+          {items.map((item, index) => (
+            <WeeklyTopicCard key={item.topic} rank={index + 1} item={item} />
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
