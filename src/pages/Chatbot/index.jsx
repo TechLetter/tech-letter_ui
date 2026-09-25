@@ -5,7 +5,7 @@ import { PATHS } from "../../routes/path";
 import chatApi from "../../api/chatApi";
 import { ErrorCode, toApiError } from "../../api/apiError";
 import llmModelsApi from "../../api/llmModelsApi";
-import { sortModelsByHealth } from "../../utils/modelHealth";
+import { isSelectableModel, sortModelsByHealth } from "../../utils/modelHealth";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
@@ -165,11 +165,15 @@ export default function Chatbot() {
   useEffect(() => {
     if (modelCatalogStatus !== "loaded") return;
 
+    // 고른 모델이 사용 불가가 돼도 바꾼다 — 그대로 두면 매번 폴백 모델이 답한다.
     const isAvailable =
-      selectedModelId && modelOptions.some((option) => option.model_id === selectedModelId);
+      selectedModelId &&
+      modelOptions.some(
+        (option) => option.model_id === selectedModelId && isSelectableModel(option)
+      );
     if (isAvailable) return;
 
-    const autoPick = sortModelsByHealth(modelOptions)[0]?.model_id;
+    const autoPick = sortModelsByHealth(modelOptions).find(isSelectableModel)?.model_id;
     if (autoPick) handleModelChange(autoPick);
   }, [handleModelChange, modelCatalogStatus, modelOptions, selectedModelId]);
 

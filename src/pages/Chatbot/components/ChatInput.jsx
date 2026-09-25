@@ -110,6 +110,7 @@ export default function ChatInput({
             placement="top"
             align="right"
             disabled={isLoading}
+            selectableOnly
             trigger={({ open, toggle }) => (
               <button
                 type="button"

@@ -1,9 +1,9 @@
 /**
- * 모델 헬스 상태를 판정 · 정렬하는 곳. 챗봇 모델 선택창과 어드민 모델
- * 선호목록 편집창이 같은 기준을 써야 "이 모델 지금 괜찮나"가 화면마다
- * 다르게 보이지 않는다.
+ * 모델 상태 표시 · 정렬. 판정은 백엔드가 한다(`state`, model_scan.classify_state) —
+ * 모델 페이지·챗봇 선택창·어드민이 같은 색을 보여야 해서 여기서 다시 판정하지 않는다.
  *
- * 상태 4단계: healthy(정상) > degraded(불안정, 429) > down(장애) > unknown(정보 없음).
+ * 상태: healthy(정상) > degraded(불안정 — 지금은 응답) > down(사용 불가 — 지금 실패)
+ * > unknown(정보 없음). 챗봇에서는 healthy·degraded만 고를 수 있다.
  */
 
 export const HEALTH_LEVEL = {
@@ -24,31 +24,28 @@ const LEVEL_RANK = {
 export const HEALTH_DOT_CLASS = {
   [HEALTH_LEVEL.HEALTHY]: "bg-emerald-500",
   [HEALTH_LEVEL.DEGRADED]: "bg-amber-500",
-  [HEALTH_LEVEL.DOWN]: "bg-red-500",
-  [HEALTH_LEVEL.UNKNOWN]: "bg-slate-300 dark:bg-slate-600",
+  [HEALTH_LEVEL.DOWN]: "bg-slate-300 dark:bg-slate-600",
+  [HEALTH_LEVEL.UNKNOWN]: "bg-slate-200 dark:bg-slate-700",
 };
 
 export const HEALTH_LABEL = {
   [HEALTH_LEVEL.HEALTHY]: "정상",
-  [HEALTH_LEVEL.DEGRADED]: "응답 지연 중",
-  [HEALTH_LEVEL.DOWN]: "응답 없음",
+  [HEALTH_LEVEL.DEGRADED]: "불안정",
+  [HEALTH_LEVEL.DOWN]: "사용 불가",
   [HEALTH_LEVEL.UNKNOWN]: "상태 확인 필요",
 };
 
-/**
- * 공개 헬스 API 응답 한 건(`{latest_status, consecutive_failures, ...}`)을 보고
- * 4단계 중 하나로 분류한다.
- */
-export function classifyModelHealth(health) {
-  const status =
-    typeof health?.latest_status === "string" ? health.latest_status.trim().toUpperCase() : "";
-  const failures =
-    typeof health?.consecutive_failures === "number" ? health.consecutive_failures : null;
+const LEVELS = new Set(Object.values(HEALTH_LEVEL));
 
-  if (!status || failures === null) return HEALTH_LEVEL.UNKNOWN;
-  if (status === "OK" && failures === 0) return HEALTH_LEVEL.HEALTHY;
-  if (status === "429") return HEALTH_LEVEL.DEGRADED;
-  return HEALTH_LEVEL.DOWN;
+/** 공개 모델 목록 한 건의 `state`. 없거나 모르는 값이면 unknown. */
+export function classifyModelHealth(health) {
+  return LEVELS.has(health?.state) ? health.state : HEALTH_LEVEL.UNKNOWN;
+}
+
+/** 챗봇에서 고를 수 있는가 — 지금 응답하는 모델(초록·주황)만. */
+export function isSelectableModel(health) {
+  const level = classifyModelHealth(health);
+  return level === HEALTH_LEVEL.HEALTHY || level === HEALTH_LEVEL.DEGRADED;
 }
 
 /**
