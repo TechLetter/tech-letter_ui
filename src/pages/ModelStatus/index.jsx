@@ -6,7 +6,7 @@ import ModelDetail from "./components/ModelDetail";
 import ModelRow from "./components/ModelRow";
 import ModelToolbar from "./components/ModelToolbar";
 import { lastDays } from "./modelFormat";
-import { SORTS, countByState, matchesQuery, sortModels } from "./modelList";
+import { countByState, matchesQuery, metricOf, sortModels } from "./modelList";
 
 const DAYS = 30;
 const DETAIL_BOX =
@@ -22,7 +22,10 @@ export default function ModelStatus() {
   // 새로고침해도 남고, 챗봇 등에서 `/models?state=healthy`로 걸 수 있게 URL에 둔다.
   const [query, setQuery] = useUrlState("q", "");
   const [state, setState] = useUrlState("state", "all");
-  const [sort, setSort] = useUrlState("sort", "uptime");
+  // 기본은 Intelligence 점수순 — 요약·챗봇이 실제로 고르는 순서와 같다.
+  const [sort, setSort] = useUrlState("sort", "score");
+  const [metricId, setMetricId] = useUrlState("metric", "intelligence");
+  const metric = useMemo(() => metricOf(metricId), [metricId]);
   const { resetParams } = useUrlParams();
 
   useEffect(() => {
@@ -56,10 +59,10 @@ export default function ModelStatus() {
   const searched = useMemo(() => models.filter((m) => matchesQuery(m, query)), [models, query]);
   const counts = countByState(searched);
   const shown = useMemo(
-    () => sortModels(state === "all" ? searched : searched.filter((m) => m.state === state), sort),
-    [searched, state, sort]
+    () =>
+      sortModels(state === "all" ? searched : searched.filter((m) => m.state === state), sort, metric),
+    [searched, state, sort, metric]
   );
-  const metric = SORTS[sort]?.metric ? SORTS[sort] : null;
   const selected = shown.findIndex((m) => m.model_id === expandedId);
   const rowEndOf = (i) => Math.min(i | 1, shown.length - 1); // 두 칸 그리드에서 i가 있는 줄의 끝
   const checkedLabel = summary?.last_checked_at
@@ -75,6 +78,8 @@ export default function ModelStatus() {
         query={query}
         onQuery={setQuery}
         sort={sort}
+        metric={metric.id}
+        onMetric={setMetricId}
         onSort={setSort}
         checkedLabel={checkedLabel}
         loading={loading}

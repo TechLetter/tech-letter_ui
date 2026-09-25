@@ -20,27 +20,32 @@ function byUsefulness(a, b) {
 
 const createdAt = (m) => (m.info?.created_at ? Date.parse(m.info.created_at) : null);
 
-const score = (metric) => (m) => m.info?.benchmarks?.[metric];
+/** 카드에 늘 보이는 벤치마크(Artificial Analysis). 점수순 정렬도 이 지표를 따른다. */
+export const METRICS = [
+  { id: "intelligence", label: "Intelligence" },
+  { id: "coding", label: "Coding" },
+  { id: "agentic", label: "Agentic" },
+];
 
-/**
- * `key`가 없는 모델(벤치마크 없음, 사용 불가의 응답 시간)은 항상 뒤로 보낸다.
- * `metric`이 있는 정렬은 벤치마크 정렬이다 — 카드에 그 점수 막대를 보인다.
- */
+export function metricOf(id) {
+  const found = METRICS.find((m) => m.id === id) || METRICS[0];
+  return { ...found, key: (model) => model.info?.benchmarks?.[found.id] };
+}
+
+/** 순서만 정한다. `key`가 없는 모델(사용 불가의 응답 시간 등)은 항상 뒤로. */
 export const SORTS = {
-  uptime: { label: "가용률 30d" },
+  score: { label: "점수순" },
+  uptime: { label: "가용률", title: "30일 가용률" },
   latency: { label: "응답 시간", key: (m) => (m.state === "down" ? null : m.avg_latency_ms), dir: 1 },
   context: { label: "컨텍스트", key: (m) => m.info?.context_length, dir: -1 },
   newest: { label: "최신", key: createdAt, dir: -1 },
-  intelligence: { label: "Intelligence", metric: "intelligence", key: score("intelligence"), dir: -1 },
-  coding: { label: "Coding", metric: "coding", key: score("coding"), dir: -1 },
-  agentic: { label: "Agentic", metric: "agentic", key: score("agentic"), dir: -1 },
 };
 
 /**
- * 벤치마크 정렬도 "지금 쓸 수 있는가"가 먼저다. 쓸 수 있는 모델(점수순 → 점수 없음) 다음에
- * 사용 불가 모델(같은 규칙). 점수가 높아도 지금 못 쓰는 모델이 맨 위에 서지 않는다.
+ * 점수순도 "지금 쓸 수 있는가"가 먼저다. 쓸 수 있는 모델(점수순 → 점수 없음) 다음에
+ * 사용 불가 모델(같은 규칙). 요약·챗봇이 모델을 고르는 순서(`scouter.rank_models`)와 같다.
  */
-function byBenchmark(key) {
+function byScore(key) {
   return (a, b) => {
     const x = key(a);
     const y = key(b);
@@ -53,10 +58,10 @@ function byBenchmark(key) {
   };
 }
 
-export function sortModels(models, sort) {
-  const { key, dir, metric } = SORTS[sort] || SORTS.uptime;
+export function sortModels(models, sort, metric) {
+  if (!SORTS[sort] || sort === "score") return [...models].sort(byScore(metric.key));
+  const { key, dir } = SORTS[sort];
   if (!key) return [...models].sort(byUsefulness);
-  if (metric) return [...models].sort(byBenchmark(key));
   return [...models].sort((a, b) => {
     const x = key(a);
     const y = key(b);

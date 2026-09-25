@@ -1,6 +1,6 @@
 import { RiArrowDownSLine, RiCloseLine, RiRefreshLine, RiSearchLine } from "react-icons/ri";
 import { HEALTH_DOT_CLASS } from "../../../utils/modelHealth";
-import { SORTS, STATE_TABS } from "../modelList";
+import { METRICS, SORTS, STATE_TABS } from "../modelList";
 
 const CONTROL =
   "h-11 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 outline-none focus:border-indigo-400 lg:h-9 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
@@ -38,6 +38,37 @@ function StateTabs({ counts, value, onChange }) {
   );
 }
 
+/** 카드에 보일 벤치마크. 점수순 정렬도 이것을 따른다. */
+function MetricToggle({ value, onChange }) {
+  return (
+    <div
+      role="group"
+      aria-label="벤치마크"
+      title="Artificial Analysis"
+      className="flex w-full shrink-0 rounded-lg bg-slate-100 p-0.5 lg:inline-flex lg:w-auto dark:bg-slate-800"
+    >
+      {METRICS.map((m) => {
+        const on = m.id === value;
+        return (
+          <button
+            key={m.id}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(m.id)}
+            className={`h-10 flex-1 rounded-md px-2.5 text-xs font-medium lg:h-8 lg:flex-none ${
+              on
+                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
+          >
+            {m.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ModelToolbar({
   counts,
   state,
@@ -46,6 +77,8 @@ export default function ModelToolbar({
   onQuery,
   sort,
   onSort,
+  metric,
+  onMetric,
   checkedLabel,
   loading,
   onRefresh,
@@ -86,6 +119,7 @@ export default function ModelToolbar({
           )}
         </div>
 
+        <MetricToggle value={metric} onChange={onMetric} />
         <div className="flex items-center gap-2">
           <label htmlFor="model-sort" className="text-xs whitespace-nowrap text-slate-500 dark:text-slate-400">
             정렬
@@ -97,22 +131,11 @@ export default function ModelToolbar({
               onChange={(e) => onSort(e.target.value)}
               className={`${CONTROL} w-full cursor-pointer appearance-none pr-8 pl-3 lg:text-[13px]`}
             >
-              {Object.entries(SORTS)
-                .filter(([, item]) => !item.metric)
-                .map(([key, { label }]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              <optgroup label="Artificial Analysis">
-                {Object.entries(SORTS)
-                  .filter(([, item]) => item.metric)
-                  .map(([key, { label }]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-              </optgroup>
+              {Object.entries(SORTS).map(([key, { label, title }]) => (
+                <option key={key} value={key} title={title}>
+                  {label}
+                </option>
+              ))}
             </select>
             <RiArrowDownSLine
               aria-hidden="true"
