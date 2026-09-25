@@ -49,4 +49,7 @@ jobs:
       - name: Prune old image
         # 태그가 `latest` 하나라 교체된 옛 이미지는 dangling으로 남는다.
         if: success()
-        run: docker image prune -f
+        run: |
+          docker image prune -f
+          # 배포마다 빌드 캐시가 쌓인다. 크기로 묶는다.
+          docker builder prune -f --keep-storage 5gb
