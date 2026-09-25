@@ -1,52 +1,63 @@
 import ModelStatusDot from "../../../components/common/ModelStatusDot";
 import { classifyModelHealth } from "../../../utils/modelHealth";
-import { reasonLabel, speedGrade, splitModelId } from "../modelFormat";
+import {
+  displayName,
+  formatContext,
+  formatLatency,
+  formatMonth,
+  statusDetail,
+} from "../modelFormat";
+import ModalityIcons from "./ModalityIcons";
+import ModelDetail from "./ModelDetail";
 import UptimeBars from "./UptimeBars";
 
-const SPEED = {
-  fast: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-  normal: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-  slow: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-};
-
-function Chip({ className, children }) {
-  return (
-    <span className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${className}`}>
-      {children}
-    </span>
-  );
-}
-
-export default function ModelRow({ model, days }) {
-  const { provider, name } = splitModelId(model.model_id);
-  const speed = model.state === "down" ? null : speedGrade(model.avg_latency_ms);
+export default function ModelRow({ model, days, expanded, onToggle }) {
+  const { provider, name } = displayName(model);
+  const down = model.state === "down";
+  const latency = down ? null : formatLatency(model.avg_latency_ms);
+  const uptime = model.uptime_30d == null ? "기록 없음" : `${model.uptime_30d}%`;
+  const meta = [
+    formatContext(model.info?.context_length) && `${formatContext(model.info.context_length)} ctx`,
+    formatMonth(model.info?.created_at),
+  ].filter(Boolean);
 
   return (
     <li
-      className={`min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${
-        model.state === "down" ? "opacity-60" : ""
-      }`}
+      className={`min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 ${
+        expanded ? "lg:col-span-2" : ""
+      } ${down && !expanded ? "opacity-60" : ""}`}
       data-testid="model-row"
     >
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <ModelStatusDot level={classifyModelHealth(model)} />
-          <span className="truncate text-sm" title={model.model_id}>
-            {provider && <span className="text-slate-400 dark:text-slate-500">{provider} · </span>}
-            <span className="font-semibold text-slate-900 dark:text-slate-100">{name}</span>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="block w-full space-y-2 rounded-xl p-4 text-left hover:bg-slate-50/70 dark:hover:bg-slate-800/40"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <ModelStatusDot level={classifyModelHealth(model)} detail={statusDetail(model)} />
+            <span className="truncate text-sm" title={model.model_id}>
+              {provider && (
+                <span className="text-slate-500 dark:text-slate-400">{provider} · </span>
+              )}
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{name}</span>
+            </span>
+          </div>
+          <span className="shrink-0 text-xs tabular-nums text-slate-600 dark:text-slate-300">
+            {latency && <span className="text-slate-500 dark:text-slate-400">{latency} · </span>}
+            {uptime}
           </span>
-          {speed && <Chip className={SPEED[speed.tone]}>{speed.label}</Chip>}
-          {model.state !== "healthy" && (
-            <Chip className="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-              {reasonLabel(model.latest_status)}
-            </Chip>
-          )}
         </div>
-        <span className="shrink-0 text-xs tabular-nums text-slate-500 dark:text-slate-400">
-          {model.uptime_30d == null ? "기록 없음" : `${model.uptime_30d}%`}
-        </span>
-      </div>
-      <UptimeBars days={days} daily={model.daily} />
+        {model.info && (
+          <div className="flex items-center gap-2 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+            {meta.length > 0 && <span>{meta.join(" · ")}</span>}
+            <ModalityIcons modalities={model.info.input_modalities} />
+          </div>
+        )}
+        <UptimeBars days={days} daily={model.daily} />
+      </button>
+      {expanded && <ModelDetail model={model} />}
     </li>
   );
 }
