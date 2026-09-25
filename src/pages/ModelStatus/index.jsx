@@ -70,7 +70,7 @@ export default function ModelStatus() {
     : "";
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+    <div className="w-full space-y-4">
       <ModelToolbar
         counts={counts}
         state={state}
