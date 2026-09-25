@@ -63,7 +63,6 @@ const buildMessageFromSession = (sessionId, msg, idx) => ({
   sources: msg.sources || [],
   agent: msg.agent || null,
   guard: msg.guard || null,
-  memory: msg.memory || null,
 });
 
 export default function Chatbot() {
@@ -345,7 +344,6 @@ export default function Chatbot() {
         sources: [],
         agent: null,
         guard: null,
-        memory: null,
         requestedModelId: requestedModelId || null,
         isStreaming: true,
         createdAt: new Date().toISOString(),
@@ -364,7 +362,6 @@ export default function Chatbot() {
           sources: data.sources || [],
           agent: data.agent || null,
           guard: data.guard || null,
-          memory: data.memory || null,
           requestedModelId: requestedModelId || null,
           isStreaming: false,
           createdAt: new Date().toISOString(),

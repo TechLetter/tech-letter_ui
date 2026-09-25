@@ -143,7 +143,6 @@ ModelDropdown.propTypes = {
       model_id: PropTypes.string.isRequired,
       state: PropTypes.oneOf(["healthy", "degraded", "down"]),
       latest_status: PropTypes.string,
-      consecutive_failures: PropTypes.number,
       uptime_24h: PropTypes.number,
       avg_latency_ms: PropTypes.number,
     })
