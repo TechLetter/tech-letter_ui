@@ -97,11 +97,22 @@ export default function ModelToolbar({
               onChange={(e) => onSort(e.target.value)}
               className={`${CONTROL} w-full cursor-pointer appearance-none pr-8 pl-3 lg:text-[13px]`}
             >
-              {Object.entries(SORTS).map(([key, { label }]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
+              {Object.entries(SORTS)
+                .filter(([, item]) => !item.metric)
+                .map(([key, { label }]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              <optgroup label="Artificial Analysis">
+                {Object.entries(SORTS)
+                  .filter(([, item]) => item.metric)
+                  .map(([key, { label }]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+              </optgroup>
             </select>
             <RiArrowDownSLine
               aria-hidden="true"
