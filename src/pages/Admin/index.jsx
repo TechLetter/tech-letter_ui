@@ -41,7 +41,7 @@ export default function Admin() {
   const close = () => setDrawerOpen(false);
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] pt-2 lg:flex lg:items-start lg:gap-8 lg:pt-4">
+    <div className="w-full pt-2 lg:flex lg:items-start lg:gap-8 lg:pt-4">
       <div className="mb-4 flex items-center gap-2 lg:hidden">
         <button
           type="button"

@@ -34,7 +34,7 @@ export default function Trends() {
   const items = data?.items || [];
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4">
+    <div className="w-full space-y-4">
       {data && (
         <p className="px-1 text-xs tabular-nums text-slate-500 dark:text-slate-400">
           {timeutils.formatLocalDate(data.period.from_at)} – {timeutils.formatLocalDate(data.period.to)}
