@@ -44,7 +44,10 @@ export default function ModelRow({ model, days, expanded, onToggle }) {
               <span className="font-semibold text-slate-900 dark:text-slate-100">{name}</span>
             </span>
           </div>
-          <span className="shrink-0 text-xs tabular-nums text-slate-600 dark:text-slate-300">
+          <span
+            className="shrink-0 text-xs tabular-nums text-slate-600 dark:text-slate-300"
+            title={latency ? "응답 · 30일 가용률" : "30일 가용률"}
+          >
             {latency && <span className="text-slate-500 dark:text-slate-400">{latency} · </span>}
             {uptime}
           </span>
