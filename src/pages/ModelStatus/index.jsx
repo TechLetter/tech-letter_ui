@@ -22,6 +22,7 @@ export default function ModelStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshTick, setRefreshTick] = useState(0);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -92,10 +93,19 @@ export default function ModelStatus() {
           <div className="mb-2 flex justify-end px-1 text-xs text-slate-400 dark:text-slate-500">
             {DAYS}일 가용률
           </div>
-          {/* 정렬 순서가 왼쪽→오른쪽, 위→아래로 읽히게 행 우선으로 채운다. */}
-          <ul className="grid gap-3 lg:grid-cols-2">
+          {/* 정렬 순서가 왼쪽→오른쪽, 위→아래로 읽히게 행 우선으로 채운다.
+              펼친 카드는 한 줄을 다 쓰므로 dense로 빈칸을 메운다. */}
+          <ul className="grid gap-3 lg:grid-flow-dense lg:grid-cols-2">
             {sorted.map((model) => (
-              <ModelRow key={model.model_id} model={model} days={days} />
+              <ModelRow
+                key={model.model_id}
+                model={model}
+                days={days}
+                expanded={expandedId === model.model_id}
+                onToggle={() =>
+                  setExpandedId((id) => (id === model.model_id ? null : model.model_id))
+                }
+              />
             ))}
           </ul>
         </section>
