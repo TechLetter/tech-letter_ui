@@ -1,11 +1,7 @@
+import ModelStatusDot from "../../../components/common/ModelStatusDot";
+import { classifyModelHealth } from "../../../utils/modelHealth";
 import { reasonLabel, speedGrade, splitModelId } from "../modelFormat";
 import UptimeBars from "./UptimeBars";
-
-const DOT = {
-  healthy: "bg-emerald-500",
-  degraded: "bg-amber-400",
-  down: "bg-slate-300 dark:bg-slate-600",
-};
 
 const SPEED = {
   fast: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
@@ -26,10 +22,13 @@ export default function ModelRow({ model, days }) {
   const speed = model.state === "down" ? null : speedGrade(model.avg_latency_ms);
 
   return (
-    <li className="py-3.5 first:pt-0 last:pb-0" data-testid="model-row">
+    <li
+      className={`py-3.5 first:pt-0 last:pb-0 ${model.state === "down" ? "opacity-60" : ""}`}
+      data-testid="model-row"
+    >
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className={`h-2 w-2 shrink-0 rounded-full ${DOT[model.state] || DOT.down}`} />
+          <ModelStatusDot level={classifyModelHealth(model)} />
           <span className="truncate text-sm" title={model.model_id}>
             {provider && <span className="text-slate-400 dark:text-slate-500">{provider} · </span>}
             <span className="font-semibold text-slate-900 dark:text-slate-100">{name}</span>

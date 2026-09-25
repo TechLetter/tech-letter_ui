@@ -16,7 +16,7 @@ export function speedGrade(latencyMs) {
 /** 헬스체크의 최근 상태 코드를 사람이 읽는 말로. */
 export function reasonLabel(latestStatus = "") {
   const status = String(latestStatus);
-  if (status === "OK") return "응답 불안정";
+  if (status === "OK") return "불안정";
   if (/429/.test(status)) return "요청 한도 초과";
   if (/40[13]/.test(status)) return "접근 불가";
   if (/404/.test(status)) return "제공 중단";
