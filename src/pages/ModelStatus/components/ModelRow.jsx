@@ -23,7 +23,9 @@ export default function ModelRow({ model, days }) {
 
   return (
     <li
-      className={`py-3.5 first:pt-0 last:pb-0 ${model.state === "down" ? "opacity-60" : ""}`}
+      className={`min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${
+        model.state === "down" ? "opacity-60" : ""
+      }`}
       data-testid="model-row"
     >
       <div className="mb-2 flex items-center justify-between gap-3">
