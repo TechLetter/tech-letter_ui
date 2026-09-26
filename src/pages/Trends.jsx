@@ -35,21 +35,24 @@ export default function Trends() {
 
   return (
     <div className="w-full space-y-4">
-      {data && (
-        <p className="px-1 text-xs tabular-nums text-slate-500 dark:text-slate-400">
-          {timeutils.formatLocalDate(data.period.from_at)} – {timeutils.formatLocalDate(data.period.to)}
-          <span className="text-slate-300 dark:text-slate-600"> · </span>
-          {data.blog_count}개 블로그 · {data.post_count}개 글
-        </p>
-      )}
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h1 className="text-xl font-bold tracking-tight text-ink lg:text-2xl">이번 주 흐름</h1>
+        {data && (
+          <>
+            <span className="font-mono text-xs text-ink-3">
+              {timeutils.formatLocalDate(data.period.from_at)} – {timeutils.formatLocalDate(data.period.to)}
+            </span>
+            <span className="text-xs text-ink-3">
+              {data.blog_count}개 블로그 · {data.post_count}개 글
+            </span>
+          </>
+        )}
+      </div>
 
       {loading && (
         <div className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-48 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/70"
-            />
+            <div key={index} className="h-48 animate-pulse rounded-xl bg-surface" />
           ))}
         </div>
       )}
@@ -61,7 +64,7 @@ export default function Trends() {
       )}
 
       {!loading && !error && items.length === 0 && (
-        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <p className="rounded-xl border border-dashed border-line px-3 py-8 text-center text-sm text-ink-3">
           최근 7일 동안 올라온 글이 없습니다.
         </p>
       )}

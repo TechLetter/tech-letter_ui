@@ -2,19 +2,53 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* 색 토큰. 라이트/다크 값은 여기서만 바꾼다 — 유틸리티(bg-surface 등)는 @theme 로 이어진다. */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --tl-canvas: #f3f4f6;
+  --tl-surface: #ffffff;
+  --tl-line: #e2e8f0;
+  --tl-ink: #0f172a;
+  --tl-ink-2: #334155;
+  --tl-ink-3: #475569;
+  --tl-accent: #4338ca;
+  --tl-accent-fg: #ffffff;
+  --tl-accent-ink: #3730a3;
+  --tl-accent-soft: #e0e7ff;
+  --tl-header-h: 56px;
+
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light;
-  color: #213547;
-  background-color: #f8fafc;
+  color: var(--tl-ink);
+  background-color: var(--tl-canvas);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --tl-header-h: 64px;
+  }
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-canvas: var(--tl-canvas);
+  --color-surface: var(--tl-surface);
+  --color-line: var(--tl-line);
+  --color-ink: var(--tl-ink);
+  --color-ink-2: var(--tl-ink-2);
+  --color-ink-3: var(--tl-ink-3);
+  --color-accent: var(--tl-accent);
+  --color-accent-fg: var(--tl-accent-fg);
+  --color-accent-ink: var(--tl-accent-ink);
+  --color-accent-soft: var(--tl-accent-soft);
 }
 
 html,
@@ -26,28 +60,41 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background-color: white;
+  background-color: var(--tl-canvas);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 네이티브 컨트롤·스크롤바도 다크로 그리도록 색 구성표를 선언한다.
    (.dark :root 는 자기 자신의 자손을 가리킬 수 없어 무효였던 셀렉터라 제거했고, 그 안에 있던 선언을 여기로 옮겼다) */
 .dark {
+  --tl-canvas: #0f172a;
+  --tl-surface: #1e293b;
+  --tl-line: #334155;
+  --tl-ink: #f1f5f9;
+  --tl-ink-2: #cbd5e1;
+  --tl-ink-3: #94a3b8;
+  --tl-accent: #a5b4fc;
+  --tl-accent-fg: #0f172a;
+  --tl-accent-ink: #c7d2fe;
+  --tl-accent-soft: #1e1b4b;
   color-scheme: dark;
 }
 
 .dark body {
-  background-color: #0f172a; /* Slate 900 */
-  color: #e2e8f0; /* Slate 200 */
+  color: var(--tl-ink);
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
   text-decoration: inherit;
 }
 
-a:hover {
+/* 클래스 없는 링크(마크다운 본문)만 파랗게. 클래스가 있으면 Tailwind 유틸리티가 이긴다. */
+a:not([class]) {
+  font-weight: 500;
+  color: #646cff;
+}
+
+a:not([class]):hover {
   color: #535bf2;
 }
 
@@ -122,17 +169,17 @@ button {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--tl-line);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--tl-ink-3);
 }
 
 ::-webkit-scrollbar-corner {

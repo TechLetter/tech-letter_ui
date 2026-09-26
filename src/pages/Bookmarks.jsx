@@ -55,24 +55,22 @@ export default function Bookmarks() {
   const showEmptyState = !loading && posts.length === 0;
 
   return (
-    <div className="w-full max-w-full sm:max-w-2xl lg:max-w-7xl mx-auto min-h-screen relative">
-      <div className="mt-3 mb-6" />
+    <div className="w-full space-y-4">
+      <h1 className="text-xl font-bold tracking-tight text-ink lg:text-2xl">북마크</h1>
 
       {showEmptyState && (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-500 text-sm">
-          <p className="mb-2 font-medium">아직 저장한 북마크가 없어요.</p>
-          <p className="text-xs">
-            관심 있는 글 우측 상단의 북마크 아이콘을 눌러 저장해 보세요.
-          </p>
-        </div>
+        <p className="rounded-xl border border-dashed border-line px-3 py-16 text-center text-sm text-ink-3">
+          저장한 글 없음
+        </p>
       )}
 
       {!showEmptyState && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
           {posts.map((post) => (
             <PostCard
               key={post.id}
               post_id={post.id}
+              blogId={post.blog_id}
               blogName={post.blog_name}
               postTitle={post.title}
               postSummary={post.summary}
@@ -82,20 +80,21 @@ export default function Bookmarks() {
               postPublishedAt={post.published_at}
               postViewCount={post.view_count}
               isBookmarked={true}
+              onSelectBlog={(blogId) => navigate(`${PATHS.HOME}?blog=${encodeURIComponent(blogId)}`)}
             />
           ))}
         </div>
       )}
 
       {hasMore && !showEmptyState && (
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center pt-4">
           <button
             type="button"
             onClick={handleLoadMore}
             disabled={loading}
-            className="rounded-full bg-indigo-600 px-4 py-2 text-xs sm:text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+            className="h-10 rounded-lg border border-line bg-surface px-4 text-sm font-medium text-ink-2 hover:bg-canvas disabled:opacity-60"
           >
-            {loading ? "불러오는 중..." : "더 보기"}
+            {loading ? "불러오는 중" : "더 보기"}
           </button>
         </div>
       )}

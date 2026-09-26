@@ -172,7 +172,7 @@ export default function SessionSidebar({
       {!isOpen && (
         <button
           onClick={() => onToggle(true)}
-          className="hidden md:flex fixed left-4 top-16 z-40 p-2.5 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+          className="hidden md:flex fixed left-4 top-[calc(var(--tl-header-h)+1rem)] z-40 p-2.5 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
         >
           <RiMenuLine className="text-xl text-slate-600 dark:text-slate-300" />
         </button>
@@ -181,7 +181,7 @@ export default function SessionSidebar({
       {/* 데스크톱 사이드바 */}
       <div
         className={`
-          hidden md:block fixed left-0 top-12 bottom-0 z-30
+          hidden md:block fixed left-0 top-(--tl-header-h) bottom-0 z-30
           transition-all duration-300 ease-in-out
           ${isOpen ? "w-64" : "w-0"}
         `}
@@ -195,7 +195,7 @@ export default function SessionSidebar({
 
       {/* 모바일 오버레이 */}
       {isMobileOpen && (
-        <div className="fixed inset-x-0 bottom-0 top-12 z-50 md:hidden">
+        <div className="fixed inset-x-0 top-(--tl-header-h) bottom-0 z-50 md:hidden">
           {/* 배경 */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"

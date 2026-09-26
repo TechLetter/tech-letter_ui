@@ -446,7 +446,7 @@ export default function Chatbot() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-12 z-40 flex w-full overflow-hidden bg-white transition-colors duration-300 dark:bg-slate-900">
+    <div className="fixed inset-x-0 top-(--tl-header-h) bottom-0 z-40 flex w-full overflow-hidden bg-white transition-colors duration-300 dark:bg-slate-900">
       {/* 세션 사이드바 */}
       <SessionSidebar
         sessions={sessions}

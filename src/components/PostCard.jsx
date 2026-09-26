@@ -4,9 +4,26 @@ import { IoShareSocialOutline } from "react-icons/io5";
 import { showToast } from "../provider/toastModalBridge";
 import postsApi from "../api/postsApi";
 import BookmarkToggleButton from "./bookmark/BookmarkToggleButton";
+import BlogIcon from "./common/BlogIcon";
+
+const copyToClipboard = (text) => {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text);
+    return;
+  }
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.opacity = 0;
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textArea);
+};
 
 export default function PostCard({
   post_id,
+  blogId,
   blogName,
   postTitle,
   postSummary,
@@ -16,117 +33,105 @@ export default function PostCard({
   postPublishedAt,
   postViewCount = 0,
   isBookmarked = false,
+  onSelectBlog,
 }) {
-  const handleClickView = () => {
+  // 원문은 새 탭에서 연다. 조회수는 열 때 올린다.
+  const handleOpen = () => {
     postsApi.incrementViewCount(post_id);
-    window.open(postUrl, "_blank");
   };
 
-  const handleCopyToClipboard = (text) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-
-      textArea.style.position = "fixed";
-      textArea.style.opacity = 0;
-
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-    }
-  };
+  const blogNameClass = "min-w-0 truncate text-[13px] font-semibold text-ink-2";
 
   return (
-    <div
+    <article
       data-testid="post-card"
-      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:border-indigo-300/80 dark:hover:border-indigo-500/50 hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-slate-300 dark:hover:border-slate-500"
     >
-      {/* 썸네일 이미지 */}
-      <div className="relative h-32 sm:h-40 md:h-40 overflow-hidden">
+      <a
+        href={postUrl}
+        target="_blank"
+        rel="noreferrer"
+        onClick={handleOpen}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="block aspect-video overflow-hidden bg-canvas"
+      >
         {postThumbnailUrl ? (
           <img
             src={postThumbnailUrl}
-            alt={postTitle}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            alt=""
             loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900" />
+          <span className="flex h-full w-full items-center justify-center">
+            <BlogIcon blogId={blogId} name={blogName} size={44} />
+          </span>
         )}
+      </a>
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start px-3 pt-3">
-          <div className="pointer-events-auto inline-flex max-w-[70%] items-center rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-indigo-50 backdrop-blur">
-            <span className="truncate">{blogName}</span>
-          </div>
+      <div className="flex flex-1 flex-col gap-2.5 px-4 pt-3.5 pb-2.5">
+        <div className="flex items-center gap-2">
+          <BlogIcon blogId={blogId} name={blogName} size={20} />
+          {onSelectBlog ? (
+            <button
+              type="button"
+              onClick={() => onSelectBlog(blogId)}
+              className={`${blogNameClass} hover:text-accent-ink`}
+            >
+              {blogName}
+            </button>
+          ) : (
+            <span className={blogNameClass}>{blogName}</span>
+          )}
+          <span className="ml-auto shrink-0 font-mono text-xs text-ink-3">
+            {timeutils.formatLocalDate(postPublishedAt)}
+          </span>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-      </div>
-
-      {/* 포스트 정보 */}
-      <div
-        className="flex h-full cursor-pointer flex-col justify-between gap-2 px-4 py-3 text-left"
-        onClick={handleClickView}
-      >
-        {/* 상단: 제목 + 본문 요약 */}
-        <div className="flex flex-col gap-4 text-slate-900 dark:text-slate-100">
-          <h2 className="text-lg sm:text-xl font-semibold leading-snug line-clamp-2">
+        <h2 className="line-clamp-2 text-[17px] leading-snug font-semibold tracking-tight text-ink">
+          <a href={postUrl} target="_blank" rel="noreferrer" onClick={handleOpen} className="hover:text-accent-ink">
             {postTitle}
-          </h2>
-          <p className="text-sm text-slate-700 dark:text-slate-300 sm:text-base">
-            {postSummary}
-          </p>
-        </div>
+          </a>
+        </h2>
+        <p className="line-clamp-3 text-sm leading-relaxed text-ink-2">{postSummary}</p>
 
-        {/* 하단: 태그 + 메타 정보 */}
-        <div className="flex flex-col gap-2 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-          <div className="flex flex-wrap gap-1.5">
-            {postTags?.slice(0, 3).map((tag, tagIndex) => (
+        {postTags?.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {postTags.slice(0, 3).map((tag, tagIndex) => (
               <span
                 key={`${tag}-${tagIndex}`}
-                className="rounded-full border border-indigo-100 bg-indigo-50 dark:border-indigo-900 dark:bg-indigo-900/30 px-2 py-[3px] text-[11px] text-indigo-700 dark:text-indigo-300"
+                className="rounded-md bg-canvas px-2 py-[3px] text-xs text-ink-2"
               >
                 {tag}
               </span>
             ))}
-            {postTags && postTags.length > 3 && (
-              <span className="text-[11px] text-indigo-300 dark:text-indigo-500">
-                +{postTags.length - 3}
-              </span>
+            {postTags.length > 3 && (
+              <span className="font-mono text-xs text-ink-3">+{postTags.length - 3}</span>
             )}
           </div>
+        )}
 
-          <div className="flex items-center justify-between">
-            <div className="flex flex-row gap-3">
-              <span>{timeutils.formatLocalDate(postPublishedAt)}</span>
-            </div>
-
-            <div className="flex flex-row items-center gap-3">
-              <span className="flex flex-row items-center justify-center gap-1.5">
-                <GrView size={16} />
-                {postViewCount}
-              </span>
-              <button
-                className="flex flex-row items-center justify-center rounded-full p-1.5 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCopyToClipboard(postUrl);
-                  showToast("URL이 클립보드에 복사되었습니다.");
-                }}
-              >
-                <IoShareSocialOutline size={18} />
-              </button>
-              <BookmarkToggleButton
-                postId={post_id}
-                initialIsBookmarked={isBookmarked}
-              />
-            </div>
-          </div>
+        <div className="mt-auto flex items-center gap-0.5 pt-1">
+          <span className="flex items-center gap-1.5 font-mono text-xs text-ink-3">
+            <GrView size={14} />
+            {postViewCount}
+          </span>
+          <span className="flex-1" />
+          <button
+            type="button"
+            aria-label="링크 복사"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-3 hover:bg-canvas hover:text-ink"
+            onClick={() => {
+              copyToClipboard(postUrl);
+              showToast("URL이 클립보드에 복사되었습니다.");
+            }}
+          >
+            <IoShareSocialOutline size={18} />
+          </button>
+          <BookmarkToggleButton postId={post_id} initialIsBookmarked={isBookmarked} />
         </div>
       </div>
-    </div>
+    </article>
   );
 }

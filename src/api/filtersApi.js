@@ -17,6 +17,9 @@ const filtersApi = {
             },
         }),
 
+    // 부모 주제와 자식 주제. 목록이 서버 코드에 있어 거의 바뀌지 않는다.
+    getTopicGroups: () => apiClient.get("/api/v1/filters/topic-groups"),
+
     getTags: ({ blog_id, categories }) =>
         apiClient.get("/api/v1/filters/tags", {
             params: {
