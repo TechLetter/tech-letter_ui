@@ -3,6 +3,7 @@ import { RiChat3Line } from "react-icons/ri";
 import { PATHS } from "../../routes/path";
 import { useAuth } from "../../hooks/useAuth";
 import { useChatbotEntry } from "../../hooks/useChatbotEntry";
+import { useLoginGate } from "../../hooks/useLoginGate";
 import UserProfileMenu from "../auth/UserProfileMenu";
 import ThemeToggle from "../common/ThemeToggle";
 import Logo from "./Logo";
@@ -11,13 +12,14 @@ const NAV = [
   { to: PATHS.HOME, label: "홈", end: true },
   { to: PATHS.TRENDS, label: "트렌드" },
   { to: PATHS.MODEL_STATUS, label: "모델" },
-  { to: PATHS.BOOKMARKS, label: "북마크" },
+  { to: PATHS.BOOKMARKS, label: "북마크", needsLogin: true },
 ];
 
 export default function AppHeader() {
   const navigate = useNavigate();
   const { user, isAuthenticated, initialized, logout, isAdmin } = useAuth();
   const goChatbot = useChatbotEntry();
+  const gate = useLoginGate();
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-(--tl-header-h) border-b border-line bg-surface">
@@ -25,11 +27,15 @@ export default function AppHeader() {
         <Logo />
 
         <nav aria-label="주요 메뉴" className="hidden items-center gap-0.5 lg:flex">
-          {NAV.map(({ to, label, end }) => (
+          {NAV.map(({ to, label, end, needsLogin }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
+              onClick={(event) => {
+                // 비로그인이면 이동하지 않고 로그인 모달부터.
+                if (needsLogin && !gate()) event.preventDefault();
+              }}
               className={({ isActive }) =>
                 `flex h-9 items-center rounded-lg px-3 text-[15px] ${
                   isActive

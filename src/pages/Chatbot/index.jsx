@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { PATHS } from "../../routes/path";
+import { useRequireLogin } from "../../hooks/useLoginGate";
+import { showLoginRequiredModal } from "../../provider/loginRequiredModalBridge";
 import chatApi from "../../api/chatApi";
 import { ErrorCode, toApiError } from "../../api/apiError";
 import llmModelsApi from "../../api/llmModelsApi";
@@ -67,7 +67,6 @@ const buildMessageFromSession = (sessionId, msg, idx) => ({
 });
 
 export default function Chatbot() {
-  const navigate = useNavigate();
   const { isAuthenticated, initialized, user, updateCredits } = useAuth();
   const hasAutoSelectedSessionRef = useRef(false);
 
@@ -98,12 +97,11 @@ export default function Chatbot() {
   // 세션 로드 상태
   const [isLoadingSession, setIsLoadingSession] = useState(false);
 
-  // 로그인 체크
+  // 로그인 체크 — 비로그인이면 홈으로 돌리고 로그인 모달.
+  const requireLogin = useRequireLogin();
   useEffect(() => {
-    if (initialized && !isAuthenticated) {
-      navigate(PATHS.LOGIN);
-    }
-  }, [initialized, isAuthenticated, navigate]);
+    requireLogin();
+  }, [requireLogin]);
 
   useEffect(() => {
     if (!initialized || !isAuthenticated) {
@@ -397,7 +395,8 @@ export default function Chatbot() {
           setMessages((prev) =>
             prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
           );
-          navigate(PATHS.LOGIN);
+          // 대화 중 로그인이 풀렸다. 쓰던 화면은 두고 로그인 모달만 띄운다.
+          showLoginRequiredModal();
           return;
         }
 
@@ -427,7 +426,7 @@ export default function Chatbot() {
         setIsLoading(false);
       }
     },
-    [currentSessionId, handleModelChange, navigate, selectedModelId, updateCredits]
+    [currentSessionId, handleModelChange, selectedModelId, updateCredits]
   );
 
   // 재시도
