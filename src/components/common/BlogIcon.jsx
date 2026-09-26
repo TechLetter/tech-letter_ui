@@ -22,7 +22,7 @@ function blogIconUrl(blogId, version) {
 }
 
 /**
- * 블로그 아이콘. 수집된 아이콘이 없으면(404) 이름 첫 글자 배지로 대신한다.
+ * 블로그 아이콘. 수집된 아이콘이 없으면(빈 응답) 이름 첫 글자 배지로 대신한다.
  * `version`을 바꾸면 캐시를 건너뛰고 다시 받는다(어드민에서 교체 직후).
  */
 export default function BlogIcon({ blogId, name, size = 20, version }) {
