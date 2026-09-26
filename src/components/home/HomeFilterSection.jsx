@@ -10,6 +10,7 @@ import {
   RiRefreshLine,
   RiSearchLine,
 } from "react-icons/ri";
+import BlogIcon from "../common/BlogIcon";
 
 const FILTER_TABS = [
   { id: "category", label: "주제", icon: RiListCheck2 },
@@ -697,6 +698,7 @@ function BlogOptions({
           {blogs.map((blog) => (
             <FilterOptionButton
               key={blog.id}
+              icon={<BlogIcon blogId={blog.id} name={blog.name} size={20} />}
               label={blog.name}
               count={blog.count}
               isSelected={selectedBlogId === blog.id}
@@ -773,6 +775,7 @@ function FilterSearchInput({ value, onChange, placeholder }) {
 }
 
 function FilterOptionButton({
+  icon,
   label,
   count,
   isSelected,
@@ -792,7 +795,10 @@ function FilterOptionButton({
           : "border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50/40 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-300"
       }`}
     >
-      <span className="min-w-0 truncate">{label}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        {icon}
+        <span className="min-w-0 truncate">{label}</span>
+      </span>
       <span className="flex shrink-0 items-center gap-1">
         {typeof count === "number" && (
           <span className="text-xs opacity-70">{count}</span>

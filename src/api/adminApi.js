@@ -46,6 +46,14 @@ export async function getBlogs({ page = 1, page_size = 100, is_active } = {}) {
 export const createBlog = (data) => client.post(`${ADMIN_BASE}/blogs`, data).then(unwrap);
 export const updateBlog = (id, data) => client.put(`${ADMIN_BASE}/blogs/${id}`, data).then(unwrap);
 
+// 아이콘은 브라우저가 64px webp로 바꿔 본문 그대로 보낸다.
+export const uploadBlogIcon = (id, blob) =>
+  client
+    .put(`${ADMIN_BASE}/blogs/${id}/icon`, blob, { headers: { "Content-Type": "image/webp" } })
+    .then(unwrap);
+export const refreshBlogIcon = (id) =>
+  client.post(`${ADMIN_BASE}/blogs/${id}/icon/refresh`).then(unwrap);
+
 export const deleteBlog = (id, { delete_posts = false } = {}) =>
   client
     .delete(`${ADMIN_BASE}/blogs/${id}`, { params: { delete_posts: Boolean(delete_posts) } })
