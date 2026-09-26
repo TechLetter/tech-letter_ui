@@ -10,7 +10,7 @@ import { mergeUniqueByKey } from "../utils/arrayUtils";
 import { useUrlParams, useUrlState } from "../hooks/useUrlState";
 
 const PAGE_SIZE = 12;
-const STRIP_TOPIC_LIMIT = 3;
+const TREND_LIMIT = 5;
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
@@ -28,7 +28,6 @@ export default function Home() {
   const [selectedGroup] = useUrlState("group", "");
   const [selectedCategory] = useUrlState("category", "");
   const [selectedBlogId] = useUrlState("blog", "");
-  const [sort] = useUrlState("sort", "");
   const { updateParams } = useUrlParams();
 
   const groupOfTopic = useCallback(
@@ -54,7 +53,6 @@ export default function Home() {
     (name) => updateParams({ category: name || null, group: name ? groupOfTopic(name) || null : activeGroup || null }),
     [updateParams, activeGroup, groupOfTopic]
   );
-  const changeSort = useCallback((value) => updateParams({ sort: value || null }), [updateParams]);
   const changeBlog = useCallback((blogId) => updateParams({ blog: blogId || null }), [updateParams]);
   const clearFilters = useCallback(
     () => updateParams({ group: null, category: null, blog: null }),
@@ -70,7 +68,6 @@ export default function Home() {
           page_size: PAGE_SIZE,
           categories: categoryParams,
           blog_id: selectedBlogId,
-          sort: sort || undefined,
         });
         const { items, page: current, total_pages } = res.data;
 
@@ -85,7 +82,7 @@ export default function Home() {
         setLoading(false);
       }
     },
-    [categoryParams, selectedBlogId, sort]
+    [categoryParams, selectedBlogId]
   );
 
   const fetchPostsRef = useRef(fetchPosts);
@@ -136,11 +133,11 @@ export default function Home() {
     };
   }, []);
 
-  // 이번 주 흐름은 한 번만. 실패하면 스트립을 비워 둔다.
+  // 이번 주 흐름은 한 번만. 실패하면 카드·스트립을 비워 둔다.
   useEffect(() => {
     let ignore = false;
     trendsApi
-      .getWeekly({ limit: STRIP_TOPIC_LIMIT })
+      .getWeekly({ limit: TREND_LIMIT })
       .then((res) => {
         if (!ignore) setTrends(res?.data || null);
       })
@@ -161,7 +158,7 @@ export default function Home() {
     setPage(1);
     setHasMore(true);
     fetchPostsRef.current(1, true);
-  }, [categoryKey, selectedBlogId, sort, waitingForGroups]);
+  }, [categoryKey, selectedBlogId, waitingForGroups]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -191,20 +188,15 @@ export default function Home() {
 
   return (
     <div className="w-full lg:grid lg:grid-cols-[216px_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[248px_minmax(0,1fr)] xl:gap-8">
-      {/* 헤더 아래 고정. 화면보다 길면 사이드바 안에서 스크롤한다. */}
+      {/* 헤더 아래부터 화면 바닥까지 고정. 목록은 카드 안에서 스크롤한다. */}
       <aside
         aria-label="필터"
-        className="sticky top-[calc(var(--tl-header-h)+1.5rem)] hidden max-h-[calc(100vh-var(--tl-header-h)-2.5rem)] overflow-y-auto pr-1 lg:block"
+        className="sticky top-[calc(var(--tl-header-h)+1.5rem)] hidden h-[calc(100vh-var(--tl-header-h)-2.5rem)] lg:block"
       >
-        <HomeSidebar {...sidebarProps} />
+        <HomeSidebar {...sidebarProps} trends={trends} />
       </aside>
       <div className="min-w-0">
-        <HomeFilterSection
-          {...sidebarProps}
-          sort={sort}
-          onChangeSort={changeSort}
-          onClearFilters={clearFilters}
-        />
+        <HomeFilterSection {...sidebarProps} onClearFilters={clearFilters} />
         <TrendStrip trends={trends} onSelectCategory={selectCategory} />
         <HomePostListSection
           posts={posts}

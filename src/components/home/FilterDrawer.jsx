@@ -47,7 +47,7 @@ export default function FilterDrawer({ open, onClose, onClear, ...sidebarProps }
             <RiCloseLine className="h-5 w-5" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <HomeSidebar {...sidebarProps} dense={false} />
         </div>
       </section>
