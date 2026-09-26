@@ -4,6 +4,7 @@ import bookmarksApi from "../api/bookmarksApi";
 import PostCard from "../components/PostCard";
 import { PATHS } from "../routes/path";
 import { useAuth } from "../hooks/useAuth";
+import { useRequireLogin } from "../hooks/useLoginGate";
 import { mergeUniqueByKey } from "../utils/arrayUtils";
 
 const PAGE_SIZE = 12;
@@ -16,12 +17,10 @@ export default function Bookmarks() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  const requireLogin = useRequireLogin();
   useEffect(() => {
-    if (!initialized) return;
-    if (!isAuthenticated) {
-      navigate(PATHS.LOGIN, { replace: true });
-    }
-  }, [initialized, isAuthenticated, navigate]);
+    requireLogin();
+  }, [requireLogin]);
 
   useEffect(() => {
     if (!initialized || !isAuthenticated) return;
