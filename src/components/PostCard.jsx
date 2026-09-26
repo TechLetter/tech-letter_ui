@@ -1,3 +1,4 @@
+import { useState } from "react";
 import timeutils from "../utils/timeutils";
 import { GrView } from "react-icons/gr";
 import { IoShareSocialOutline } from "react-icons/io5";
@@ -35,6 +36,9 @@ export default function PostCard({
   isBookmarked = false,
   onSelectBlog,
 }) {
+  // 썸네일 주소가 깨졌으면 썸네일 없는 글처럼 블로그 아이콘을 보여 준다.
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+
   // 원문은 새 탭에서 연다. 조회수는 열 때 올린다.
   const handleOpen = () => {
     postsApi.incrementViewCount(post_id);
@@ -56,11 +60,12 @@ export default function PostCard({
         aria-hidden="true"
         className="block aspect-video overflow-hidden bg-canvas"
       >
-        {postThumbnailUrl ? (
+        {postThumbnailUrl && !thumbnailFailed ? (
           <img
             src={postThumbnailUrl}
             alt=""
             loading="lazy"
+            onError={() => setThumbnailFailed(true)}
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
         ) : (
