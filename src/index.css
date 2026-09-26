@@ -59,7 +59,8 @@ body {
   max-width: 100vw;
   min-width: 320px;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* hidden 이 아니라 clip 이다 — hidden 은 body 를 스크롤 컨테이너로 만들어 사이드바 sticky 가 풀린다. */
+  overflow-x: clip;
   background-color: var(--tl-canvas);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
