@@ -17,8 +17,11 @@ function toneOf(name = "") {
   return TONES[hash % TONES.length];
 }
 
+// 아이콘을 한꺼번에 바꿨을 때 올린다. 브라우저에 캐시된 옛 아이콘(Medium 로고)을 버리게 한다.
+const ICON_EPOCH = 2;
+
 function blogIconUrl(blogId, version) {
-  return `${API}/api/v1/blogs/${blogId}/icon${version ? `?v=${version}` : ""}`;
+  return `${API}/api/v1/blogs/${blogId}/icon?v=${version || ICON_EPOCH}`;
 }
 
 /**
