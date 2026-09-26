@@ -4,12 +4,13 @@ import filtersApi from "../api/filtersApi";
 import trendsApi from "../api/trendsApi";
 import HomeFilterSection from "../components/home/HomeFilterSection";
 import HomePostListSection from "../components/home/HomePostListSection";
-import HomeRail, { TrendStrip } from "../components/home/HomeRail";
+import HomeSidebar from "../components/home/HomeSidebar";
+import TrendStrip from "../components/home/TrendStrip";
 import { mergeUniqueByKey } from "../utils/arrayUtils";
 import { useUrlParams, useUrlState } from "../hooks/useUrlState";
 
 const PAGE_SIZE = 12;
-const RAIL_TOPIC_LIMIT = 5;
+const STRIP_TOPIC_LIMIT = 3;
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
@@ -22,24 +23,19 @@ export default function Home() {
   // Filter states
   const [categoryFilters, setCategoryFilters] = useState([]);
   const [blogFilters, setBlogFilters] = useState([]);
-  const [tagFilters, setTagFilters] = useState([]);
 
   // URL 동기화되는 필터 상태
   const [selectedGroup] = useUrlState("group", "");
   const [selectedCategory] = useUrlState("category", "");
   const [selectedBlogId] = useUrlState("blog", "");
   const [sort] = useUrlState("sort", "");
-  const [selectedTags] = useUrlState("tags", [], {
-    parse: (v) => (v ? v.split(",") : []),
-    serialize: (v) => (Array.isArray(v) && v.length > 0 ? v.join(",") : ""),
-  });
   const { updateParams } = useUrlParams();
 
   const groupOfTopic = useCallback(
     (name) => (topicGroups || []).find((group) => group.topics.includes(name))?.id || "",
     [topicGroups]
   );
-  // 자식 주제가 있으면 부모는 거기서 정한다 — 트렌드의 `?category=` 링크가 그대로 탭을 연다.
+  // 자식 주제가 있으면 부모는 거기서 정한다 — 트렌드의 `?category=` 링크가 그대로 트리를 편다.
   const activeGroup = selectedCategory ? groupOfTopic(selectedCategory) : selectedGroup;
   // 부모만 골랐으면 자식 전체를 OR 로 조회한다.
   const categoryParams = useMemo(() => {
@@ -47,7 +43,7 @@ export default function Home() {
     return (topicGroups || []).find((group) => group.id === activeGroup)?.topics || [];
   }, [selectedCategory, activeGroup, topicGroups]);
   const categoryKey = categoryParams.join("|");
-  // 부모 탭이 URL 에 있는데 묶음을 아직 못 받았으면 전체 글을 잠깐 보여 주지 않고 기다린다.
+  // 부모가 URL 에 있는데 묶음을 아직 못 받았으면 전체 글을 잠깐 보여 주지 않고 기다린다.
   const waitingForGroups = Boolean(selectedGroup && !selectedCategory && topicGroups === null);
 
   const selectGroup = useCallback(
@@ -60,20 +56,8 @@ export default function Home() {
   );
   const changeSort = useCallback((value) => updateParams({ sort: value || null }), [updateParams]);
   const changeBlog = useCallback((blogId) => updateParams({ blog: blogId || null }), [updateParams]);
-  const changeTags = useCallback(
-    (tags) => updateParams({ tags: Array.isArray(tags) && tags.length > 0 ? tags.join(",") : null }),
-    [updateParams]
-  );
-  const applyFilters = useCallback(
-    ({ blogId, tags }) =>
-      updateParams({
-        blog: blogId || null,
-        tags: Array.isArray(tags) && tags.length > 0 ? tags.join(",") : null,
-      }),
-    [updateParams]
-  );
   const clearFilters = useCallback(
-    () => updateParams({ group: null, category: null, blog: null, tags: null }),
+    () => updateParams({ group: null, category: null, blog: null }),
     [updateParams]
   );
 
@@ -86,7 +70,6 @@ export default function Home() {
           page_size: PAGE_SIZE,
           categories: categoryParams,
           blog_id: selectedBlogId,
-          tags: selectedTags,
           sort: sort || undefined,
         });
         const { items, page: current, total_pages } = res.data;
@@ -102,7 +85,7 @@ export default function Home() {
         setLoading(false);
       }
     },
-    [categoryParams, selectedBlogId, selectedTags, sort]
+    [categoryParams, selectedBlogId, sort]
   );
 
   const fetchPostsRef = useRef(fetchPosts);
@@ -111,53 +94,33 @@ export default function Home() {
     fetchPostsRef.current = fetchPosts;
   }, [fetchPosts]);
 
+  // 자식 개수는 출처를, 출처 개수는 주제를 반영한다.
   const loadCategoryFilters = useCallback(async () => {
     try {
-      const res = await filtersApi.getCategories({
-        blog_id: selectedBlogId,
-        tags: selectedTags.length > 0 ? selectedTags : undefined,
-      });
+      const res = await filtersApi.getCategories({ blog_id: selectedBlogId });
       setCategoryFilters(res?.data?.items.filter((item) => item.count > 0) || []);
     } catch (err) {
       console.log("Failed to fetch category filters:", err);
       setCategoryFilters([]);
     }
-  }, [selectedBlogId, selectedTags]);
+  }, [selectedBlogId]);
 
   const loadBlogFilters = useCallback(async () => {
     try {
-      const res = await filtersApi.getBlogs({
-        categories: categoryParams,
-        tags: selectedTags.length > 0 ? selectedTags : undefined,
-      });
+      const res = await filtersApi.getBlogs({ categories: categoryParams });
       setBlogFilters(res?.data?.items.filter((item) => item.count > 0) || []);
     } catch (err) {
       console.log("Failed to fetch blog filters:", err);
       setBlogFilters([]);
     }
-  }, [categoryParams, selectedTags]);
+  }, [categoryParams]);
 
-  const loadTagFilters = useCallback(async () => {
-    try {
-      const res = await filtersApi.getTags({
-        blog_id: selectedBlogId,
-        categories: categoryParams,
-      });
-      setTagFilters(res?.data?.items.filter((item) => item.count > 0) || []);
-    } catch (err) {
-      console.log("Failed to fetch tag filters:", err);
-      setTagFilters([]);
-    }
-  }, [selectedBlogId, categoryParams]);
-
-  // Load all filters on mount and when selection changes
   useEffect(() => {
     loadCategoryFilters();
     loadBlogFilters();
-    loadTagFilters();
-  }, [loadCategoryFilters, loadBlogFilters, loadTagFilters]);
+  }, [loadCategoryFilters, loadBlogFilters]);
 
-  // 주제 묶음은 한 번만. 실패하면 부모 탭 없이 '전체' 만 둔다.
+  // 주제 묶음은 한 번만. 실패하면 부모 없이 '전체' 만 둔다.
   useEffect(() => {
     let ignore = false;
     filtersApi
@@ -173,11 +136,11 @@ export default function Home() {
     };
   }, []);
 
-  // 이번 주 흐름은 한 번만. 실패하면 레일을 비워 둔다.
+  // 이번 주 흐름은 한 번만. 실패하면 스트립을 비워 둔다.
   useEffect(() => {
     let ignore = false;
     trendsApi
-      .getWeekly({ limit: RAIL_TOPIC_LIMIT })
+      .getWeekly({ limit: STRIP_TOPIC_LIMIT })
       .then((res) => {
         if (!ignore) setTrends(res?.data || null);
       })
@@ -198,7 +161,7 @@ export default function Home() {
     setPage(1);
     setHasMore(true);
     fetchPostsRef.current(1, true);
-  }, [categoryKey, selectedBlogId, selectedTags, sort, waitingForGroups]);
+  }, [categoryKey, selectedBlogId, sort, waitingForGroups]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -214,25 +177,32 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasMore, loading]);
 
+  const sidebarProps = {
+    topicGroups: topicGroups || [],
+    categoryFilters,
+    blogFilters,
+    activeGroup,
+    selectedCategory,
+    selectedBlogId,
+    onSelectGroup: selectGroup,
+    onSelectCategory: selectCategory,
+    onChangeBlog: changeBlog,
+  };
+
   return (
-    <div className="w-full xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start xl:gap-8">
+    <div className="w-full lg:grid lg:grid-cols-[216px_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[248px_minmax(0,1fr)] xl:gap-8">
+      {/* 헤더 아래 고정. 화면보다 길면 사이드바 안에서 스크롤한다. */}
+      <aside
+        aria-label="필터"
+        className="sticky top-[calc(var(--tl-header-h)+1.5rem)] hidden max-h-[calc(100vh-var(--tl-header-h)-2.5rem)] overflow-y-auto pr-1 lg:block"
+      >
+        <HomeSidebar {...sidebarProps} />
+      </aside>
       <div className="min-w-0">
         <HomeFilterSection
-          topicGroups={topicGroups || []}
-          activeGroup={activeGroup}
+          {...sidebarProps}
           sort={sort}
           onChangeSort={changeSort}
-          selectedCategory={selectedCategory}
-          categoryFilters={categoryFilters}
-          blogFilters={blogFilters}
-          tagFilters={tagFilters}
-          selectedBlogId={selectedBlogId}
-          selectedTags={selectedTags}
-          onSelectGroup={selectGroup}
-          onSelectCategory={selectCategory}
-          onChangeBlog={changeBlog}
-          onChangeTags={changeTags}
-          onApplyFilters={applyFilters}
           onClearFilters={clearFilters}
         />
         <TrendStrip trends={trends} onSelectCategory={selectCategory} />
@@ -242,14 +212,6 @@ export default function Home() {
           hasMore={hasMore}
           onSelectBlog={changeBlog}
           onClearFilters={clearFilters}
-        />
-      </div>
-      <div className="hidden xl:block">
-        <HomeRail
-          trends={trends}
-          blogFilters={blogFilters}
-          onSelectCategory={selectCategory}
-          onSelectBlog={changeBlog}
         />
       </div>
     </div>
