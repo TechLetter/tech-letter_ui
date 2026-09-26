@@ -51,8 +51,11 @@ export const uploadBlogIcon = (id, blob) =>
   client
     .put(`${ADMIN_BASE}/blogs/${id}/icon`, blob, { headers: { "Content-Type": "image/webp" } })
     .then(unwrap);
-export const refreshBlogIcon = (id) =>
-  client.post(`${ADMIN_BASE}/blogs/${id}/icon/refresh`).then(unwrap);
+// `siteUrl`을 주면 그 사이트의 아이콘을 받는다(Medium 블로그의 회사 홈페이지).
+export const refreshBlogIcon = (id, siteUrl) =>
+  client
+    .post(`${ADMIN_BASE}/blogs/${id}/icon/refresh`, siteUrl ? { site_url: siteUrl } : undefined)
+    .then(unwrap);
 
 export const deleteBlog = (id, { delete_posts = false } = {}) =>
   client

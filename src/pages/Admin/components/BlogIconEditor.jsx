@@ -36,6 +36,9 @@ export default function BlogIconEditor({ blog, onChanged }) {
   const input = useRef(null);
   const [version, setVersion] = useState(Date.now());
   const [busy, setBusy] = useState(false);
+  const [siteUrl, setSiteUrl] = useState("");
+  const typedUrl = siteUrl.trim();
+  const canFetchUrl = /^https?:\/\/\S+$/.test(typedUrl);
 
   const bump = () => {
     const next = Date.now();
@@ -57,10 +60,10 @@ export default function BlogIconEditor({ blog, onChanged }) {
     }
   };
 
-  const refresh = async () => {
+  const refresh = async (fromUrl) => {
     setBusy(true);
     try {
-      await refreshBlogIcon(blog.id);
+      await refreshBlogIcon(blog.id, fromUrl);
       // 요약 워커가 받아 온다. 보통 몇 초면 끝난다.
       setTimeout(bump, 6000);
     } catch (error) {
@@ -74,7 +77,7 @@ export default function BlogIconEditor({ blog, onChanged }) {
     "h-8 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700";
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <BlogIcon key={version} blogId={blog.id} name={blog.name} size={40} version={version} />
       <div className="flex gap-2">
         <button
@@ -85,8 +88,32 @@ export default function BlogIconEditor({ blog, onChanged }) {
         >
           이미지 선택
         </button>
-        <button type="button" className={button} disabled={busy} onClick={refresh}>
+        <button type="button" className={button} disabled={busy} onClick={() => refresh()}>
           사이트에서 다시 받기
+        </button>
+      </div>
+      <div className="flex w-full gap-2">
+        <input
+          type="url"
+          value={siteUrl}
+          onChange={(e) => setSiteUrl(e.target.value)}
+          onKeyDown={(e) => {
+            // 블로그 수정 폼 안에 있다. Enter가 폼 제출이 되지 않게 한다.
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            if (canFetchUrl) refresh(typedUrl);
+          }}
+          placeholder="https://"
+          aria-label="아이콘을 받을 주소"
+          className="h-8 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+        />
+        <button
+          type="button"
+          className={button}
+          disabled={busy || !canFetchUrl}
+          onClick={() => refresh(typedUrl)}
+        >
+          주소에서 받기
         </button>
       </div>
       <input
