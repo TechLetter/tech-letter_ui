@@ -1,17 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  RiArrowDownSLine,
+  RiBookmarkLine,
+  RiLogoutBoxRLine,
+  RiSettings3Line,
+  RiShieldLine,
+  RiShieldUserLine,
+} from "react-icons/ri";
 import { PATHS } from "../../routes/path";
 import SettingsModal from "../account/SettingsModal";
+
+const ITEM =
+  "flex h-11 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-sm font-medium text-ink hover:bg-canvas";
+const ICON = "h-[18px] w-[18px] shrink-0 text-ink-3";
 
 export default function UserProfileMenu({ user, isAdmin, onLogout }) {
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const containerRef = useRef(null);
   const navigate = useNavigate();
-
-  const handleToggleOpen = () => {
-    setOpen((prev) => !prev);
-  };
 
   useEffect(() => {
     if (!open) return;
@@ -29,18 +37,14 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
     };
   }, [open]);
 
+  const go = (path) => {
+    navigate(path);
+    setOpen(false);
+  };
+
   const handleLogoutClick = () => {
     onLogout();
     setOpen(false);
-  };
-
-  const handleOpenSettings = () => {
-    setSettingsOpen(true);
-    setOpen(false);
-  };
-
-  const handleCloseSettings = () => {
-    setSettingsOpen(false);
   };
 
   const handleAccountDeleted = () => {
@@ -49,102 +53,78 @@ export default function UserProfileMenu({ user, isAdmin, onLogout }) {
     navigate(PATHS.HOME);
   };
 
-  const handleClickBookmarks = () => {
-    navigate(PATHS.BOOKMARKS);
-    setOpen(false);
-  };
-
   const userName = user?.name || "";
   const userEmail = user?.email || "";
-  const userRoleLabel = isAdmin ? "관리자" : "사용자";
   const userInitial = userName ? userName.charAt(0).toUpperCase() : "";
 
   return (
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        onClick={handleToggleOpen}
-        className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        aria-label="계정 메뉴"
+        className="flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surface pr-1.5 pl-1 hover:bg-canvas"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-xs font-semibold text-white shadow-sm">
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent-soft text-[13px] font-bold text-accent-ink">
           {userInitial}
-        </div>
-        <div className="hidden sm:flex flex-col text-left">
-          <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate max-w-[140px]">
-            {userName}
-          </span>
-          <span className="text-[10px] font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            {userRoleLabel}
-          </span>
-        </div>
-        <span className="text-[10px] text-gray-400">▾</span>
+        </span>
+        <RiArrowDownSLine className="h-4 w-4 text-ink-3" />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-semibold text-white">
+        <div
+          role="menu"
+          className="absolute right-0 mt-2 w-64 rounded-xl border border-line bg-surface p-1.5 shadow-lg dark:shadow-slate-950/60"
+        >
+          <div className="flex items-center gap-3 border-b border-line px-2.5 pt-2 pb-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-sm font-bold text-accent-ink">
               {userInitial}
-            </div>
-            <div className="min-w-0 text-left">
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                {userName}
-              </p>
-              {userEmail && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {userEmail}
-                </p>
-              )}
-              <p className="mt-0.5 text-[11px] text-indigo-600 dark:text-indigo-400">
-                {userRoleLabel}
-              </p>
-            </div>
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate text-sm font-semibold text-ink">{userName}</span>
+              {userEmail && <span className="truncate text-xs text-ink-3">{userEmail}</span>}
+            </span>
           </div>
 
-          <div className="mt-4 border-t border-gray-100 dark:border-slate-700 pt-3 space-y-1">
+          <div className="flex flex-col pt-1.5">
             {isAdmin && (
-              <button
-                type="button"
-                onClick={() => {
-                  navigate(PATHS.ADMIN);
-                  setOpen(false);
-                }}
-                className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50"
-              >
-                <span>관리자 페이지</span>
-                <span className="text-[13px]">⟶</span>
+              <button type="button" role="menuitem" onClick={() => go(PATHS.ADMIN)} className={ITEM}>
+                <RiShieldUserLine className={ICON} />
+                관리자
               </button>
             )}
-            <button
-              type="button"
-              onClick={handleClickBookmarks}
-              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-slate-700"
-            >
-              <span>내 북마크</span>
-              <span className="text-[13px]">⟶</span>
+            <button type="button" role="menuitem" onClick={() => go(PATHS.BOOKMARKS)} className={ITEM}>
+              <RiBookmarkLine className={ICON} />
+              북마크
             </button>
             <button
               type="button"
-              onClick={handleOpenSettings}
-              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-slate-700"
+              role="menuitem"
+              onClick={() => {
+                setSettingsOpen(true);
+                setOpen(false);
+              }}
+              className={ITEM}
             >
-              <span>설정</span>
-              <span className="text-[13px]">⟶</span>
+              <RiSettings3Line className={ICON} />
+              설정
             </button>
-            <button
-              type="button"
-              onClick={handleLogoutClick}
-              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300"
-            >
-              <span>로그아웃</span>
-              <span className="text-[13px]">⟶</span>
+            <button type="button" role="menuitem" onClick={() => go(PATHS.PRIVACY)} className={ITEM}>
+              <RiShieldLine className={ICON} />
+              개인정보처리방침
+            </button>
+            <div className="my-1.5 h-px bg-line" />
+            <button type="button" role="menuitem" onClick={handleLogoutClick} className={`${ITEM} text-ink-2`}>
+              <RiLogoutBoxRLine className={ICON} />
+              로그아웃
             </button>
           </div>
         </div>
       )}
       <SettingsModal
         open={settingsOpen}
-        onClose={handleCloseSettings}
+        onClose={() => setSettingsOpen(false)}
         onDeleted={handleAccountDeleted}
         user={user}
       />

@@ -6,19 +6,12 @@ export default function ThemeToggle() {
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
-      className={`p-2 rounded-full transition-colors ${
-        isDarkMode
-          ? "bg-gray-800 text-yellow-400 hover:bg-gray-700"
-          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-      }`}
-      aria-label="Toggle Dark Mode"
+      aria-label={isDarkMode ? "라이트 모드" : "다크 모드"}
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-ink-2 hover:bg-canvas"
     >
-      {isDarkMode ? (
-        <RiSunLine className="text-xl" />
-      ) : (
-        <RiMoonLine className="text-xl" />
-      )}
+      {isDarkMode ? <RiSunLine className="h-[18px] w-[18px]" /> : <RiMoonLine className="h-[18px] w-[18px]" />}
     </button>
   );
 }

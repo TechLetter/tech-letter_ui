@@ -54,7 +54,7 @@ export default function BookmarkToggleButton({
       aria-label={isBookmarked ? "북마크 해제" : "북마크 추가"}
       onClick={handleToggleBookmark}
       disabled={loading}
-      className={`flex items-center justify-center rounded-full p-1.5 transition-colors ${
+      className={`flex items-center justify-center rounded-full p-2 transition-colors ${
         isBookmarked
           ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
           : "text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
