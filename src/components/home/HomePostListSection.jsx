@@ -1,11 +1,37 @@
+import { RiChat3Line } from "react-icons/ri";
 import PostCard from "../PostCard";
 
-export default function HomePostListSection({ posts, loading, hasMore, onSelectBlog, onClearFilters }) {
+export default function HomePostListSection({
+  posts,
+  loading,
+  hasMore,
+  onSelectBlog,
+  onClearFilters,
+  searchQuery = "",
+  highlightTerms = [],
+  onAskChatbot,
+}) {
   const empty = !loading && posts.length === 0;
 
   return (
     <div className="pb-4">
-      {empty && (
+      {empty && searchQuery && (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-line py-16">
+          <p className="text-sm text-ink-3">
+            ‘{searchQuery}’ <span className="font-mono">(0)</span>
+          </p>
+          <button
+            type="button"
+            onClick={onAskChatbot}
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-[13px] font-semibold text-accent-fg hover:opacity-90"
+          >
+            <RiChat3Line className="h-4 w-4" />
+            챗봇에 물어보기
+          </button>
+        </div>
+      )}
+
+      {empty && !searchQuery && (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-line py-16">
           <p className="text-sm text-ink-3">조건에 맞는 글 없음</p>
           {onClearFilters && (
@@ -36,6 +62,7 @@ export default function HomePostListSection({ posts, loading, hasMore, onSelectB
             postViewCount={post.view_count}
             isBookmarked={post.is_bookmarked}
             onSelectBlog={onSelectBlog}
+            highlightTerms={highlightTerms}
           />
         ))}
       </div>

@@ -6,8 +6,13 @@ import HomeFilterSection from "../components/home/HomeFilterSection";
 import HomePostListSection from "../components/home/HomePostListSection";
 import HomeSidebar from "../components/home/HomeSidebar";
 import TrendStrip from "../components/home/TrendStrip";
+import AiSummaryCard from "../components/search/AiSummaryCard";
+import { searchTerms } from "../utils/searchTerms";
+import { useLoginGate } from "../hooks/useLoginGate";
+import { PATHS } from "../routes/path";
 import { mergeUniqueByKey } from "../utils/arrayUtils";
 import { useUrlParams, useUrlState } from "../hooks/useUrlState";
+import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 12;
 const TREND_LIMIT = 5;
@@ -17,6 +22,7 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(null);
   const [trends, setTrends] = useState(null);
   const [topicGroups, setTopicGroups] = useState(null);
 
@@ -28,7 +34,13 @@ export default function Home() {
   const [selectedGroup] = useUrlState("group", "");
   const [selectedCategory] = useUrlState("category", "");
   const [selectedBlogId] = useUrlState("blog", "");
+  // 검색어. 있으면 관련순 결과, 없으면 최신 피드.
+  const [searchQuery] = useUrlState("q", "");
   const { updateParams } = useUrlParams();
+  const navigate = useNavigate();
+  const gate = useLoginGate();
+  const q = searchQuery.trim();
+  const highlightTerms = useMemo(() => searchTerms(q), [q]);
 
   const groupOfTopic = useCallback(
     (name) => (topicGroups || []).find((group) => group.topics.includes(name))?.id || "",
@@ -58,6 +70,10 @@ export default function Home() {
     () => updateParams({ group: null, category: null, blog: null }),
     [updateParams]
   );
+  const closeSearch = useCallback(() => updateParams({ q: null }), [updateParams]);
+  const askChatbot = useCallback(() => {
+    if (gate()) navigate(`${PATHS.CHATBOT}?q=${encodeURIComponent(q)}`);
+  }, [gate, navigate, q]);
 
   const fetchPosts = useCallback(
     async (pageNum = 1, resetPosts = false) => {
@@ -66,10 +82,12 @@ export default function Home() {
         const res = await postsApi.getPosts({
           page: pageNum,
           page_size: PAGE_SIZE,
+          q: q || undefined,
           categories: categoryParams,
           blog_id: selectedBlogId,
         });
-        const { items, page: current, total_pages } = res.data;
+        const { items, page: current, total_pages, total: totalCount } = res.data;
+        setTotal(typeof totalCount === "number" ? totalCount : null);
 
         // 서버가 총 페이지 수를 준다. `items.length < PAGE_SIZE` 로 추론하지
         // 않는다 — 마지막 페이지가 정확히 꽉 찬 경우를 틀리게 판단했다.
@@ -82,7 +100,7 @@ export default function Home() {
         setLoading(false);
       }
     },
-    [categoryParams, selectedBlogId]
+    [categoryParams, selectedBlogId, q]
   );
 
   const fetchPostsRef = useRef(fetchPosts);
@@ -158,7 +176,7 @@ export default function Home() {
     setPage(1);
     setHasMore(true);
     fetchPostsRef.current(1, true);
-  }, [categoryKey, selectedBlogId, waitingForGroups]);
+  }, [categoryKey, selectedBlogId, q, waitingForGroups]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -196,14 +214,24 @@ export default function Home() {
         <HomeSidebar {...sidebarProps} trends={trends} />
       </aside>
       <div className="min-w-0">
-        <HomeFilterSection {...sidebarProps} onClearFilters={clearFilters} />
-        <TrendStrip trends={trends} onSelectCategory={selectCategory} />
+        <HomeFilterSection
+          {...sidebarProps}
+          onClearFilters={clearFilters}
+          searchQuery={q}
+          searchTotal={q ? total : null}
+          onCloseSearch={closeSearch}
+        />
+        {!q && <TrendStrip trends={trends} onSelectCategory={selectCategory} />}
+        {q && posts.length > 0 && <AiSummaryCard query={q} posts={posts} />}
         <HomePostListSection
           posts={posts}
           loading={loading}
           hasMore={hasMore}
           onSelectBlog={changeBlog}
           onClearFilters={clearFilters}
+          searchQuery={q}
+          highlightTerms={highlightTerms}
+          onAskChatbot={askChatbot}
         />
       </div>
     </div>

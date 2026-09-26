@@ -4,12 +4,14 @@ import { Suspense } from "react";
 import { ROUTES } from "./routes/router";
 import { ToastModalProvider } from "./provider/ToastModalProvider";
 import { LoginRequiredModalProvider } from "./provider/LoginRequiredModalProvider";
+import { SearchOverlayProvider } from "./provider/SearchOverlayProvider";
 
 function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <ToastModalProvider />
       <LoginRequiredModalProvider />
+      <SearchOverlayProvider />
       <Routes>
         <Route element={<MainLayout />}>
           {ROUTES.map(({ path, element }) => (

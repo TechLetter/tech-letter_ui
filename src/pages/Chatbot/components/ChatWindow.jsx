@@ -3,13 +3,11 @@ import { chatErrorMessage } from "../../../api/chatApi";
 import { ErrorCode } from "../../../api/apiError";
 import MessageBubble from "./MessageBubble";
 import SecurityNotice from "./SecurityNotice";
-import { RiRobot2Line, RiRefreshLine, RiLightbulbLine } from "react-icons/ri";
+import { RiRefreshLine } from "react-icons/ri";
 
 /**
  * ChatWindow 컴포넌트
- * 메시지 목록, 빈 상태, 추천 질문 표시
- *
- * @param {Object} props
+ * 메시지 목록, 빈 상태(추천 질문), 로딩·에러 표시
  */
 export default function ChatWindow({
   messages,
@@ -29,81 +27,57 @@ export default function ChatWindow({
   const showEmptyState = messages.length === 0 && !error;
 
   return (
-    <div className="min-h-0 flex-1 w-full overflow-y-auto overscroll-contain">
-      <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col pt-3 pb-2 sm:pt-6 lg:max-w-4xl">
-        {/* 빈 상태 */}
+    <div className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain">
+      <div className="mx-auto flex min-h-full w-full max-w-[860px] flex-col px-4 pt-3 pb-2 lg:px-0 lg:pt-2">
+        {/* 빈 상태 — 추천 질문 */}
         {showEmptyState && (
-          <div
-            className="flex-1 flex flex-col items-center justify-center text-center px-4 py-8 opacity-0 animate-fadeIn"
-            style={{ animationFillMode: "forwards" }}
-          >
-            <div className="mb-5 rounded-full bg-slate-100 p-5 shadow-inner dark:bg-slate-800 dark:shadow-slate-900/50 sm:mb-6 sm:p-6">
-              <RiRobot2Line className="text-5xl text-slate-300 dark:text-slate-600 sm:text-6xl" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-800 mb-6 dark:text-slate-200 sm:text-xl">
-              무엇을 도와드릴까요?
-            </h2>
-
-            {/* 추천 질문 */}
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-8 opacity-0 animate-fadeIn" style={{ animationFillMode: "forwards" }}>
+            <img src="/tech-letter-favicon.svg" alt="" width={40} height={40} className="h-10 w-10" />
             {suggestedQuestions && suggestedQuestions.length > 0 && (
-              <div className="w-full max-w-md">
-                <div className="flex items-center justify-center gap-1.5 mb-3 text-slate-400 dark:text-slate-500">
-                  <RiLightbulbLine className="text-amber-500" />
-                  <span className="text-xs font-medium">추천 질문</span>
-                </div>
-                <div className="space-y-2">
+              <>
+                <span className="text-[13px] font-semibold text-ink-3">추천 질문 ({suggestedQuestions.length})</span>
+                <div className="flex w-full max-w-[640px] flex-col gap-2">
                   {suggestedQuestions.map((question, idx) => (
                     <button
                       key={idx}
+                      type="button"
                       onClick={() => onSuggestedQuestion?.(question)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 shadow-sm transition-all hover:border-indigo-300 hover:bg-slate-50 hover:shadow dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-600 dark:hover:bg-slate-700"
+                      className="min-h-11 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-left text-sm leading-relaxed text-ink hover:border-accent hover:bg-canvas"
                     >
                       {question}
                     </button>
                   ))}
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
 
         {/* 메시지 목록 */}
-        <div className="flex flex-1 flex-col px-3 sm:px-4 md:px-6">
+        <div className="flex flex-1 flex-col">
           {messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} models={models} />
           ))}
 
           {/* 로딩 표시 */}
           {isLoading && (
-            <div className="w-full mb-6">
-              <div className="flex gap-1 pl-1">
-                <span
-                  className="w-2 h-2 bg-slate-400 rounded-full animate-bounce dark:bg-slate-500"
-                  style={{ animationDelay: "0ms" }}
-                />
-                <span
-                  className="w-2 h-2 bg-slate-400 rounded-full animate-bounce dark:bg-slate-500"
-                  style={{ animationDelay: "150ms" }}
-                />
-                <span
-                  className="w-2 h-2 bg-slate-400 rounded-full animate-bounce dark:bg-slate-500"
-                  style={{ animationDelay: "300ms" }}
-                />
-              </div>
+            <div className="mb-6 flex gap-1 pl-10">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-ink-3" style={{ animationDelay: "0ms" }} />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-ink-3" style={{ animationDelay: "150ms" }} />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-ink-3" style={{ animationDelay: "300ms" }} />
             </div>
           )}
 
           {/* 에러 상태 */}
           {error && (
-            <div className="my-4 rounded-xl bg-red-50 p-4 text-center dark:bg-red-900/20">
+            <div className="my-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-center dark:border-rose-900/60 dark:bg-rose-950/40">
               <SecurityNotice error={error} />
-              <p className="text-red-800 text-sm mb-2 dark:text-red-300">
-                {chatErrorMessage(error)}
-              </p>
+              <p className="mb-2 text-sm text-rose-700 dark:text-rose-300">{chatErrorMessage(error)}</p>
               {onRetry && error.code !== ErrorCode.REQUEST_INVALID && (
                 <button
+                  type="button"
                   onClick={onRetry}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-red-200 rounded-md text-red-600 text-sm hover:bg-red-50 dark:bg-slate-800 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-sm font-medium text-ink-2 hover:bg-canvas"
                 >
                   <RiRefreshLine /> 다시 시도
                 </button>

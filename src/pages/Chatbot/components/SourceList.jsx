@@ -1,31 +1,39 @@
-import { RiExternalLinkLine, RiFileList3Line } from "react-icons/ri";
+import { RiExternalLinkLine } from "react-icons/ri";
+import BlogIcon from "../../../components/common/BlogIcon";
+import timeutils from "../../../utils/timeutils";
 
+/** 답변이 참고한 글 — 번호 · 블로그 아이콘 · 제목 · 블로그. */
 export default function SourceList({ sources }) {
   if (!sources?.length) return null;
 
   return (
-    <div className="mt-4 max-w-full overflow-hidden border-t border-slate-200 pt-3 dark:border-slate-800">
-      <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-        <RiFileList3Line className="text-sm" />
-        참고한 글 {sources.length}개
-      </div>
-      <div className="space-y-1.5">
+    <div className="mt-3 flex max-w-full flex-col gap-1.5">
+      <span className="text-xs font-semibold text-ink-3">참고한 글 ({sources.length})</span>
+      <div className="flex flex-col gap-1.5">
         {sources.map((source, index) => {
           const content = (
             <>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{source.title}</span>
-                <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+              <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-md bg-accent-soft px-1 font-mono text-[11px] text-accent-ink">
+                {index + 1}
+              </span>
+              <BlogIcon blogId={source.blog_id} name={source.blog_name} size={24} />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-[13px] font-semibold text-ink">{source.title}</span>
+                <span className="truncate text-[11px] text-ink-3">
                   {source.blog_name}
+                  {source.published_at && (
+                    <>
+                      {" · "}
+                      <span className="font-mono">{timeutils.formatLocalDate(source.published_at)}</span>
+                    </>
+                  )}
                 </span>
               </span>
-              {source.link && (
-                <RiExternalLinkLine className="mt-0.5 flex-shrink-0 text-base" />
-              )}
+              {source.link && <RiExternalLinkLine className="h-4 w-4 shrink-0 text-ink-3" />}
             </>
           );
           const className =
-            "flex max-w-full min-w-0 items-start gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300";
+            "flex min-w-0 max-w-full items-center gap-2.5 rounded-lg border border-line bg-surface px-2.5 py-2 hover:border-accent";
 
           if (!source.link) {
             return (
@@ -34,15 +42,8 @@ export default function SourceList({ sources }) {
               </div>
             );
           }
-
           return (
-            <a
-              key={`${source.link}-${index}`}
-              href={source.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${className} hover:border-indigo-300 hover:text-indigo-700 dark:hover:border-indigo-700 dark:hover:text-indigo-300`}
-            >
+            <a key={`${source.link}-${index}`} href={source.link} target="_blank" rel="noopener noreferrer" className={className}>
               {content}
             </a>
           );

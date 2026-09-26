@@ -9,12 +9,16 @@ import { getAccessToken } from "../utils/authToken";
  * 들어 있다.
  */
 
-const buildChatPayload = (query, sessionId, modelId) => {
+const buildChatPayload = (query, sessionId, modelId, postIds) => {
   const payload = { query };
   if (sessionId) payload.session_id = sessionId;
 
   if (typeof modelId === "string" && modelId.trim()) {
     payload.model_id = modelId.trim();
+  }
+  // 검색 결과의 AI 요약 — 이 글들만 근거로 답한다(최대 8개).
+  if (Array.isArray(postIds) && postIds.length > 0) {
+    payload.post_ids = postIds.slice(0, 8);
   }
   return payload;
 };
@@ -71,7 +75,7 @@ const chatApi = {
   },
 
   streamChatRequest: async (query, sessionId, options = {}, modelId) => {
-    const payload = buildChatPayload(query, sessionId, modelId ?? getModelId(options));
+    const payload = buildChatPayload(query, sessionId, modelId ?? getModelId(options), options?.postIds);
 
     const response = await fetch(buildApiUrl("/api/v1/chat/messages/stream"), {
       method: "POST",

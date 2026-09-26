@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RiArrowRightSLine, RiCloseLine, RiMenuLine } from "react-icons/ri";
+import { RiArrowRightSLine, RiCloseLine, RiMenuLine, RiSearchLine } from "react-icons/ri";
 import BlogIcon from "../common/BlogIcon";
 import FilterDrawer from "./FilterDrawer";
 
@@ -31,6 +31,9 @@ export default function HomeFilterSection({
   onSelectCategory,
   onChangeBlog,
   onClearFilters,
+  searchQuery = "",
+  searchTotal = null,
+  onCloseSearch,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -77,16 +80,38 @@ export default function HomeFilterSection({
         </button>
       </div>
 
-      {/* 데스크톱: 현재 주제 · 선택 칩 */}
+      {/* 검색 중: 모바일에도 검색어 · 결과 수 */}
+      {searchQuery && (
+        <div className="flex items-center gap-2 lg:hidden">
+          <span className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg border border-accent bg-surface pr-1 pl-3">
+            <RiSearchLine className="h-4 w-4 shrink-0 text-accent-ink" />
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{searchQuery}</span>
+            {searchTotal !== null && <span className="font-mono text-xs text-ink-3">({searchTotal})</span>}
+            <button type="button" aria-label="검색 닫기" onClick={onCloseSearch} className="flex h-8 w-8 items-center justify-center text-ink-3">
+              <RiCloseLine className="h-4 w-4" />
+            </button>
+          </span>
+        </div>
+      )}
+
+      {/* 데스크톱: 현재 주제(또는 검색어) · 선택 칩 */}
       <div className="hidden flex-wrap items-center gap-2 lg:flex">
-        <h1 className="flex items-center gap-1 text-lg font-bold tracking-tight text-ink">
-          {crumb.map((part, index) => (
-            <span key={part} className="flex items-center gap-1">
-              {index > 0 && <RiArrowRightSLine className="h-4 w-4 text-ink-3" />}
-              {part}
-            </span>
-          ))}
-        </h1>
+        {searchQuery ? (
+          <h1 className="flex items-center gap-2 text-lg font-bold tracking-tight text-ink">
+            ‘{searchQuery}’
+            {searchTotal !== null && <span className="font-mono text-sm font-medium text-ink-3">({searchTotal})</span>}
+            <span className="pl-1 text-xs font-medium text-ink-3">관련순</span>
+          </h1>
+        ) : (
+          <h1 className="flex items-center gap-1 text-lg font-bold tracking-tight text-ink">
+            {crumb.map((part, index) => (
+              <span key={part} className="flex items-center gap-1">
+                {index > 0 && <RiArrowRightSLine className="h-4 w-4 text-ink-3" />}
+                {part}
+              </span>
+            ))}
+          </h1>
+        )}
         {selectedBlogId && (
           <span className={`${ACTIVE_CHIP} ml-2 pl-1.5`}>
             <BlogIcon blogId={selectedBlogId} name={selectedBlog?.name} size={20} />
@@ -101,6 +126,16 @@ export default function HomeFilterSection({
             className="h-8 rounded-lg px-2.5 text-[13px] font-semibold text-ink-3 hover:bg-canvas hover:text-ink"
           >
             초기화
+          </button>
+        )}
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={onCloseSearch}
+            className="ml-auto flex h-8 items-center gap-1 rounded-lg px-2.5 text-[13px] font-semibold text-ink-3 hover:bg-canvas hover:text-ink"
+          >
+            <RiCloseLine className="h-3.5 w-3.5" />
+            검색 닫기
           </button>
         )}
       </div>
