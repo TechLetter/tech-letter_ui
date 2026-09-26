@@ -3,10 +3,6 @@ import { RiArrowRightSLine, RiCloseLine, RiMenuLine } from "react-icons/ri";
 import BlogIcon from "../common/BlogIcon";
 import FilterDrawer from "./FilterDrawer";
 
-const SORTS = [
-  { value: "", label: "최신순" },
-  { value: "views", label: "조회순" },
-];
 const ACTIVE_CHIP =
   "flex h-8 items-center gap-1 rounded-full bg-accent-soft pl-2.5 pr-1 text-[13px] font-semibold text-accent-ink";
 
@@ -23,12 +19,10 @@ function RemoveButton({ label, onClick }) {
   );
 }
 
-/** 피드 위 툴바 — 현재 주제, 선택 칩, 정렬. 모바일에서는 드로어를 여는 버튼도 겸한다. */
+/** 피드 위 툴바 — 현재 주제와 선택 칩. 모바일에서는 드로어를 여는 버튼도 겸한다. */
 export default function HomeFilterSection({
   topicGroups = [],
   activeGroup = "",
-  sort = "",
-  onChangeSort,
   selectedCategory = "",
   categoryFilters = [],
   blogFilters = [],
@@ -57,30 +51,9 @@ export default function HomeFilterSection({
     onChangeBlog,
   };
 
-  const sortToggle = (
-    <div role="group" aria-label="정렬" className="ml-auto flex shrink-0 rounded-lg border border-line bg-surface p-0.5">
-      {SORTS.map(({ value, label }) => {
-        const on = value === (sort === "views" ? "views" : "");
-        return (
-          <button
-            key={value || "latest"}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChangeSort(value)}
-            className={`h-8 rounded-md px-2.5 text-[13px] ${
-              on ? "bg-accent-soft font-semibold text-accent-ink" : "font-medium text-ink-3 hover:text-ink"
-            }`}
-          >
-            {label}
-          </button>
-        );
-      })}
-    </div>
-  );
-
   return (
     <section className="mb-4 flex flex-col gap-3">
-      {/* 모바일: 현재 주제 · 출처 · 정렬 */}
+      {/* 모바일: 현재 주제 · 출처 */}
       <div className="flex items-center gap-2 lg:hidden">
         <button
           type="button"
@@ -102,10 +75,9 @@ export default function HomeFilterSection({
           {selectedBlog && <BlogIcon blogId={selectedBlog.id} name={selectedBlog.name} size={20} />}
           <span className="max-w-[7rem] truncate">{selectedBlog?.name || "출처"}</span>
         </button>
-        {sortToggle}
       </div>
 
-      {/* 데스크톱: 현재 주제 · 선택 칩 · 정렬 */}
+      {/* 데스크톱: 현재 주제 · 선택 칩 */}
       <div className="hidden flex-wrap items-center gap-2 lg:flex">
         <h1 className="flex items-center gap-1 text-lg font-bold tracking-tight text-ink">
           {crumb.map((part, index) => (
@@ -131,7 +103,6 @@ export default function HomeFilterSection({
             초기화
           </button>
         )}
-        {sortToggle}
       </div>
 
       {/* 모바일은 선택 칩을 두지 않는다 — 선택 바가 이미 주제·출처를 보여 준다. 초기화는 드로어에. */}

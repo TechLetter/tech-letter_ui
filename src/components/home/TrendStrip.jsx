@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { PATHS } from "../../routes/path";
 
-/** 피드 위 한 줄 — 이번 주 흐름 상위 3개. */
+/** 피드 위 한 줄 — 이번 주 흐름 상위 3개. lg 부터는 사이드바 카드가 대신한다. */
 export default function TrendStrip({ trends, onSelectCategory }) {
   const items = (trends?.items || []).slice(0, 3);
   if (items.length === 0) return null;
   return (
-    <div className="mb-4 flex items-center gap-2">
+    <div className="mb-4 flex items-center gap-2 lg:hidden">
       <Link to={PATHS.TRENDS} className="shrink-0">
         <span className="text-xs font-semibold text-ink-3 hover:text-accent-ink">이번 주</span>
       </Link>
@@ -20,7 +20,7 @@ export default function TrendStrip({ trends, onSelectCategory }) {
           >
             <span className="font-mono text-accent-ink">{index + 1}</span>
             {item.topic}
-            <span className="font-medium text-ink-3">{item.blog_count}곳</span>
+            <span className="font-mono font-medium text-ink-3">({item.blog_count})</span>
           </button>
         ))}
       </div>

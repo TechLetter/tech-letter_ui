@@ -1,16 +1,22 @@
 import BlogPicker from "./BlogPicker";
-import TopicTree from "./TopicTree";
+import TopicPicker from "./TopicPicker";
+import TrendsCard from "./TrendsCard";
 
-function SectionLabel({ children, right }) {
+const CARD = "flex min-h-0 flex-col rounded-xl border border-line bg-surface p-3";
+
+function CardLabel({ children, count }) {
   return (
-    <div className="flex h-7 items-baseline justify-between px-2.5">
-      <span className="text-xs font-semibold tracking-wide text-ink-3">{children}</span>
-      {right && <span className="text-xs text-ink-3">{right}</span>}
+    <div className="mb-2 flex h-6 shrink-0 items-baseline gap-1.5">
+      <span className="text-[13px] font-bold text-ink">{children}</span>
+      {count > 0 && <span className="font-mono text-xs text-ink-3">({count})</span>}
     </div>
   );
 }
 
-/** 주제 트리 + 출처 목록. 데스크톱 사이드바와 모바일 드로어가 같은 내용을 쓴다. */
+/**
+ * 주제 · 출처 · 이번 주 흐름 카드. 부모 높이(사이드바·드로어)를 다 쓰고 목록은 카드 안에서 스크롤한다.
+ * 주제 카드는 최대 55% — 자식이 적은 부모면 남는 높이를 출처에 넘긴다. 트렌드는 `trends` 를 줄 때만.
+ */
 export default function HomeSidebar({
   topicGroups,
   categoryFilters,
@@ -21,13 +27,14 @@ export default function HomeSidebar({
   onSelectGroup,
   onSelectCategory,
   onChangeBlog,
+  trends,
   dense = true,
 }) {
   return (
-    <div className="flex flex-col gap-5">
-      <section className="flex flex-col gap-1">
-        <SectionLabel>주제</SectionLabel>
-        <TopicTree
+    <div className={`flex h-full min-h-0 flex-col ${dense ? "gap-4" : "gap-3"}`}>
+      <section className={`${CARD} max-h-[55%] shrink`}>
+        <CardLabel>주제</CardLabel>
+        <TopicPicker
           topicGroups={topicGroups}
           categoryFilters={categoryFilters}
           activeGroup={activeGroup}
@@ -37,8 +44,9 @@ export default function HomeSidebar({
           dense={dense}
         />
       </section>
-      <section className="flex flex-col gap-1">
-        <SectionLabel right={blogFilters.length ? `${blogFilters.length}곳` : ""}>출처</SectionLabel>
+      {/* 출처는 최소 4행(약 236px)은 보이게 — 그만큼 주제 카드가 먼저 줄어든다. */}
+      <section className={`${CARD} min-h-[236px] flex-1`}>
+        <CardLabel count={blogFilters.length}>출처</CardLabel>
         <BlogPicker
           blogFilters={blogFilters}
           selectedBlogId={selectedBlogId}
@@ -46,6 +54,7 @@ export default function HomeSidebar({
           dense={dense}
         />
       </section>
+      {trends && <TrendsCard trends={trends} onSelectCategory={onSelectCategory} />}
     </div>
   );
 }

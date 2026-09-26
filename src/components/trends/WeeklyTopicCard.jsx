@@ -7,7 +7,7 @@ import BlogIcon from "../common/BlogIcon";
 /** 지난주보다 다룬 블로그가 몇 곳 늘었나. 지난주 숫자는 툴팁으로. */
 export function ChangeBadge({ current, previous }) {
   const delta = current - previous;
-  const tip = `지난주 ${previous}개 블로그`;
+  const tip = `지난주 블로그 (${previous})`;
   if (delta === 0) {
     return (
       <span title={tip} className="px-2 font-mono text-[11px] font-semibold text-ink-3">
@@ -23,7 +23,7 @@ export function ChangeBadge({ current, previous }) {
         up ? "bg-accent-soft text-accent-ink" : "bg-canvas text-ink-3"
       }`}
     >
-      {up ? "▲" : "▼"} {Math.abs(delta)}곳
+      {up ? "▲" : "▼"} {Math.abs(delta)}
     </span>
   );
 }
@@ -46,7 +46,7 @@ export default function WeeklyTopicCard({ rank, item }) {
             </Link>
           </div>
           <p className="mt-1 text-xs text-ink-3">
-            {item.blog_count}개 블로그 · {item.post_count}개 글
+            블로그 <span className="font-mono">({item.blog_count})</span> · 글 <span className="font-mono">({item.post_count})</span>
           </p>
         </div>
         <ChangeBadge current={item.blog_count} previous={item.previous_blog_count} />

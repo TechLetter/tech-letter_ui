@@ -43,7 +43,7 @@ export default function Trends() {
               {timeutils.formatLocalDate(data.period.from_at)} – {timeutils.formatLocalDate(data.period.to)}
             </span>
             <span className="text-xs text-ink-3">
-              {data.blog_count}개 블로그 · {data.post_count}개 글
+              블로그 <span className="font-mono">({data.blog_count})</span> · 글 <span className="font-mono">({data.post_count})</span>
             </span>
           </>
         )}
