@@ -12,6 +12,7 @@ import { showToast } from "../../../provider/toastModalBridge";
 import { useUrlState } from "../../../hooks/useUrlState";
 import { exactTime } from "../adminFormat";
 import { Dot, IconAction, PrimaryButton, RefreshButton, RelTime, SearchBox, StateTabs, Toolbar } from "./AdminKit";
+import BlogIcon from "../../../components/common/BlogIcon";
 import BlogFormModal from "./BlogFormModal";
 import DeleteBlogModal from "./DeleteBlogModal";
 
@@ -68,6 +69,8 @@ export default function BlogsTab() {
   const [deleteState, setDeleteState] = useState({ open: false, blog: null });
   const [submitting, setSubmitting] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  // 모달에서 아이콘을 바꾸면 목록의 이미지도 새로 받는다.
+  const [iconVersions, setIconVersions] = useState({});
   const [state, setState] = useUrlState("state", "all");
   const [query, setQuery] = useUrlState("q", "");
 
@@ -166,25 +169,34 @@ export default function BlogsTab() {
       key: "name",
       label: "블로그",
       render: (name, row) => (
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <a href={row.url} target="_blank" rel="noopener noreferrer" className="min-w-0 truncate">
-              <span className="font-medium text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400">
-                {name}
-              </span>
-            </a>
-            <a
-              href={row.rss_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${name} RSS`}
-              title={row.rss_url}
-              className="shrink-0"
-            >
-              <RiRssLine className="h-3.5 w-3.5 text-slate-300 hover:text-orange-500 dark:text-slate-600" />
-            </a>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <BlogIcon
+            key={iconVersions[row.id]}
+            blogId={row.id}
+            name={name}
+            size={20}
+            version={iconVersions[row.id]}
+          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <a href={row.url} target="_blank" rel="noopener noreferrer" className="min-w-0 truncate">
+                <span className="font-medium text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400">
+                  {name}
+                </span>
+              </a>
+              <a
+                href={row.rss_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${name} RSS`}
+                title={row.rss_url}
+                className="shrink-0"
+              >
+                <RiRssLine className="h-3.5 w-3.5 text-slate-300 hover:text-orange-500 dark:text-slate-600" />
+              </a>
+            </div>
+            <div className="truncate text-xs text-slate-500 dark:text-slate-400">{host(row.url)}</div>
           </div>
-          <div className="truncate text-xs text-slate-500 dark:text-slate-400">{host(row.url)}</div>
         </div>
       ),
     },
@@ -260,6 +272,7 @@ export default function BlogsTab() {
         submitting={submitting}
         onClose={closeFormModal}
         onSubmit={handleSubmitBlog}
+        onIconChanged={(id, version) => setIconVersions((prev) => ({ ...prev, [id]: version }))}
       />
       <DeleteBlogModal
         open={deleteState.open}

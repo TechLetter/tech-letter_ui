@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { RiCloseLine } from "react-icons/ri";
+import BlogIconEditor from "./BlogIconEditor";
 
 const DEFAULT_FORM = {
   name: "",
@@ -30,6 +31,7 @@ export default function BlogFormModal({
   submitting,
   onClose,
   onSubmit,
+  onIconChanged,
 }) {
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [error, setError] = useState("");
@@ -132,6 +134,15 @@ export default function BlogFormModal({
             </div>
           )}
 
+          {mode === "edit" && blog?.id && (
+            <div>
+              <span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                아이콘
+              </span>
+              <BlogIconEditor blog={blog} onChanged={onIconChanged} />
+            </div>
+          )}
+
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
               블로그명 <span className="text-red-500">*</span>
@@ -215,4 +226,5 @@ BlogFormModal.propTypes = {
   submitting: PropTypes.bool,
   onClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  onIconChanged: PropTypes.func,
 };
