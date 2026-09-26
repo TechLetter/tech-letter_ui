@@ -1,15 +1,13 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { RiSparklingLine } from "react-icons/ri";
 import { displayName } from "../../../utils/modelName";
 import SecurityNotice from "./SecurityNotice";
 import SourceList from "./SourceList";
 
 /**
  * MessageBubble 컴포넌트
- * ChatGPT 스타일: 아이콘 제거, 봇 메시지는 텍스트만 표시, 유저는 회색 말풍선.
- *
- * @param {Object} props
- * @param {Object} props.message
+ * 사용자는 오른쪽 말풍선, 답변은 스파크 아이콘 + 본문 + 참고한 글 + 모델.
  */
 export default function MessageBubble({ message, models = [] }) {
   const isUser = message.role === "user";
@@ -19,115 +17,73 @@ export default function MessageBubble({ message, models = [] }) {
     typeof message.agent?.model_id === "string" ? message.agent.model_id : "";
   const usedModelFallback =
     !isUser && requestedModelId && actualModelId && requestedModelId !== actualModelId;
+  const modelLabel = actualModelId
+    ? displayName(models.find((m) => m.model_id === actualModelId) || { model_id: actualModelId }).name
+    : "";
+
+  if (isUser) {
+    return (
+      <div className="mb-5 flex w-full justify-end">
+        <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-accent-soft px-4 py-2.5 text-[15px] leading-relaxed text-accent-ink sm:max-w-[78%]">
+          <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.content}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`mb-5 flex w-full min-w-0 ${
-        isUser ? "justify-end" : "justify-start"
-      } sm:mb-6`}
-    >
-      <div
-        className={`flex w-full min-w-0 max-w-full ${
-          isUser ? "justify-end" : "justify-start"
-        }`}
-      >
-        <div
-          className={`min-w-0 overflow-hidden text-[15px] leading-relaxed sm:text-base ${
-            isUser
-              ? "max-w-[88%] rounded-[1.5rem] rounded-tr-sm bg-indigo-600 px-4 py-3 text-white sm:max-w-[78%] sm:rounded-[2rem] sm:px-5"
-              : "max-w-full bg-transparent text-slate-900 prose prose-sm prose-slate max-w-none dark:prose-invert dark:text-slate-100 sm:prose-base"
-          }`}
-        >
-          {isUser ? (
-            <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-              {message.content}
+    <div className="mb-6 flex w-full min-w-0 gap-2.5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
+        <RiSparklingLine className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <SecurityNotice guard={message.guard} />
+        {usedModelFallback && (
+          <p className="mb-2 text-xs text-ink-3" role="status">
+            고른 모델이 응답하지 않아{" "}
+            <span className="break-all font-medium" title={actualModelId}>
+              {modelLabel}
             </span>
-          ) : (
-            <>
-              <SecurityNotice guard={message.guard} />
-              {usedModelFallback && (
-                <p
-                  className="mb-2 text-xs text-slate-500 dark:text-slate-400"
-                  role="status"
-                >
-                  고른 모델이 응답하지 않아{" "}
-                  <span className="break-all font-medium" title={actualModelId}>
-                    {displayName(models.find((m) => m.model_id === actualModelId) || { model_id: actualModelId }).name}
-                  </span>
-                  로 답했습니다.
-                </p>
-              )}
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  a: ({ ...props }) => (
-                    <a
-                      {...props}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline dark:text-blue-400"
-                    />
-                  ),
-                  // 모바일에서 너무 큰 제목 방지
-                  h1: ({ ...props }) => (
-                    <h1 {...props} className="mt-6 mb-4 text-xl font-bold sm:text-2xl" />
-                  ),
-                  h2: ({ ...props }) => (
-                    <h2 {...props} className="mt-5 mb-3 text-lg font-bold sm:text-xl" />
-                  ),
-                  h3: ({ ...props }) => (
-                    <h3 {...props} className="mt-4 mb-2 text-base font-bold sm:text-lg" />
-                  ),
-                  ul: ({ ...props }) => (
-                    <ul {...props} className="list-disc pl-5 my-2" />
-                  ),
-                  ol: ({ ...props }) => (
-                    <ol {...props} className="list-decimal pl-5 my-2" />
-                  ),
-                  p: ({ ...props }) => (
-                    <p {...props} className="my-2 break-words [overflow-wrap:anywhere]" />
-                  ),
-                  code: ({ className, children, ...props }) => {
-                    return (
-                      <code
-                        className={`${className} rounded bg-slate-100 px-1 py-0.5 break-words dark:bg-slate-800`}
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    );
-                  },
-                  pre: ({ ...props }) => (
-                    <pre
-                      {...props}
-                      className="my-4 max-w-full overflow-x-auto rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-800 sm:p-4"
-                    />
-                  ),
-                  table: ({ ...props }) => (
-                    <div className="my-4 max-w-full overflow-x-auto">
-                      <table {...props} className="w-full min-w-max text-sm" />
-                    </div>
-                  ),
-                  th: ({ ...props }) => (
-                    <th
-                      {...props}
-                      className="border border-slate-200 px-2 py-1 text-left dark:border-slate-700"
-                    />
-                  ),
-                  td: ({ ...props }) => (
-                    <td
-                      {...props}
-                      className="border border-slate-200 px-2 py-1 dark:border-slate-700"
-                    />
-                  ),
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
-              <SourceList sources={message.sources} />
-            </>
-          )}
+            로 답했습니다.
+          </p>
+        )}
+        <div className="prose prose-sm prose-slate max-w-none text-[15px] leading-relaxed text-ink dark:prose-invert">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              a: ({ ...props }) => (
+                <a {...props} target="_blank" rel="noopener noreferrer" className="text-accent-ink hover:underline" />
+              ),
+              h1: ({ ...props }) => <h1 {...props} className="mt-6 mb-4 text-xl font-bold" />,
+              h2: ({ ...props }) => <h2 {...props} className="mt-5 mb-3 text-lg font-bold" />,
+              h3: ({ ...props }) => <h3 {...props} className="mt-4 mb-2 text-base font-bold" />,
+              ul: ({ ...props }) => <ul {...props} className="my-2 list-disc pl-5" />,
+              ol: ({ ...props }) => <ol {...props} className="my-2 list-decimal pl-5" />,
+              p: ({ ...props }) => <p {...props} className="my-2 break-words [overflow-wrap:anywhere]" />,
+              code: ({ className, children, ...props }) => (
+                <code className={`${className || ""} rounded bg-canvas px-1 py-0.5 break-words`} {...props}>
+                  {children}
+                </code>
+              ),
+              pre: ({ ...props }) => (
+                <pre {...props} className="my-4 max-w-full overflow-x-auto rounded-lg bg-canvas p-3 text-sm" />
+              ),
+              table: ({ ...props }) => (
+                <div className="my-4 max-w-full overflow-x-auto">
+                  <table {...props} className="w-full min-w-max text-sm" />
+                </div>
+              ),
+              th: ({ ...props }) => <th {...props} className="border border-line px-2 py-1 text-left" />,
+              td: ({ ...props }) => <td {...props} className="border border-line px-2 py-1" />,
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
         </div>
+        <SourceList sources={message.sources} />
+        {modelLabel && !message.isStreaming && (
+          <p className="mt-2 text-[11px] text-ink-3">{modelLabel}</p>
+        )}
       </div>
     </div>
   );

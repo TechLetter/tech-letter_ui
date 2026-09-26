@@ -6,6 +6,7 @@ import { showToast } from "../provider/toastModalBridge";
 import postsApi from "../api/postsApi";
 import BookmarkToggleButton from "./bookmark/BookmarkToggleButton";
 import BlogIcon from "./common/BlogIcon";
+import Highlight from "./common/Highlight";
 
 const copyToClipboard = (text) => {
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -35,6 +36,7 @@ export default function PostCard({
   postViewCount = 0,
   isBookmarked = false,
   onSelectBlog,
+  highlightTerms = [],
 }) {
   // 썸네일 주소가 깨졌으면 썸네일 없는 글처럼 블로그 아이콘을 보여 준다.
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
@@ -96,10 +98,12 @@ export default function PostCard({
 
         <h2 className="line-clamp-2 text-[17px] leading-snug font-semibold tracking-tight text-ink">
           <a href={postUrl} target="_blank" rel="noreferrer" onClick={handleOpen} className="hover:text-accent-ink">
-            {postTitle}
+            <Highlight text={postTitle} terms={highlightTerms} />
           </a>
         </h2>
-        <p className="line-clamp-3 text-sm leading-relaxed text-ink-2">{postSummary}</p>
+        <p className="line-clamp-3 text-sm leading-relaxed text-ink-2">
+          <Highlight text={postSummary} terms={highlightTerms} />
+        </p>
 
         {postTags?.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">

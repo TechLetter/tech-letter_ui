@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useRequireLogin } from "../../hooks/useLoginGate";
 import { showLoginRequiredModal } from "../../provider/loginRequiredModalBridge";
@@ -6,12 +7,11 @@ import chatApi from "../../api/chatApi";
 import { ErrorCode, toApiError } from "../../api/apiError";
 import llmModelsApi from "../../api/llmModelsApi";
 import { isSelectableModel, sortModelsByHealth } from "../../utils/modelHealth";
-import CreditsBadge from "../../components/chatbot/CreditsBadge";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
 import SessionSidebar from "./components/SessionSidebar";
 import InsufficientCreditsModal from "../../components/chatbot/InsufficientCreditsModal";
-import { RiAddLine, RiMenuLine } from "react-icons/ri";
+import { RiAddLine, RiMenuLine, RiSearchLine, RiSparklingLine } from "react-icons/ri";
 
 const CHAT_MODEL_STORAGE_KEY = "techletter.chat.model";
 
@@ -69,9 +69,13 @@ const buildMessageFromSession = (sessionId, msg, idx) => ({
 export default function Chatbot() {
   const { isAuthenticated, initialized, user, updateCredits } = useAuth();
   const hasAutoSelectedSessionRef = useRef(false);
+  // 검색에서 넘어온 경우: ?session= 은 그 대화를 열고, ?q= 는 입력창에 채운다.
+  const [searchParams] = useSearchParams();
+  const wantedSessionId = searchParams.get("session") || "";
+  const fromSearch = searchParams.get("from") === "search";
+  const searchQuery = searchParams.get("q") || "";
+  const prefilledRef = useRef(false);
 
-  // 사이드바 토글 상태
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // 세션 상태
@@ -241,14 +245,22 @@ export default function Chatbot() {
       return;
     }
 
-    const latestSession = sessions[0];
-    if (!latestSession?.id) {
+    const wanted = wantedSessionId && sessions.find((s) => s.id === wantedSessionId);
+    const target = wanted || sessions[0];
+    if (!target?.id) {
       return;
     }
 
     hasAutoSelectedSessionRef.current = true;
-    handleSelectSession(latestSession.id);
-  }, [currentSessionId, handleSelectSession, isLoadingSession, sessions]);
+    handleSelectSession(target.id);
+  }, [currentSessionId, handleSelectSession, isLoadingSession, sessions, wantedSessionId]);
+
+  // ?q= 는 한 번만 입력창에 채운다. 보내는 건 사용자 몫.
+  useEffect(() => {
+    if (prefilledRef.current || !searchQuery || wantedSessionId) return;
+    prefilledRef.current = true;
+    setInputValue(searchQuery);
+  }, [searchQuery, wantedSessionId]);
 
   // 새 채팅 시작 - 빈 세션이 있으면 재사용
   const handleNewChat = useCallback(async () => {
@@ -436,6 +448,11 @@ export default function Chatbot() {
     }
   }, [handleSend, lastQuery]);
 
+  const selectedModel = useMemo(
+    () => modelOptions.find((option) => option.model_id === selectedModelId) || null,
+    [modelOptions, selectedModelId]
+  );
+
   if (!initialized) {
     return null;
   }
@@ -444,95 +461,105 @@ export default function Chatbot() {
     return null;
   }
 
+  const showSearchBanner = fromSearch && searchQuery && currentSessionId === wantedSessionId;
+  const summaryCount = showSearchBanner
+    ? messages.find((message) => message.role === "assistant")?.sources?.length || 0
+    : 0;
+
   return (
-    <div className="fixed inset-x-0 top-(--tl-header-h) bottom-0 z-40 flex w-full overflow-hidden bg-white transition-colors duration-300 dark:bg-slate-900">
-      {/* 세션 사이드바 */}
-      <SessionSidebar
-        sessions={sessions}
-        currentSessionId={currentSessionId}
-        onSelectSession={handleSelectSession}
-        onNewChat={handleNewChat}
-        onDeleteSession={handleDeleteSession}
-        onSessionsLoaded={handleSessionsLoaded}
-        credits={user?.credits?.remaining}
-        isOpen={isSidebarOpen}
-        onToggle={setIsSidebarOpen}
-        isMobileOpen={isMobileSidebarOpen}
-        onMobileOpenChange={setIsMobileSidebarOpen}
-      />
-
-      {/* 채팅 영역 - 사이드바 열림 상태에 따라 마진 조정 */}
-      <div
-        className={`
-          flex min-w-0 flex-1 flex-col transition-all duration-300
-          ${isSidebarOpen ? "md:ml-64" : "md:ml-0"}
-        `}
-      >
-        <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3 dark:border-slate-800 dark:bg-slate-900 md:hidden">
-          <button
-            type="button"
-            onClick={() => setIsMobileSidebarOpen(true)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"
-            aria-label="채팅 기록 열기"
-          >
-            <RiMenuLine className="text-xl" />
-          </button>
-          <div className="min-w-0 px-3 text-center">
-            <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {currentSession?.title || "AI 챗봇"}
-            </div>
-            {user?.credits && (
-              <CreditsBadge
-                credits={user.credits.remaining}
-                className="mt-0.5 px-2 py-0 text-[11px]"
-              />
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={handleNewChat}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm active:scale-95"
-            aria-label="새 채팅"
-          >
-            <RiAddLine className="text-xl" />
-          </button>
+    <div className="fixed inset-x-0 top-(--tl-header-h) bottom-0 z-40 flex w-full flex-col overflow-hidden bg-canvas">
+      {/* 모바일 상단 바 — 대화 목록 · 제목 · 새 대화 */}
+      <div className="flex h-14 shrink-0 items-center gap-1 border-b border-line bg-surface px-1.5 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setIsMobileSidebarOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-2"
+          aria-label="대화 목록"
+        >
+          <RiMenuLine className="h-[22px] w-[22px]" />
+        </button>
+        <div className="flex min-w-0 flex-1 flex-col items-center">
+          <span className="max-w-full truncate text-[15px] font-bold text-ink">
+            {currentSession?.title || "새 대화"}
+          </span>
+          {typeof user?.credits?.remaining === "number" && (
+            <span className="font-mono text-[11px] text-ink-3">크레딧 ({user.credits.remaining})</span>
+          )}
         </div>
-
-        {isLoadingSession ? (
-          <div className="flex flex-1 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-          </div>
-        ) : (
-          <>
-            <ChatWindow
-              messages={messages}
-              isLoading={isLoading}
-              error={error}
-              onRetry={handleRetry}
-              suggestedQuestions={
-                isCurrentSessionEmpty ? suggestedQuestions : null
-              }
-              onSuggestedQuestion={handleSuggestedQuestion}
-              models={modelOptions}
-            />
-            <ChatInput
-              onSend={handleSend}
-              isLoading={isLoading}
-              value={inputValue}
-              onChange={setInputValue}
-              modelOptions={modelOptions}
-              selectedModelId={selectedModelId}
-              onModelChange={handleModelChange}
-            />
-          </>
-        )}
+        <button
+          type="button"
+          onClick={handleNewChat}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-accent-ink"
+          aria-label="새 대화"
+        >
+          <RiAddLine className="h-[22px] w-[22px]" />
+        </button>
       </div>
 
-      {/* 크레딧 부족 모달 */}
-      <InsufficientCreditsModal
-        isOpen={showCreditsModal}
-        onClose={() => setShowCreditsModal(false)}
-      />
+      <div className="mx-auto flex min-h-0 w-full max-w-[1360px] flex-1 gap-8 px-0 lg:px-8 lg:py-6">
+        <SessionSidebar
+          sessions={sessions}
+          currentSessionId={currentSessionId}
+          onSelectSession={handleSelectSession}
+          onNewChat={handleNewChat}
+          onDeleteSession={handleDeleteSession}
+          onSessionsLoaded={handleSessionsLoaded}
+          credits={user?.credits?.remaining}
+          selectedModel={selectedModel}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileOpenChange={setIsMobileSidebarOpen}
+        />
+
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {currentSession?.title && (
+            <h1 className="hidden truncate pb-3 text-lg font-bold tracking-tight text-ink lg:block">{currentSession.title}</h1>
+          )}
+          {showSearchBanner && (
+            <div className="mx-4 mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 lg:mx-0 lg:mt-0 lg:mb-3">
+              <span className="text-xs font-semibold text-ink-3">검색에서 이어서</span>
+              <span className="flex h-7 items-center gap-1 rounded-full bg-accent-soft px-2.5 text-xs font-semibold text-accent-ink">
+                <RiSearchLine className="h-3 w-3" />
+                {searchQuery}
+              </span>
+              {summaryCount > 0 && (
+                <span className="flex h-7 items-center gap-1 rounded-full border border-line px-2.5 text-xs font-semibold text-ink-2">
+                  <RiSparklingLine className="h-3 w-3" />
+                  AI 요약 · 참고한 글 ({summaryCount})
+                </span>
+              )}
+            </div>
+          )}
+
+          {isLoadingSession ? (
+            <div className="flex flex-1 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            </div>
+          ) : (
+            <>
+              <ChatWindow
+                messages={messages}
+                isLoading={isLoading}
+                error={error}
+                onRetry={handleRetry}
+                suggestedQuestions={isCurrentSessionEmpty ? suggestedQuestions : null}
+                onSuggestedQuestion={handleSuggestedQuestion}
+                models={modelOptions}
+              />
+              <ChatInput
+                onSend={handleSend}
+                isLoading={isLoading}
+                value={inputValue}
+                onChange={setInputValue}
+                modelOptions={modelOptions}
+                selectedModelId={selectedModelId}
+                onModelChange={handleModelChange}
+              />
+            </>
+          )}
+        </main>
+      </div>
+
+      <InsufficientCreditsModal isOpen={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
     </div>
   );
 }

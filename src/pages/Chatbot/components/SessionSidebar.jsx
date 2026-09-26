@@ -1,18 +1,23 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   RiAddLine,
-  RiDeleteBinLine,
-  RiChat3Line,
-  RiMenuLine,
+  RiArrowRightSLine,
   RiCloseLine,
+  RiCoinLine,
+  RiDeleteBinLine,
 } from "react-icons/ri";
 import chatApi from "../../../api/chatApi";
-import CreditsBadge from "../../../components/chatbot/CreditsBadge";
+import ModelStatusDot from "../../../components/common/ModelStatusDot";
+import { PATHS } from "../../../routes/path";
+import { classifyModelHealth } from "../../../utils/modelHealth";
+import { displayName } from "../../../utils/modelName";
+
+const CARD = "flex min-h-0 flex-col rounded-xl border border-line bg-surface p-3";
 
 /**
- * SessionSidebar - 세션 목록 사이드바
- * 데스크톱: 토글 가능한 좌측 사이드바
- * 모바일: 햄버거 버튼 + 슬라이드 오버레이
+ * SessionSidebar - 대화 목록 + 크레딧·모델 카드.
+ * 데스크톱: 좌측 248px 고정. 모바일: 햄버거로 여는 좌측 드로어.
  */
 export default function SessionSidebar({
   sessions,
@@ -22,8 +27,7 @@ export default function SessionSidebar({
   onDeleteSession,
   onSessionsLoaded,
   credits,
-  isOpen,
-  onToggle,
+  selectedModel,
   isMobileOpen = false,
   onMobileOpenChange,
 }) {
@@ -46,10 +50,18 @@ export default function SessionSidebar({
     loadSessions();
   }, [onSessionsLoaded]);
 
+  useEffect(() => {
+    if (!isMobileOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") onMobileOpenChange?.(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isMobileOpen, onMobileOpenChange]);
+
   const handleDelete = async (e, sessionId) => {
     e.stopPropagation();
     if (deletingId) return;
-
     setDeletingId(sessionId);
     try {
       await chatApi.deleteSession(sessionId);
@@ -71,140 +83,135 @@ export default function SessionSidebar({
     onMobileOpenChange?.(false);
   };
 
-  // 사이드바 컨텐츠
-  const sidebarContent = (
-    <div className="flex h-full min-h-0 flex-col bg-slate-50 dark:bg-slate-800/50">
-      {/* 헤더 */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-slate-700 dark:text-slate-200">
-            채팅 기록
-          </span>
-          {/* 데스크톱: 접기 버튼, 모바일: 닫기 버튼 */}
-          <button
-            onClick={() => {
-              onToggle(false);
-              onMobileOpenChange?.(false);
-            }}
-            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 md:block hidden"
-            aria-label="사이드바 닫기"
-          >
-            <RiCloseLine className="text-lg" />
-          </button>
-          <button
-            onClick={() => onMobileOpenChange?.(false)}
-            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 md:hidden"
-            aria-label="채팅 기록 닫기"
-          >
-            <RiCloseLine className="text-xl" />
-          </button>
+  const modelName = selectedModel ? displayName(selectedModel).name : "";
+  const uptime = typeof selectedModel?.uptime_24h === "number" ? `${selectedModel.uptime_24h.toFixed(1)}%` : "";
+  const latency =
+    typeof selectedModel?.avg_latency_ms === "number"
+      ? selectedModel.avg_latency_ms >= 1000
+        ? `${(selectedModel.avg_latency_ms / 1000).toFixed(1)}s`
+        : `${Math.round(selectedModel.avg_latency_ms)}ms`
+      : "";
+
+  const rowClass = (on) =>
+    `group flex h-11 items-center gap-1 rounded-lg pr-1 pl-2.5 lg:h-10 ${on ? "bg-accent-soft" : "hover:bg-canvas"}`;
+
+  const content = (dense) => (
+    <div className={`flex h-full min-h-0 flex-col ${dense ? "gap-4" : "gap-3"}`}>
+      <section className={`${CARD} flex-1`}>
+        <div className="mb-2 flex h-6 shrink-0 items-baseline gap-1.5">
+          <span className="text-[13px] font-bold text-ink">대화</span>
+          {sessions.length > 0 && <span className="font-mono text-xs text-ink-3">({sessions.length})</span>}
         </div>
-        <CreditsBadge credits={credits} />
-      </div>
-
-      {/* 새 채팅 버튼 */}
-      <div className="p-3">
         <button
+          type="button"
           onClick={handleNewChat}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md"
+          className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent-soft text-[13px] font-semibold text-accent-ink hover:opacity-90 lg:h-9"
         >
-          <RiAddLine className="text-lg" />새 채팅
+          <RiAddLine className="h-4 w-4" />새 대화
         </button>
-      </div>
+        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto pr-0.5">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <p className="py-8 text-center text-[13px] text-ink-3">대화 없음</p>
+          ) : (
+            sessions.map((session) => {
+              const on = session.id === currentSessionId;
+              return (
+                <div key={session.id} className={rowClass(on)}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectSession(session.id)}
+                    className={`min-w-0 flex-1 truncate text-left text-[13px] ${
+                      on ? "font-semibold text-accent-ink" : "font-medium text-ink"
+                    }`}
+                  >
+                    {session.title || "새 대화"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleDelete(e, session.id)}
+                    disabled={deletingId === session.id}
+                    aria-label="대화 삭제"
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md lg:h-8 lg:w-8 ${
+                      on ? "text-accent-ink" : "text-ink-3 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    } hover:bg-canvas disabled:opacity-40`}
+                  >
+                    <RiDeleteBinLine className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
 
-      {/* 세션 목록 */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3">
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : sessions.length === 0 ? (
-          <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
-            아직 채팅 기록이 없습니다
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                onClick={() => handleSelectSession(session.id)}
-                className={`
-                  group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all
-                  ${
-                    currentSessionId === session.id
-                      ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                      : "hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-                  }
-                `}
-              >
-                <RiChat3Line className="flex-shrink-0 text-lg" />
-                <span className="flex-1 truncate text-sm">
-                  {session.title || "새 채팅"}
-                </span>
-                <button
-                  onClick={(e) => handleDelete(e, session.id)}
-                  disabled={deletingId === session.id}
-                  className={`
-                    flex-shrink-0 p-1 rounded transition-all
-                    text-slate-400 hover:text-rose-500 hover:bg-rose-50 
-                    dark:text-slate-500 dark:hover:text-rose-400 dark:hover:bg-rose-900/20
-                    opacity-100 md:opacity-0 md:group-hover:opacity-100
-                    ${deletingId === session.id ? "!opacity-100" : ""}
-                  `}
-                >
-                  {deletingId === session.id ? (
-                    <div className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <RiDeleteBinLine />
-                  )}
-                </button>
-              </div>
-            ))}
+      <section className={`${CARD} shrink-0 gap-1`}>
+        <div className="flex h-7 items-center gap-2">
+          <RiCoinLine className="h-4 w-4 text-ink-3" />
+          <span className="text-[13px] font-semibold text-ink">크레딧</span>
+          <span className="flex-1" />
+          <span className="font-mono text-sm text-ink">{typeof credits === "number" ? `(${credits})` : "–"}</span>
+        </div>
+        {selectedModel && (
+          <div className="flex h-7 items-center gap-2">
+            <span className="flex w-4 justify-center">
+              <ModelStatusDot level={classifyModelHealth(selectedModel)} />
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink" title={selectedModel.model_id}>
+              {modelName}
+            </span>
+            {(latency || uptime) && (
+              <span className="font-mono text-[11px] text-ink-3">{[latency, uptime].filter(Boolean).join(" · ")}</span>
+            )}
           </div>
         )}
-      </div>
+        <Link to={PATHS.MODEL_STATUS} className="flex h-7 items-center gap-0.5">
+          <span className="text-xs font-semibold text-accent-ink">모델 상태 보기</span>
+          <RiArrowRightSLine className="h-3.5 w-3.5 text-accent-ink" />
+        </Link>
+      </section>
     </div>
   );
 
   return (
     <>
-      {/* 데스크톱 토글 버튼 (사이드바 닫혔을 때) */}
-      {!isOpen && (
-        <button
-          onClick={() => onToggle(true)}
-          className="hidden md:flex fixed left-4 top-[calc(var(--tl-header-h)+1rem)] z-40 p-2.5 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-        >
-          <RiMenuLine className="text-xl text-slate-600 dark:text-slate-300" />
-        </button>
-      )}
+      {/* 데스크톱 */}
+      <aside aria-label="대화 목록" className="hidden w-[248px] shrink-0 lg:block">
+        {content(true)}
+      </aside>
 
-      {/* 데스크톱 사이드바 */}
-      <div
-        className={`
-          hidden md:block fixed left-0 top-(--tl-header-h) bottom-0 z-30
-          transition-all duration-300 ease-in-out
-          ${isOpen ? "w-64" : "w-0"}
-        `}
-      >
-        {isOpen && (
-          <div className="w-64 h-full border-r border-slate-200 dark:border-slate-700">
-            {sidebarContent}
-          </div>
-        )}
-      </div>
-
-      {/* 모바일 오버레이 */}
+      {/* 모바일 드로어 */}
       {isMobileOpen && (
-        <div className="fixed inset-x-0 top-(--tl-header-h) bottom-0 z-50 md:hidden">
-          {/* 배경 */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="닫기"
             onClick={() => onMobileOpenChange?.(false)}
+            className="absolute inset-0 bg-black/50"
           />
-          {/* 슬라이드 패널 */}
-          <div className="absolute bottom-0 left-0 top-0 w-[min(20rem,calc(100vw-2rem))] animate-slideInLeft overflow-hidden shadow-2xl">
-            {sidebarContent}
-          </div>
+          <section
+            role="dialog"
+            aria-label="대화 목록"
+            className="absolute inset-y-0 left-0 flex w-[min(20rem,calc(100vw-3rem))] animate-slideInLeft flex-col bg-canvas"
+          >
+            <div className="flex h-14 shrink-0 items-center border-b border-line bg-surface pr-2 pl-5">
+              <h2 className="flex-1 text-[17px] font-bold text-ink">대화</h2>
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={() => onMobileOpenChange?.(false)}
+                className="flex h-11 w-11 items-center justify-center text-ink-2"
+              >
+                <RiCloseLine className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              {content(false)}
+            </div>
+          </section>
         </div>
       )}
     </>
