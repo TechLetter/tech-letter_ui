@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { RiDeleteBinLine, RiSparklingLine, RiDatabase2Line, RiAddLine } from "react-icons/ri";
+import BlogIcon from "../../../components/common/BlogIcon";
 import Table from "../../../components/common/Table";
 import { DEFAULT_PAGE_SIZE } from "../../../components/common/Pagination";
 import {
@@ -197,7 +198,10 @@ export default function PostsTab() {
               {title}
             </span>
           </a>
-          <div className="truncate text-xs text-slate-500 dark:text-slate-400">{row.blog_name || "-"}</div>
+          <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            {row.blog_id && <BlogIcon blogId={row.blog_id} name={row.blog_name} size={14} />}
+            <span className="truncate">{row.blog_name || "-"}</span>
+          </div>
           {row.status?.failed_reason && (
             <div className="truncate text-xs text-rose-600 dark:text-rose-400" title={row.status.failed_reason}>
               {row.status.failed_reason}
