@@ -2,29 +2,28 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { RiArrowDownSLine, RiArrowRightLine, RiCoinLine, RiRefreshLine, RiSparklingLine } from "react-icons/ri";
+import { RiArrowDownSLine, RiArrowRightLine, RiSparklingLine } from "react-icons/ri";
 import { chatErrorMessage } from "../../api/chatApi";
-import InsufficientCreditsModal from "../chatbot/InsufficientCreditsModal";
-import { useAuth } from "../../hooks/useAuth";
+import searchApi from "../../api/searchApi";
 import { useAiSummary } from "../../hooks/useAiSummary";
+import { useLoginGate } from "../../hooks/useLoginGate";
 import { PATHS } from "../../routes/path";
 import BlogIcon from "../common/BlogIcon";
 
 const CLAMP_LINES = 6;
 const SOURCE_LIMIT = 3;
-const BTN_PRIMARY =
-  "flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-[13px] font-semibold text-accent-fg hover:opacity-90";
 const BTN_TEXT = "flex h-8 items-center gap-1 px-1 text-[13px] font-semibold text-accent-ink hover:underline";
 
 /** 본문의 `[n]` 을 n 번째 참고 글로 가는 링크로 바꾼다. 마크다운이 그대로 렌더한다. */
 const linkCitations = (text) => text.replace(/\[(\d{1,2})\]/g, (match, n) => `[${n}](#src-${n})`);
 
-/** 검색 결과 맨 위 — AI 요약. 요약 보기를 누르기 전엔 버튼 하나, 누르면 짧은 답변과 참고 글. */
+/** 검색 결과 맨 위 — AI 요약. 로그인해 있으면 바로 짧은 답변과 참고 글을 보여 준다. */
 export default function AiSummaryCard({ query, posts }) {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const gate = useLoginGate();
   const postIds = useMemo(() => posts.slice(0, 8).map((post) => post.id), [posts]);
-  const { state, result, error, run, stop, reset } = useAiSummary(query, postIds);
+  const { state, result, error } = useAiSummary(query, postIds);
+  const [continuing, setContinuing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const bodyRef = useRef(null);
@@ -95,19 +94,9 @@ export default function AiSummaryCard({ query, posts }) {
       <div className="flex items-center gap-3">
         {title}
         <span className="flex-1" />
-        {isAuthenticated ? (
-          <button type="button" onClick={run} className={BTN_PRIMARY}>
-            요약 보기
-            <span className="flex items-center gap-0.5 opacity-90">
-              <RiCoinLine className="h-4 w-4" />
-              <span className="font-mono">1</span>
-            </span>
-          </button>
-        ) : (
-          <button type="button" onClick={run} className="h-9 rounded-lg border border-ink px-3.5 text-[13px] font-semibold text-ink hover:bg-canvas">
-            로그인
-          </button>
-        )}
+        <button type="button" onClick={gate} className="h-9 rounded-lg border border-ink px-3.5 text-[13px] font-semibold text-ink hover:bg-canvas">
+          로그인
+        </button>
       </div>
     );
   }
@@ -115,13 +104,7 @@ export default function AiSummaryCard({ query, posts }) {
   if (state === "loading") {
     return card(
       <>
-        <div className="flex items-center gap-3">
-          {title}
-          <span className="flex-1" />
-          <button type="button" onClick={stop} className="h-8 px-1 text-[13px] font-semibold text-ink-3 hover:text-ink">
-            중지
-          </button>
-        </div>
+        {title}
         <div className="flex flex-col gap-2.5 py-1" aria-busy="true">
           <span className="skeleton h-3 w-[96%]" />
           <span className="skeleton h-3 w-[88%]" />
@@ -131,57 +114,31 @@ export default function AiSummaryCard({ query, posts }) {
     );
   }
 
-  if (state === "nocredit") {
-    return (
-      <>
-        {card(
-          <div className="flex items-center gap-3">
-            {title}
-            <span className="flex h-6 items-center gap-1 rounded-full bg-amber-100 px-2 text-xs font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-              <RiCoinLine className="h-3.5 w-3.5" />
-              크레딧 (0)
-            </span>
-            <span className="flex-1" />
-            <button type="button" onClick={reset} className="h-8 px-1 text-[13px] font-semibold text-ink-3 hover:text-ink">
-              닫기
-            </button>
-          </div>
-        )}
-        <InsufficientCreditsModal isOpen onClose={reset} />
-      </>
-    );
-  }
-
   if (state === "error") {
     return card(
       <div className="flex flex-wrap items-center gap-3">
         {title}
         <span className="text-[13px] text-rose-700 dark:text-rose-300">{chatErrorMessage(error)}</span>
-        <span className="flex-1" />
-        <button type="button" onClick={run} className={BTN_TEXT}>
-          다시 시도
-        </button>
       </div>
     );
   }
+
+  const continueInChat = async () => {
+    if (continuing) return;
+    setContinuing(true);
+    try {
+      const { session_id: sessionId } = await searchApi.continueSummary(result.key);
+      navigate(`${PATHS.CHATBOT}?session=${encodeURIComponent(sessionId)}&from=search&q=${encodeURIComponent(query)}`);
+    } catch {
+      setContinuing(false);
+    }
+  };
 
   const shown = sources.slice(0, SOURCE_LIMIT);
   const rest = sources.length - shown.length;
   return card(
     <>
-      <div className="flex items-center gap-3">
-        {title}
-        <span className="flex-1" />
-        <button
-          type="button"
-          onClick={run}
-          aria-label="다시 만들기"
-          title="다시 만들기"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-3 hover:bg-surface hover:text-ink"
-        >
-          <RiRefreshLine className="h-4 w-4" />
-        </button>
-      </div>
+      {title}
       <div
         ref={bodyRef}
         className={`text-[15px] leading-relaxed text-ink ${expanded ? "" : "line-clamp-6"}`}
@@ -213,13 +170,7 @@ export default function AiSummaryCard({ query, posts }) {
         ))}
         {rest > 0 && <span className="font-mono text-xs text-ink-3">+{rest}</span>}
         <span className="flex-1" />
-        <button
-          type="button"
-          onClick={() =>
-            navigate(`${PATHS.CHATBOT}?session=${encodeURIComponent(result.sessionId)}&from=search&q=${encodeURIComponent(query)}`)
-          }
-          className={BTN_TEXT}
-        >
+        <button type="button" onClick={continueInChat} disabled={continuing} className={BTN_TEXT}>
           이어서 묻기
           <RiArrowRightLine className="h-4 w-4" />
         </button>
