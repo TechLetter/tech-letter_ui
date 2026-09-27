@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 /**
- * 헤더 크레딧 배지 — 로그인했을 때만. 2 이하면 주황. 누르면 남은 크레딧·하루 지급 팝오버.
+ * 헤더 크레딧 배지 — 로그인했을 때만. 2 이하면 주황. 누르면 남은 크레딧 팝오버.
  * 값은 AuthProvider 의 `user.credits` 그대로라 챗봇·AI 요약이 갱신하면 같이 바뀐다.
  */
 export default function HeaderCredits({ className = "" }) {
@@ -24,7 +24,6 @@ export default function HeaderCredits({ className = "" }) {
 
   const remaining = user?.credits?.remaining;
   if (!isAuthenticated || typeof remaining !== "number") return null;
-  const granted = user?.credits?.granted_today;
   const low = remaining <= 2;
 
   return (
@@ -53,12 +52,6 @@ export default function HeaderCredits({ className = "" }) {
             <span className="text-ink-2">남은 크레딧</span>
             <span className={`font-mono font-semibold ${low ? "text-amber-700 dark:text-amber-300" : "text-ink"}`}>({remaining})</span>
           </div>
-          {typeof granted === "number" && (
-            <div className="flex h-9 items-center justify-between px-2.5 text-[13px]">
-              <span className="text-ink-2">하루 지급</span>
-              <span className="font-mono font-semibold text-ink">({granted})</span>
-            </div>
-          )}
         </div>
       )}
     </div>
