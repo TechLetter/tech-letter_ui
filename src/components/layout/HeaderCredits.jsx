@@ -5,7 +5,7 @@ import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 /**
  * 헤더 크레딧 배지 — 로그인했을 때만. 2 이하면 주황. 누르면 남은 크레딧 팝오버.
- * 값은 AuthProvider 의 `user.credits` 그대로라 챗봇·AI 요약이 갱신하면 같이 바뀐다.
+ * 값은 AuthProvider 의 `user.credits` 그대로라 챗봇이 갱신하면 같이 바뀐다.
  */
 export default function HeaderCredits({ className = "" }) {
   const { user, isAuthenticated } = useAuth();
