@@ -67,7 +67,7 @@ const buildMessageFromSession = (sessionId, msg, idx) => ({
 });
 
 export default function Chatbot() {
-  const { isAuthenticated, initialized, user, updateCredits } = useAuth();
+  const { isAuthenticated, initialized, updateCredits } = useAuth();
   const hasAutoSelectedSessionRef = useRef(false);
   // 검색에서 넘어온 경우: ?session= 은 그 대화를 열고, ?q= 는 입력창에 채운다.
   const [searchParams] = useSearchParams();
@@ -482,9 +482,6 @@ export default function Chatbot() {
           <span className="max-w-full truncate text-[15px] font-bold text-ink">
             {currentSession?.title || "새 대화"}
           </span>
-          {typeof user?.credits?.remaining === "number" && (
-            <span className="font-mono text-[11px] text-ink-3">크레딧 ({user.credits.remaining})</span>
-          )}
         </div>
         <button
           type="button"
@@ -504,7 +501,6 @@ export default function Chatbot() {
           onNewChat={handleNewChat}
           onDeleteSession={handleDeleteSession}
           onSessionsLoaded={handleSessionsLoaded}
-          credits={user?.credits?.remaining}
           selectedModel={selectedModel}
           isMobileOpen={isMobileSidebarOpen}
           onMobileOpenChange={setIsMobileSidebarOpen}

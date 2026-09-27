@@ -52,7 +52,7 @@ export default function Trends() {
       {loading && (
         <div className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-48 animate-pulse rounded-xl bg-surface" />
+            <div key={index} className="skeleton h-48 rounded-xl" />
           ))}
         </div>
       )}

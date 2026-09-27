@@ -1,6 +1,32 @@
 import { RiChat3Line } from "react-icons/ri";
 import PostCard from "../PostCard";
 
+const SKELETON_COUNT = 6;
+
+/** 카드와 같은 골격 — 첫 화면이 비어 보이지 않게. */
+function PostCardSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex flex-col overflow-hidden rounded-xl border border-line bg-surface">
+      <div className="skeleton aspect-video rounded-none" />
+      <div className="flex flex-col gap-3 px-4 pt-3.5 pb-4">
+        <div className="flex items-center gap-2">
+          <span className="skeleton h-5 w-5 rounded-md" />
+          <span className="skeleton h-3 w-28" />
+          <span className="skeleton ml-auto h-3 w-16" />
+        </div>
+        <span className="skeleton h-4 w-[92%]" />
+        <span className="skeleton h-4 w-[70%]" />
+        <span className="skeleton h-3 w-full" />
+        <span className="skeleton h-3 w-[85%]" />
+        <div className="flex gap-1.5">
+          <span className="skeleton h-5 w-14 rounded-md" />
+          <span className="skeleton h-5 w-12 rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePostListSection({
   posts,
   loading,
@@ -12,6 +38,7 @@ export default function HomePostListSection({
   onAskChatbot,
 }) {
   const empty = !loading && posts.length === 0;
+  const initialLoading = loading && posts.length === 0;
 
   return (
     <div className="pb-4">
@@ -46,7 +73,8 @@ export default function HomePostListSection({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-5 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-5 xl:grid-cols-3" aria-busy={loading}>
+        {initialLoading && Array.from({ length: SKELETON_COUNT }).map((_, index) => <PostCardSkeleton key={index} />)}
         {posts.map((post) => (
           <PostCard
             key={post.id}
@@ -67,7 +95,7 @@ export default function HomePostListSection({
         ))}
       </div>
 
-      {loading && (
+      {loading && !initialLoading && (
         <div className="my-8 text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
         </div>

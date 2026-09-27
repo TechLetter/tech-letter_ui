@@ -22,7 +22,7 @@ function Signal({ tone, tip, children }) {
 
 /** 파이프라인이 멈췄는지 한눈에. 누르면 운영 탭. */
 function StatusBlock({ summary, onNavigate }) {
-  if (!summary) return <div className="mt-3 h-[88px] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/70" />;
+  if (!summary) return <div className="skeleton mt-3 h-[88px] rounded-xl" />;
   const { dead, pending, resumeAt, lastFetchedAt, failingBlogs, activeBlogs } = summary;
   const fetchTip = [
     lastFetchedAt && `마지막 RSS 수집 ${exactTime(lastFetchedAt)}`,

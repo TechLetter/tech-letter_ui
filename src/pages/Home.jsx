@@ -75,8 +75,12 @@ export default function Home() {
     if (gate()) navigate(`${PATHS.CHATBOT}?q=${encodeURIComponent(q)}`);
   }, [gate, navigate, q]);
 
+  // 마지막 요청만 반영한다 — 필터를 바꾼 뒤 늦게 온 이전 필터 응답이 목록에 섞이지 않게.
+  const requestIdRef = useRef(0);
+
   const fetchPosts = useCallback(
     async (pageNum = 1, resetPosts = false) => {
+      const requestId = ++requestIdRef.current;
       setLoading(true);
       try {
         const res = await postsApi.getPosts({
@@ -86,6 +90,7 @@ export default function Home() {
           categories: categoryParams,
           blog_id: selectedBlogId,
         });
+        if (requestId !== requestIdRef.current) return;
         const { items, page: current, total_pages, total: totalCount } = res.data;
         setTotal(typeof totalCount === "number" ? totalCount : null);
 
@@ -97,7 +102,7 @@ export default function Home() {
       } catch (err) {
         console.log(err);
       } finally {
-        setLoading(false);
+        if (requestId === requestIdRef.current) setLoading(false);
       }
     },
     [categoryParams, selectedBlogId, q]
@@ -171,12 +176,29 @@ export default function Home() {
     if (page > 1) fetchPostsRef.current(page);
   }, [page]);
 
+  // 필터·검색이 바뀌면 피드 맨 위로 먼저 올린다. 그대로 두면 짧아진 새 목록 끝에 걸려
+  // 무한 스크롤까지 당겨져 엉뚱한 위치(바닥)에 선다. 첫 진입은 건드리지 않는다.
+  const feedKey = `${categoryKey}\n${selectedBlogId}\n${q}`;
+  const feedKeyRef = useRef(null);
+
+  // 뒤로/앞으로 때 브라우저가 옛 위치를 되살리면 1쪽만 다시 받은 목록에서 같은 일이 난다.
+  // 홈에 있는 동안만 수동으로 둔다.
+  useEffect(() => {
+    const prev = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = prev;
+    };
+  }, []);
+
   useEffect(() => {
     if (waitingForGroups) return;
+    if (feedKeyRef.current !== null && feedKeyRef.current !== feedKey) window.scrollTo(0, 0);
+    feedKeyRef.current = feedKey;
     setPage(1);
     setHasMore(true);
     fetchPostsRef.current(1, true);
-  }, [categoryKey, selectedBlogId, q, waitingForGroups]);
+  }, [feedKey, waitingForGroups]);
 
   useEffect(() => {
     const handleScroll = () => {

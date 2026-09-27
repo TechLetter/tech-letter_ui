@@ -163,6 +163,42 @@ button {
   }
 }
 
+/* 스켈레톤 — 바탕색 위로 밝은 띠가 한 번씩 지나간다. 움직임을 줄인 환경에서는 가만히 둔다. */
+:root {
+  --tl-skeleton: #e5e7eb;
+  --tl-skeleton-shine: #f5f6f8;
+}
+
+.dark {
+  --tl-skeleton: #273449;
+  --tl-skeleton-shine: #364358;
+}
+
+.skeleton {
+  border-radius: 8px;
+  background-color: var(--tl-skeleton);
+  background-image: linear-gradient(90deg, transparent 0%, var(--tl-skeleton-shine) 50%, transparent 100%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background-image: none;
+    animation: none;
+  }
+}
+
 /* Webkit 기반 브라우저(Chrome, Safari, Edge) 스크롤바 */
 ::-webkit-scrollbar {
   width: 4px;
