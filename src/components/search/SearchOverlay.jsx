@@ -251,9 +251,6 @@ export default function SearchOverlay({ initialQuery = "", onClose }) {
           <span className="flex items-center gap-1">
             <kbd className={KBD}>↵</kbd> 열기
           </span>
-          <span className="flex items-center gap-1">
-            <kbd className={KBD}>⌘K</kbd> 검색
-          </span>
         </div>
       </section>
       )}

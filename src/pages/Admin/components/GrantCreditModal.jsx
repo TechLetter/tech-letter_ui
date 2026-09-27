@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { RiCloseLine, RiCoinLine, RiCalendarLine } from "react-icons/ri";
+import { useEscapeKey } from "../../../hooks/useEscapeKey";
 
 /**
  * GrantCreditModal - 크레딧 지급 모달
  */
 export default function GrantCreditModal({ isOpen, user, onClose, onSubmit }) {
+  useEscapeKey(isOpen, onClose);
   const [amount, setAmount] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

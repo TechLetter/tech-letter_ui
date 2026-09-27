@@ -6,6 +6,7 @@ import { useChatbotEntry } from "../../hooks/useChatbotEntry";
 import { useLoginGate } from "../../hooks/useLoginGate";
 import { openSearch } from "../../provider/searchOverlayBridge";
 import { openMobileFilter } from "../../provider/mobileFilterBridge";
+import { SEARCH_SHORTCUT } from "../../utils/shortcut";
 import UserProfileMenu from "../auth/UserProfileMenu";
 import ThemeToggle from "../common/ThemeToggle";
 import Logo from "./Logo";
@@ -87,7 +88,7 @@ export default function AppHeader() {
             >
               <RiSearchLine className={`h-4 w-4 shrink-0 ${currentQuery ? "text-accent-ink" : ""}`} />
               <span className={`min-w-0 flex-1 truncate text-left ${currentQuery ? "font-semibold" : ""}`}>{currentQuery || "검색"}</span>
-              {!currentQuery && <kbd className="rounded border border-line bg-surface px-1.5 py-px font-mono text-[11px]">⌘K</kbd>}
+              {!currentQuery && <kbd className="rounded border border-line bg-surface px-1.5 py-px font-mono text-[11px]">{SEARCH_SHORTCUT}</kbd>}
             </button>
             {currentQuery && (
               <button

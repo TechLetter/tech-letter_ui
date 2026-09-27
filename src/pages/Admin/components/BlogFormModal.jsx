@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { RiCloseLine } from "react-icons/ri";
 import BlogIconEditor from "./BlogIconEditor";
+import { useEscapeKey } from "../../../hooks/useEscapeKey";
 
 const DEFAULT_FORM = {
   name: "",
@@ -35,6 +36,7 @@ export default function BlogFormModal({
 }) {
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [error, setError] = useState("");
+  useEscapeKey(open && !submitting, onClose);
 
   const title = mode === "edit" ? "블로그 수정" : "블로그 추가";
   const submitLabel = mode === "edit" ? "수정" : "추가";

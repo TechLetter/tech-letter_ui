@@ -1,3 +1,4 @@
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 export default function BasicModal({
   open,
   title,
@@ -6,6 +7,7 @@ export default function BasicModal({
   onPrimary,
   onClose,
 }) {
+  useEscapeKey(open, onClose);
   if (!open) return null;
 
   const handleOverlayClick = (event) => {
