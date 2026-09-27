@@ -1,5 +1,13 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+// 글꼴은 우리 서버에서 내려준다. Google Fonts로 받으면 이용자 브라우저가 Google에
+// 접속한다(개인정보처리방침에서 그 항목을 뺐다, 2026-09-27). 한글은 유니코드 구간별로
+// 잘게 나뉘어 있어 쓰는 글자의 파일만 받는다.
+import "@fontsource/ibm-plex-sans-kr/400.css";
+import "@fontsource/ibm-plex-sans-kr/500.css";
+import "@fontsource/ibm-plex-sans-kr/600.css";
+import "@fontsource/ibm-plex-sans-kr/700.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
