@@ -110,7 +110,7 @@ function TableBody({
           {columns.map((col) => (
             <div
               key={col.key}
-              className={`h-4 bg-slate-200 rounded animate-pulse dark:bg-slate-700 min-w-0 ${
+              className={`skeleton h-4 rounded min-w-0 ${
                 col.className || ""
               }`}
               style={cellStyle(col)}
@@ -126,7 +126,7 @@ function TableBody({
             {columns.map((col) => (
               <div
                 key={col.key}
-                className={`h-4 bg-slate-100 rounded animate-pulse dark:bg-slate-800 min-w-0 ${
+                className={`skeleton h-4 rounded min-w-0 ${
                   col.className || ""
                 }`}
                 style={cellStyle(col)}

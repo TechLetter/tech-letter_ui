@@ -93,7 +93,7 @@ export default function ModelStatus() {
       )}
 
       {loading && models.length === 0 && (
-        <div className="h-72 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/70" />
+        <div className="skeleton h-72 rounded-xl" />
       )}
 
       {models.length > 0 && shown.length === 0 && (

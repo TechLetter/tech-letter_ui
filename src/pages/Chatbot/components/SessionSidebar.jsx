@@ -4,7 +4,6 @@ import {
   RiAddLine,
   RiArrowRightSLine,
   RiCloseLine,
-  RiCoinLine,
   RiDeleteBinLine,
 } from "react-icons/ri";
 import chatApi from "../../../api/chatApi";
@@ -16,7 +15,7 @@ import { displayName } from "../../../utils/modelName";
 const CARD = "flex min-h-0 flex-col rounded-xl border border-line bg-surface p-3";
 
 /**
- * SessionSidebar - 대화 목록 + 크레딧·모델 카드.
+ * SessionSidebar - 대화 목록 + 모델 상태 카드. 크레딧은 헤더 배지가 보여 준다.
  * 데스크톱: 좌측 248px 고정. 모바일: 햄버거로 여는 좌측 드로어.
  */
 export default function SessionSidebar({
@@ -26,7 +25,6 @@ export default function SessionSidebar({
   onNewChat,
   onDeleteSession,
   onSessionsLoaded,
-  credits,
   selectedModel,
   isMobileOpen = false,
   onMobileOpenChange,
@@ -149,12 +147,6 @@ export default function SessionSidebar({
       </section>
 
       <section className={`${CARD} shrink-0 gap-1`}>
-        <div className="flex h-7 items-center gap-2">
-          <RiCoinLine className="h-4 w-4 text-ink-3" />
-          <span className="text-[13px] font-semibold text-ink">크레딧</span>
-          <span className="flex-1" />
-          <span className="font-mono text-sm text-ink">{typeof credits === "number" ? `(${credits})` : "–"}</span>
-        </div>
         {selectedModel && (
           <div className="flex h-7 items-center gap-2">
             <span className="flex w-4 justify-center">

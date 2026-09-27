@@ -9,6 +9,7 @@ import { openMobileFilter } from "../../provider/mobileFilterBridge";
 import { SEARCH_SHORTCUT } from "../../utils/shortcut";
 import UserProfileMenu from "../auth/UserProfileMenu";
 import ThemeToggle from "../common/ThemeToggle";
+import HeaderCredits from "./HeaderCredits";
 import Logo from "./Logo";
 
 const NAV = [
@@ -101,6 +102,7 @@ export default function AppHeader() {
               </button>
             )}
           </div>
+          <HeaderCredits className="lg:hidden" />
           <button
             type="button"
             aria-label="검색"
@@ -118,9 +120,8 @@ export default function AppHeader() {
             챗봇
           </button>
           <ThemeToggle />
-          {!initialized && (
-            <div className="hidden h-9 w-9 animate-pulse rounded-lg bg-canvas lg:block" />
-          )}
+          <HeaderCredits className="hidden lg:block" />
+          {!initialized && <div className="skeleton hidden h-9 w-9 lg:block" />}
           {initialized && isAuthenticated && (
             <div className="hidden lg:block">
               <UserProfileMenu user={user} isAdmin={isAdmin} onLogout={logout} />
