@@ -4,10 +4,11 @@ import { RiSparklingLine } from "react-icons/ri";
 import { displayName } from "../../../utils/modelName";
 import SecurityNotice from "./SecurityNotice";
 import SourceList from "./SourceList";
+import AnswerInfo from "./AnswerInfo";
 
 /**
  * MessageBubble 컴포넌트
- * 사용자는 오른쪽 말풍선, 답변은 스파크 아이콘 + 본문 + 참고한 글 + 모델.
+ * 사용자는 오른쪽 말풍선, 답변은 스파크 아이콘 + 본문 + 참고한 글 + (i) 답변 정보.
  */
 export default function MessageBubble({ message, models = [] }) {
   const isUser = message.role === "user";
@@ -81,8 +82,8 @@ export default function MessageBubble({ message, models = [] }) {
           </ReactMarkdown>
         </div>
         <SourceList sources={message.sources} />
-        {modelLabel && !message.isStreaming && (
-          <p className="mt-2 text-[11px] text-ink-3">{modelLabel}</p>
+        {!message.isStreaming && (
+          <AnswerInfo modelLabel={modelLabel} modelId={actualModelId} usage={message.agent?.usage} />
         )}
       </div>
     </div>

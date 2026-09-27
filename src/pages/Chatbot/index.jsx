@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useRequireLogin } from "../../hooks/useLoginGate";
@@ -448,11 +448,6 @@ export default function Chatbot() {
     }
   }, [handleSend, lastQuery]);
 
-  const selectedModel = useMemo(
-    () => modelOptions.find((option) => option.model_id === selectedModelId) || null,
-    [modelOptions, selectedModelId]
-  );
-
   if (!initialized) {
     return null;
   }
@@ -501,7 +496,6 @@ export default function Chatbot() {
           onNewChat={handleNewChat}
           onDeleteSession={handleDeleteSession}
           onSessionsLoaded={handleSessionsLoaded}
-          selectedModel={selectedModel}
           isMobileOpen={isMobileSidebarOpen}
           onMobileOpenChange={setIsMobileSidebarOpen}
         />

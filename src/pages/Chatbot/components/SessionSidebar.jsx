@@ -1,21 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import {
-  RiAddLine,
-  RiArrowRightSLine,
-  RiCloseLine,
-  RiDeleteBinLine,
-} from "react-icons/ri";
+import { RiAddLine, RiCloseLine, RiDeleteBinLine } from "react-icons/ri";
 import chatApi from "../../../api/chatApi";
-import ModelStatusDot from "../../../components/common/ModelStatusDot";
-import { PATHS } from "../../../routes/path";
-import { classifyModelHealth } from "../../../utils/modelHealth";
-import { displayName } from "../../../utils/modelName";
 
 const CARD = "flex min-h-0 flex-col rounded-xl border border-line bg-surface p-3";
 
 /**
- * SessionSidebar - 대화 목록 + 모델 상태 카드. 크레딧은 헤더 배지가 보여 준다.
+ * SessionSidebar - 대화 목록. 크레딧은 헤더 배지가, 답변별 모델·토큰은 답변 옆 (i)가 보여 준다.
  * 데스크톱: 좌측 248px 고정. 모바일: 햄버거로 여는 좌측 드로어.
  */
 export default function SessionSidebar({
@@ -25,7 +15,6 @@ export default function SessionSidebar({
   onNewChat,
   onDeleteSession,
   onSessionsLoaded,
-  selectedModel,
   isMobileOpen = false,
   onMobileOpenChange,
 }) {
@@ -80,15 +69,6 @@ export default function SessionSidebar({
     onNewChat();
     onMobileOpenChange?.(false);
   };
-
-  const modelName = selectedModel ? displayName(selectedModel).name : "";
-  const uptime = typeof selectedModel?.uptime_24h === "number" ? `${selectedModel.uptime_24h.toFixed(1)}%` : "";
-  const latency =
-    typeof selectedModel?.avg_latency_ms === "number"
-      ? selectedModel.avg_latency_ms >= 1000
-        ? `${(selectedModel.avg_latency_ms / 1000).toFixed(1)}s`
-        : `${Math.round(selectedModel.avg_latency_ms)}ms`
-      : "";
 
   const rowClass = (on) =>
     `group flex h-11 items-center gap-1 rounded-lg pr-1 pl-2.5 lg:h-10 ${on ? "bg-accent-soft" : "hover:bg-canvas"}`;
@@ -146,25 +126,6 @@ export default function SessionSidebar({
         </div>
       </section>
 
-      <section className={`${CARD} shrink-0 gap-1`}>
-        {selectedModel && (
-          <div className="flex h-7 items-center gap-2">
-            <span className="flex w-4 justify-center">
-              <ModelStatusDot level={classifyModelHealth(selectedModel)} />
-            </span>
-            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink" title={selectedModel.model_id}>
-              {modelName}
-            </span>
-            {(latency || uptime) && (
-              <span className="font-mono text-[11px] text-ink-3">{[latency, uptime].filter(Boolean).join(" · ")}</span>
-            )}
-          </div>
-        )}
-        <Link to={PATHS.MODEL_STATUS} className="flex h-7 items-center gap-0.5">
-          <span className="text-xs font-semibold text-accent-ink">모델 상태 보기</span>
-          <RiArrowRightSLine className="h-3.5 w-3.5 text-accent-ink" />
-        </Link>
-      </section>
     </div>
   );
 
