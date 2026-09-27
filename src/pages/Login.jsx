@@ -14,7 +14,7 @@ export default function Login() {
         </div>
         <div className="space-y-4">
           <GoogleLoginButton />
-          <p className="text-xs text-gray-400 text-center dark:text-slate-500">
+          <p className="text-center text-xs text-ink-3">
             로그인 시{" "}
             <Link
               to={PATHS.PRIVACY}
