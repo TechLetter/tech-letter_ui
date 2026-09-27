@@ -1,10 +1,12 @@
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { RiChat3Line, RiCloseLine, RiSearchLine } from "react-icons/ri";
+import { RiChat3Line, RiCloseLine, RiMenuLine, RiSearchLine } from "react-icons/ri";
 import { PATHS } from "../../routes/path";
 import { useAuth } from "../../hooks/useAuth";
 import { useChatbotEntry } from "../../hooks/useChatbotEntry";
 import { useLoginGate } from "../../hooks/useLoginGate";
 import { openSearch } from "../../provider/searchOverlayBridge";
+import { openMobileFilter } from "../../provider/mobileFilterBridge";
+import { SEARCH_SHORTCUT } from "../../utils/shortcut";
 import UserProfileMenu from "../auth/UserProfileMenu";
 import ThemeToggle from "../common/ThemeToggle";
 import Logo from "./Logo";
@@ -34,6 +36,17 @@ export default function AppHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-(--tl-header-h) border-b border-line bg-surface">
       <div className="mx-auto flex h-full w-full max-w-[1360px] items-center gap-6 px-4 sm:px-6 lg:px-8">
+        {/* 모바일: 홈의 주제·출처 사이드바를 연다. */}
+        {pathname === PATHS.HOME && (
+          <button
+            type="button"
+            aria-label="메뉴"
+            onClick={openMobileFilter}
+            className="-ml-2 -mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink hover:bg-canvas lg:hidden"
+          >
+            <RiMenuLine className="h-6 w-6" />
+          </button>
+        )}
         <Logo />
 
         <nav aria-label="주요 메뉴" className="hidden items-center gap-0.5 lg:flex">
@@ -75,7 +88,7 @@ export default function AppHeader() {
             >
               <RiSearchLine className={`h-4 w-4 shrink-0 ${currentQuery ? "text-accent-ink" : ""}`} />
               <span className={`min-w-0 flex-1 truncate text-left ${currentQuery ? "font-semibold" : ""}`}>{currentQuery || "검색"}</span>
-              {!currentQuery && <kbd className="rounded border border-line bg-surface px-1.5 py-px font-mono text-[11px]">⌘K</kbd>}
+              {!currentQuery && <kbd className="rounded border border-line bg-surface px-1.5 py-px font-mono text-[11px]">{SEARCH_SHORTCUT}</kbd>}
             </button>
             {currentQuery && (
               <button

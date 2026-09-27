@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import authApi from "../../api/authApi";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 function SettingsModalContent({ open, onClose, onDeleted, user }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  useEscapeKey(open && !submitting, onClose);
 
   if (!open) return null;
 

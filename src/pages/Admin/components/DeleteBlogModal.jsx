@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { RiCloseLine } from "react-icons/ri";
+import { useEscapeKey } from "../../../hooks/useEscapeKey";
 
 export default function DeleteBlogModal({
   open,
@@ -10,6 +11,7 @@ export default function DeleteBlogModal({
   onConfirm,
 }) {
   const [deletePosts, setDeletePosts] = useState(false);
+  useEscapeKey(open && !submitting, onClose);
 
   useEffect(() => {
     if (open) setDeletePosts(false);

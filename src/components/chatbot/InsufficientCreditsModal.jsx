@@ -1,4 +1,5 @@
 import { RiAlertLine, RiCloseLine } from "react-icons/ri";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 /**
  * InsufficientCreditsModal - 크레딧 부족 안내 모달
@@ -7,6 +8,7 @@ import { RiAlertLine, RiCloseLine } from "react-icons/ri";
  * @param {function} props.onClose - 닫기 핸들러
  */
 export default function InsufficientCreditsModal({ isOpen, onClose }) {
+  useEscapeKey(isOpen, onClose);
   if (!isOpen) return null;
 
   return (

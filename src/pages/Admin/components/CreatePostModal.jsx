@@ -3,8 +3,10 @@ import PropTypes from "prop-types";
 import { RiCloseLine } from "react-icons/ri";
 import { createPost, getBlogs, handleAdminError } from "../../../api/adminApi";
 import { showToast } from "../../../provider/toastModalBridge";
+import { useEscapeKey } from "../../../hooks/useEscapeKey";
 
 export default function CreatePostModal({ open, onClose, onCreated }) {
+  useEscapeKey(open, onClose);
   const [blogs, setBlogs] = useState([]);
   const [blogsLoading, setBlogsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);

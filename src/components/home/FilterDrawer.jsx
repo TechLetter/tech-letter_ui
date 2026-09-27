@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { RiCloseLine } from "react-icons/ri";
-import HomeSidebar from "./HomeSidebar";
+import MobileFilterList from "./MobileFilterList";
 
 /** 모바일 좌측 드로어. 고르면 바로 반영되고, 닫기만 하면 된다. */
 export default function FilterDrawer({ open, onClose, onClear, ...sidebarProps }) {
@@ -47,8 +47,8 @@ export default function FilterDrawer({ open, onClose, onClear, ...sidebarProps }
             <RiCloseLine className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <HomeSidebar {...sidebarProps} dense={false} />
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <MobileFilterList {...sidebarProps} />
         </div>
       </section>
     </div>
