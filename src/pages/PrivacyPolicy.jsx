@@ -1,6 +1,77 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { PATHS } from "../routes/path";
+
+// 실제 처리 방식과 어긋나면 안 된다. 수집 항목·외부 서비스·보관 기간을 바꾸면 이 문서도 고친다.
+// 근거: users/models.py(회원 항목), api/v1/me.py(탈퇴 시 대화·북마크·크레딧 삭제),
+// users/credits.py(중복 지급 방지 해시), search/service.py(IP는 메모리에서 1분),
+// 서버는 Oracle Cloud 춘천 리전(ap-chuncheon-1).
+const EFFECTIVE_DATE = "2026년 9월 27일";
+
+const SECTIONS = [
+  { id: "purpose", title: "처리 목적" },
+  { id: "items", title: "처리하는 개인정보 항목과 수집 방법" },
+  { id: "retention", title: "보유 기간" },
+  { id: "third-party", title: "제3자 제공" },
+  { id: "processors", title: "처리 위탁과 이용하는 외부 서비스" },
+  { id: "transfer", title: "국외 이전" },
+  { id: "destruction", title: "파기 절차와 방법" },
+  { id: "rights", title: "이용자의 권리와 행사 방법" },
+  { id: "security", title: "안전성 확보 조치" },
+  { id: "storage", title: "쿠키와 브라우저 저장소" },
+  { id: "children", title: "만 14세 미만 아동" },
+  { id: "officer", title: "개인정보 보호책임자" },
+  { id: "remedy", title: "권익침해 구제" },
+  { id: "changes", title: "방침의 변경" },
+];
+
+function Section({ index, children }) {
+  const { id, title } = SECTIONS[index];
+  return (
+    <section id={id} className="scroll-mt-24">
+      <h2 className="mb-3 flex items-baseline gap-2.5 text-lg font-bold text-ink sm:text-xl">
+        <span className="font-mono text-sm text-accent-ink">{String(index + 1).padStart(2, "0")}</span>
+        {title}
+      </h2>
+      <div className="space-y-3 text-[15px] leading-7 text-ink-2">{children}</div>
+    </section>
+  );
+}
+
+function Table({ head, rows }) {
+  return (
+    <div className="-mx-1 overflow-x-auto px-1">
+      <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+        <thead>
+          <tr>
+            {head.map((cell) => (
+              <th key={cell} className="border-b border-line bg-canvas px-3 py-2.5 font-semibold text-ink">
+                {cell}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, r) => (
+            <tr key={r} className="align-top">
+              {row.map((cell, c) => (
+                <td key={c} className="border-b border-line px-3 py-2.5 text-ink-2">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const List = ({ items }) => (
+  <ul className="list-disc space-y-1.5 pl-5">
+    {items.map((item, i) => (
+      <li key={i}>{item}</li>
+    ))}
+  </ul>
+);
 
 export default function PrivacyPolicy() {
   useEffect(() => {
@@ -8,424 +79,227 @@ export default function PrivacyPolicy() {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sm:p-10">
-        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-8 pb-4 border-b border-slate-200 dark:border-slate-700">
-          개인정보처리방침
-        </h1>
+    <article className="mx-auto w-full max-w-[1100px] py-6 sm:py-10">
+      <header className="mb-8 border-b border-line pb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">개인정보처리방침</h1>
+        <p className="mt-3 text-[15px] leading-7 text-ink-2">
+          Tech-Letter(이하 “서비스”)는 개인이 운영하는 기술 블로그 모음 서비스입니다. 서비스는 「개인정보 보호법」에 따라
+          이용자의 개인정보를 처리하며, 어떤 정보를 왜, 어디에서, 얼마 동안 처리하는지 아래와 같이 알려 드립니다.
+        </p>
+        <p className="mt-2 font-mono text-sm text-ink-3">시행일 {EFFECTIVE_DATE}</p>
+      </header>
 
-        <div className="prose prose-slate dark:prose-invert max-w-none space-y-8">
-          <p className="text-lg text-slate-600 dark:text-slate-300 font-medium">
-            <strong>Tech-Letter</strong>(이하 "운영자" 또는 "서비스")는
-            정보통신망 이용촉진 및 정보보호 등에 관한 법률, 개인정보보호법 등
-            관련 법령을 준수하며, 이용자의 개인정보 보호를 위해 최선을 다하고
-            있습니다.
-            <br />
-            <br />
-            <span className="text-sm text-slate-500 dark:text-slate-400 font-normal">
-              본 방침은 2026년 9월 24일부터 시행됩니다.
-            </span>
+      <nav aria-label="목차" className="mb-10 rounded-xl border border-line bg-surface p-4 sm:p-5">
+        <ol className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2 lg:grid-cols-3">
+          {SECTIONS.map(({ id, title }, i) => (
+            <li key={id}>
+              <a href={`#${id}`} className="flex gap-2 py-0.5 hover:underline">
+                <span className="font-mono text-ink-3">{String(i + 1).padStart(2, "0")}</span>
+                <span className="text-ink-2">{title}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div className="space-y-10">
+        <Section index={0}>
+          <p>서비스는 수집한 개인정보를 다음 목적으로만 처리합니다.</p>
+          <List
+            items={[
+              "회원 식별과 로그인 유지",
+              "북마크 저장, 챗봇·검색 결과 AI 요약 제공과 대화 기록 보관",
+              "크레딧 지급·사용 관리와 같은 날 중복 지급 방지",
+              "서비스 운영: 오류 분석, 과도한 요청 제한 등 부정 이용 방지",
+            ]}
+          />
+          <p>서비스는 광고, 마케팅, 뉴스레터 발송을 하지 않으며 그 목적으로 개인정보를 처리하지 않습니다.</p>
+        </Section>
+
+        <Section index={1}>
+          <Table
+            head={["구분", "항목", "수집 방법"]}
+            rows={[
+              [
+                "회원 가입·로그인 (필수)",
+                "이메일 주소, 이름, Google 계정 고유 식별자",
+                "Google 로그인 시 Google로부터 받음 (프로필 사진은 저장하지 않음)",
+              ],
+              [
+                "서비스 이용 중 생성",
+                "북마크 목록, 챗봇 대화 내용(질문·답변·참고한 글·사용한 모델·토큰 수·응답 시간), 크레딧 지급·사용 기록",
+                "이용자가 기능을 사용할 때 생성",
+              ],
+              [
+                "회원·비회원 공통 (자동)",
+                "검색어, 접속 IP 주소, 웹 서버 접근 기록(요청 경로·시각·브라우저 정보·참조 페이지)",
+                "서비스 이용 과정에서 자동 생성",
+              ],
+            ]}
+          />
+          <List
+            items={[
+              "검색어는 검색 결과를 만드는 동안에만 쓰고 저장하지 않습니다. 같은 검색어를 다시 처리하지 않도록 검색 의미 분석 결과를 서버 메모리에 최대 1시간 둘 수 있습니다.",
+              "접속 IP 주소는 과도한 요청을 막기 위해 서버 메모리에서 1분 동안만 세고 저장하지 않습니다. 웹 서버 접근 기록에도 이용자의 실제 IP 주소는 남지 않습니다.",
+              "글 조회수는 누가 봤는지 기록하지 않고 글마다 숫자만 올립니다.",
+              "비밀번호는 받지 않습니다. 로그인은 Google 계정으로만 합니다.",
+            ]}
+          />
+        </Section>
+
+        <Section index={2}>
+          <Table
+            head={["항목", "보유 기간"]}
+            rows={[
+              ["회원 정보, 북마크, 크레딧 기록, 챗봇 대화", "회원 탈퇴 시 즉시 삭제. 챗봇 대화는 이용자가 대화 목록에서 언제든 개별 삭제 가능"],
+              ["로그인으로 지급된 크레딧", "지급일 자정(UTC)에 만료되며 자동 삭제"],
+              [
+                "크레딧 중복 지급 방지 기록",
+                "Google 계정 식별자를 복원할 수 없게 변환(해시)한 값과 마지막 지급 시각. 탈퇴 후 다시 가입해 같은 날 크레딧을 또 받는 것을 막기 위해 탈퇴 후에도 보관",
+              ],
+              ["웹 서버 접근 기록", "정해진 용량을 넘으면 오래된 기록부터 자동 삭제"],
+              [
+                "운영 작업 전 백업",
+                "데이터 정리·업그레이드 같은 작업 전에 백업을 만들 수 있으며, 가장 최근 것 하나만 두고 작업이 문제없음을 확인하면 삭제",
+              ],
+            ]}
+          />
+        </Section>
+
+        <Section index={3}>
+          <p>
+            서비스는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 다만 법령에 따라 수사기관 등이 적법한 절차로 요청하는
+            경우는 예외로 합니다.
           </p>
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                1
-              </span>
-              수집하는 개인정보 항목 및 방법
-            </h2>
-            <div className="pl-10 space-y-6">
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  가. 수집 항목
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-1">
-                      1) 회원가입 및 이용 시 (필수)
-                    </h4>
-                    <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400 text-sm">
-                      <li>
-                        <strong>항목:</strong> 이메일 주소, 이름(또는 닉네임),
-                        소셜 로그인 식별자(Provider Sub)
-                      </li>
-                      <li>
-                        <strong>목적:</strong> 회원 식별, 서비스 제공(뉴스레터,
-                        채팅 등), 크레딧 관리
-                      </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-1">
-                      2) 서비스 이용 과정에서 자동 수집 (필수)
-                    </h4>
-                    <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400 text-sm">
-                      <li>
-                        <strong>항목:</strong> 접속 IP 정보, 쿠키, 서비스 이용
-                        기록(북마크, 크레딧 내역), 접속 로그, 기기 정보
-                      </li>
-                      <li>
-                        <strong>목적:</strong> 서비스 제공 및 운영, 부정 이용
-                        방지, 오류 분석
-                      </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-1">
-                      3) 선택 수집 (동의 시)
-                    </h4>
-                    <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400 text-sm">
-                      <li>
-                        <strong>항목:</strong> 관심 카테고리, 선호 블로그 /{" "}
-                        <strong>목적:</strong> 맞춤형 콘텐츠 추천
-                      </li>
-                      <li>
-                        <strong>항목:</strong> 뉴스레터 수신 동의 /{" "}
-                        <strong>목적:</strong> 이메일 뉴스레터 발송
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  나. 수집 방법
-                </h3>
-                <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                  <li>
-                    홈페이지 및 앱 내 회원가입(Google OAuth), 서비스 이용
-                    과정에서 생성정보 수집 툴을 통한 수집
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </section>
+        <Section index={4}>
+          <p>서비스는 운영을 위해 아래 외부 서비스를 이용합니다.</p>
+          <Table
+            head={["업체", "업무", "처리하는 정보"]}
+            rows={[
+              [
+                "Oracle Corporation (Oracle Cloud Infrastructure)",
+                "서버와 데이터베이스 운영. 대한민국 춘천 리전",
+                "서비스가 저장하는 모든 정보(회원 정보, 북마크, 크레딧 기록, 챗봇 대화)",
+              ],
+              ["Google LLC", "Google 로그인", "로그인 과정의 계정 정보"],
+              ["Google LLC (Gemini API)", "AI 요약·챗봇 답변 생성, 검색어 의미 분석", "국외 이전 항목 참고"],
+              ["OpenRouter, Inc.", "AI 답변 생성 중계(여러 AI 모델 제공자 연결)", "국외 이전 항목 참고"],
+              [
+                "Google LLC (Google Fonts)",
+                "화면 글꼴 제공",
+                "이용자의 브라우저가 글꼴을 받으려고 Google 서버에 직접 접속하며, 이때 IP 주소 등 접속 정보가 Google에 전달됨",
+              ],
+            ]}
+          />
+          <p>
+            글 목록의 썸네일 이미지는 원문 블로그 서버에서 바로 불러오므로, 이용자의 브라우저가 해당 블로그 서버에
+            접속합니다. 원문 링크를 열었을 때 그 사이트에서의 개인정보 처리에는 이 방침이 적용되지 않습니다.
+          </p>
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                2
-              </span>
-              개인정보의 이용 목적
-            </h2>
-            <div className="pl-10">
-              <p className="text-slate-600 dark:text-slate-400 mb-2">
-                운영자는 수집한 개인정보를 다음의 목적을 위해 활용합니다.
-              </p>
-              <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                <li>
-                  서비스 제공 및 계약 이행 (뉴스레터 발송, AI 요약/챗봇 제공)
-                </li>
-                <li>회원 관리 (본인확인, 부정이용 방지, 민원처리)</li>
-                <li>
-                  신규 서비스 개발 및 마케팅 (통계 분석, 맞춤 서비스 제공)
-                </li>
-                <li>
-                  <strong className="text-indigo-600 dark:text-indigo-400">
-                    AI 모델 활용
-                  </strong>
-                  : 서비스 품질 향상을 위한 <strong>통계 분석 목적의</strong>{" "}
-                  익명화된 데이터 활용
-                </li>
-              </ul>
-            </div>
-          </section>
+        <Section index={5}>
+          <p>챗봇, 검색 결과 AI 요약, 검색을 이용하면 아래 정보가 해외 AI 제공자에게 전송됩니다.</p>
+          <Table
+            head={["이전받는 자", "국가", "이전 항목", "시기와 방법", "목적", "보유 기간"]}
+            rows={[
+              [
+                "Google LLC",
+                "미국",
+                "챗봇 질문과 이어지는 대화 맥락, 답변 근거로 쓰는 글 내용, 검색어",
+                "기능을 쓸 때마다 암호화된 통신(HTTPS)으로 API 전송",
+                "답변 생성, 검색어 의미 분석",
+                "Google의 API 약관·정책에 따름",
+              ],
+              [
+                "OpenRouter, Inc. 및 OpenRouter가 연결하는 AI 모델 제공자",
+                "미국 등 모델 제공자 소재국",
+                "챗봇 질문과 이어지는 대화 맥락, 답변 근거로 쓰는 글 내용",
+                "기능을 쓸 때마다 암호화된 통신(HTTPS)으로 API 전송",
+                "답변 생성",
+                "OpenRouter와 각 모델 제공자의 약관·정책에 따름",
+              ],
+            ]}
+          />
+          <List
+            items={[
+              "이메일 주소, 이름 같은 회원 정보는 AI 제공자에게 보내지 않습니다.",
+              "서비스는 무료 API 등급을 쓰는 경우가 있으며, 무료 등급에서는 제공자가 입력 내용을 자사 서비스 개선에 활용할 수 있습니다. 챗봇에 개인정보나 민감한 정보를 입력하지 마세요.",
+              "국외 이전을 원하지 않으면 챗봇, AI 요약, 검색 기능을 쓰지 않으면 됩니다. 이 경우에도 글 목록 보기와 북마크는 이용할 수 있습니다.",
+            ]}
+          />
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                3
-              </span>
-              개인정보의 보유 및 이용 기간
-            </h2>
-            <div className="pl-10 space-y-4">
-              <p className="text-slate-600 dark:text-slate-400">
-                원칙적으로 개인정보 수집 및 이용 목적이 달성된 후에는 해당
-                정보를 지체 없이 파기합니다.
-              </p>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
-                  1) 내부 방침에 의한 정보 보유
-                </h3>
-                <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                  <li>
-                    <strong>회원 탈퇴 시:</strong>{" "}
-                    <span className="text-red-600 dark:text-red-400 font-medium">
-                      지체 없이 파기
-                    </span>{" "}
-                    (단, 재가입 방지 등을 위해 소셜 로그인 식별자는 해시화하여
-                    보관할 수 있음)
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
-                  2) 관련 법령에 의한 정보 보유
-                </h3>
-                <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                  <li>
-                    <strong>통신비밀보호법:</strong> 로그인 기록 (3개월)
-                  </li>
-                  <li>
-                    <strong>
-                      전자상거래 등에서의 소비자 보호에 관한 법률:
-                    </strong>
-                    <ul className="list-circle list-outside ml-4 mt-1 space-y-1 text-sm">
-                      <li>계약 또는 청약철회 등에 관한 기록 (5년)</li>
-                      <li>대금결제 및 재화 등의 공급에 관한 기록 (5년)</li>
-                      <li>소비자의 불만 또는 분쟁처리에 관한 기록 (3년)</li>
-                    </ul>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </section>
+        <Section index={6}>
+          <p>
+            보유 기간이 끝나거나 처리 목적을 이루면 데이터베이스에서 지체 없이 삭제하며, 삭제한 정보는 복구할 수 없습니다.
+            백업에 남아 있던 정보는 그 백업을 삭제할 때 함께 파기됩니다.
+          </p>
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                4
-              </span>
-              개인정보의 파기 절차 및 방법
-            </h2>
-            <div className="pl-10">
-              <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                <li>
-                  <strong>절차:</strong> 목적 달성 후 내부 방침 및 기타 관련
-                  법령에 따라 일정 기간 저장된 후 파기
-                </li>
-                <li>
-                  <strong>방법:</strong> 전자적 파일 형태는 기술적 방법을
-                  사용하여 삭제 (복구 불가)
-                </li>
-              </ul>
-            </div>
-          </section>
+        <Section index={7}>
+          <p>이용자는 언제든 자신의 개인정보를 열람·정정·삭제하거나 처리 정지를 요청할 수 있습니다.</p>
+          <List
+            items={[
+              "회원 탈퇴: 계정 메뉴(모바일은 하단 더보기)의 설정에서 회원 탈퇴. 회원 정보, 북마크, 크레딧 기록, 챗봇 대화가 즉시 삭제됩니다.",
+              "챗봇 대화 삭제: 챗봇의 대화 목록에서 대화별로 삭제",
+              "그 밖의 요청: 아래 개인정보 보호책임자 이메일로 연락하면 지체 없이 처리합니다.",
+            ]}
+          />
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                5
-              </span>
-              개인정보 처리 위탁 및 국외 이전
-            </h2>
-            <div className="pl-10 space-y-6">
-              <p className="text-slate-600 dark:text-slate-400">
-                운영자는 서비스 향상을 위해 아래와 같이 외부 전문 업체에
-                개인정보 처리를 위탁하고 있으며, 일부 정보는 국외로 이전될 수
-                있습니다.
-              </p>
+        <Section index={8}>
+          <List
+            items={[
+              "모든 통신은 암호화(HTTPS)합니다.",
+              "데이터베이스는 인터넷에서 직접 접근할 수 없습니다. 서버 관리 도구는 허용한 IP에서만, 서비스 관리 기능은 관리자 권한 계정만 쓸 수 있습니다.",
+              "로그인 상태는 서명된 토큰으로 확인하며, 비밀번호는 받거나 보관하지 않습니다.",
+              "처리 목적에 필요한 최소한의 정보만 수집합니다.",
+            ]}
+          />
+        </Section>
 
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  가. 개인정보 처리 위탁
-                </h3>
-                <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
-                  <table className="min-w-full text-sm text-left text-slate-600 dark:text-slate-400">
-                    <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
-                      <tr>
-                        <th className="px-6 py-3 border-b border-slate-200 dark:border-slate-700">
-                          수탁 업체
-                        </th>
-                        <th className="px-6 py-3 border-b border-slate-200 dark:border-slate-700">
-                          위탁 업무 내용
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="bg-white dark:bg-slate-800">
-                        <td className="px-6 py-4 border-b border-slate-100 dark:border-slate-700/50">
-                          이메일 발송 업체 (추후 도입 시 명시)
-                        </td>
-                        <td className="px-6 py-4 border-b border-slate-100 dark:border-slate-700/50">
-                          뉴스레터 및 안내 메일 발송
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+        <Section index={9}>
+          <List
+            items={[
+              "로그인 상태 유지를 위해 브라우저 저장소(localStorage)에 로그인 토큰을 저장합니다. 화면 테마와 챗봇에서 고른 모델도 같은 곳에 저장합니다.",
+              "Google 로그인 과정에서 위조 요청을 막기 위한 일회용 쿠키를 잠깐 사용합니다.",
+              "브라우저 설정에서 쿠키와 사이트 데이터를 지우거나 차단할 수 있습니다. 이 경우 로그인이 필요한 기능은 쓸 수 없습니다.",
+            ]}
+          />
+        </Section>
 
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  나. 국외 이전 (AI API 등)
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                  서비스 핵심 기능인 AI 요약 및 챗봇 제공을 위해 아래와 같이
-                  국외로 데이터가 전송됩니다.
-                </p>
-                <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
-                  <table className="min-w-full text-sm text-left text-slate-600 dark:text-slate-400">
-                    <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
-                      <tr>
-                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                          이전받는 자
-                        </th>
-                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                          이전 국가
-                        </th>
-                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                          이전 항목
-                        </th>
-                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                          이전 일시 및 방법
-                        </th>
-                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                          이용 목적 및 기간
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                      <tr className="bg-white dark:bg-slate-800">
-                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                          OpenAI
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">미국</td>
-                        <td className="px-4 py-3">질문(Query), 포스트 본문</td>
-                        <td className="px-4 py-3">API 호출 시 네트워크 전송</td>
-                        <td className="px-4 py-3">
-                          AI 답변 생성 / 처리 후 즉시 삭제 또는 정책 따름
-                        </td>
-                      </tr>
-                      <tr className="bg-white dark:bg-slate-800">
-                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                          Google (Gemini)
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">미국</td>
-                        <td className="px-4 py-3">질문(Query), 포스트 본문</td>
-                        <td className="px-4 py-3">API 호출 시 네트워크 전송</td>
-                        <td className="px-4 py-3">
-                          AI 답변 생성 / 처리 후 즉시 삭제 또는 정책 따름
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-500 italic">
-                  * 위탁받은 업체는 해당 목적 달성을 위해서만 개인정보를
-                  처리하며, 관계 법령에 따라 안전하게 관리됩니다.
-                </p>
-              </div>
-            </div>
-          </section>
+        <Section index={10}>
+          <p>
+            서비스는 만 14세 미만 아동을 대상으로 하지 않습니다. 만 14세 미만 아동의 개인정보가 수집된 사실을 알게 되면
+            즉시 삭제합니다.
+          </p>
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                6
-              </span>
-              이용자 및 법정대리인의 권리
-            </h2>
-            <div className="pl-10">
-              <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                <li>
-                  이용자는 언제든지 자신의 개인정보를 열람, 수정, 삭제(회원
-                  탈퇴) 요청할 수 있습니다.
-                </li>
-                <li>뉴스레터 수신 동의를 철회할 수 있습니다.</li>
-                <li>문의: 아래 개인정보 보호책임자 이메일</li>
-              </ul>
-            </div>
-          </section>
+        <Section index={11}>
+          <Table head={["구분", "내용"]} rows={[["이름", "김도형"], ["이메일", "dhkimxx@gmail.com"]]} />
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                7
-              </span>
-              개인정보의 안전성 확보 조치
-            </h2>
-            <div className="pl-10">
-              <p className="text-slate-600 dark:text-slate-400 mb-2">
-                운영자는 이용자의 개인정보 보호를 위해 다음과 같은 조치를 취하고
-                있습니다.
-              </p>
-              <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                <li>
-                  <strong>관리적 조치:</strong> 내부관리계획 수립·시행, 개인정보
-                  취급 최소화
-                </li>
-                <li>
-                  <strong>기술적 조치:</strong> 개인정보 암호화(전송 구간 등),
-                  보안 프로그램 설치 및 갱신, 접근통제
-                </li>
-              </ul>
-            </div>
-          </section>
+        <Section index={12}>
+          <p>개인정보 침해로 도움이 필요하면 아래 기관에 문의할 수 있습니다.</p>
+          <List
+            items={[
+              "개인정보침해신고센터 (국번 없이) 118, privacy.kisa.or.kr",
+              "개인정보분쟁조정위원회 1833-6972, www.kopico.go.kr",
+              "대검찰청 (국번 없이) 1301, www.spo.go.kr",
+              "경찰청 (국번 없이) 182, ecrm.police.go.kr",
+            ]}
+          />
+        </Section>
 
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                8
-              </span>
-              개인정보 자동 수집 장치의 설치·운영 및 거부
-            </h2>
-            <div className="pl-10">
-              <ul className="list-disc list-outside ml-4 text-slate-600 dark:text-slate-400">
-                <li className="mb-1">
-                  <strong>쿠키 사용:</strong> 이용자에게 빠른 웹 환경을
-                  제공하고, 로그인 상태를 유지하기 위해 쿠키를 사용합니다.
-                </li>
-                <li>
-                  <strong>거부 방법:</strong> 웹 브라우저 설정을 통해 쿠키
-                  저장을 거부할 수 있습니다. (단, 로그인이 필요한 일부 서비스
-                  이용에 어려움이 있을 수 있습니다.)
-                </li>
-              </ul>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                9
-              </span>
-              개인정보 보호책임자
-            </h2>
-            <div className="ml-10 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl inline-block">
-              <p className="text-slate-700 dark:text-slate-300">
-                <span className="font-semibold w-20 inline-block">이름:</span>{" "}
-                김도형
-              </p>
-              <p className="text-slate-700 dark:text-slate-300 mt-1">
-                <span className="font-semibold w-20 inline-block">이메일:</span>{" "}
-                <a
-                  href="mailto:dhkimxx@gmail.com"
-                  className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  dhkimxx@gmail.com
-                </a>
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm">
-                10
-              </span>
-              기타
-            </h2>
-            <div className="pl-10">
-              <p className="text-slate-600 dark:text-slate-400">
-                본 방침은 Tech-Letter 서비스에 적용되며, 링크된 다른
-                웹사이트(타사 블로그 등)에서의 개인정보 수집에 대해서는 본
-                방침이 적용되지 않습니다. 만 14세 미만 아동의 회원가입은 제한될
-                수 있습니다.
-              </p>
-            </div>
-          </section>
-        </div>
+        <Section index={13}>
+          <p>
+            이 방침은 {EFFECTIVE_DATE}부터 시행합니다. 내용이 바뀌면 시행 전에 이 페이지로 알립니다. 이전 방침(2026년 9월 24일
+            시행)은 뉴스레터·결제처럼 서비스에 없는 기능을 담고 있어 실제 처리 방식에 맞게 다시 작성했습니다.
+          </p>
+        </Section>
       </div>
-
-      <div className="mt-8 text-center">
-        <Link
-          to={PATHS.HOME}
-          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-300 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 transition-colors"
-        >
-          홈으로 돌아가기
-        </Link>
-      </div>
-    </div>
+    </article>
   );
 }
