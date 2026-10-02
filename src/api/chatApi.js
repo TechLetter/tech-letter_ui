@@ -169,8 +169,6 @@ const parseStreamEvent = (block) => {
 const CHAT_MESSAGES = {
   [ErrorCode.CHAT_SESSION_NOT_FOUND]: "세션을 찾을 수 없습니다. 새 채팅을 시작해 주세요.",
   [ErrorCode.CREDIT_INSUFFICIENT]: "크레딧이 부족합니다. 내일 다시 시도해 주세요.",
-  [ErrorCode.POLICY_BLOCKED]:
-    "요청에 내부 지시 변경이나 민감 정보 요청으로 해석될 수 있는 내용이 있어 처리하지 않았습니다.",
   [ErrorCode.LLM_RATE_LIMITED]: "요청이 몰리고 있어요. 잠시 후 다시 시도해 주세요.",
   [ErrorCode.LLM_UNAVAILABLE]: "챗봇이 일시적으로 불안정합니다. 잠시 후 다시 시도해 주세요.",
   [ErrorCode.AUTH_REQUIRED]: "로그인이 필요한 서비스입니다.",

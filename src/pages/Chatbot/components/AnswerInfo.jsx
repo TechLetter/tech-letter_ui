@@ -7,7 +7,7 @@ const seconds = (ms) => (typeof ms === "number" ? `${(ms / 1000).toFixed(1)}s` :
 
 /**
  * 답변 끝의 (i). 누르면 이 답변의 모델·토큰·응답 시간을 작게 보여 준다.
- * 토큰은 이 질문 하나에 든 LLM 호출(질의 재작성·계획·답변)의 합이다. 예전 답변은 모델만 있다.
+ * 토큰은 이 질문 하나에 든 LLM 호출의 합이다. 예전 답변은 모델만 있다.
  */
 export default function AnswerInfo({ modelLabel, modelId, usage }) {
   const [open, setOpen] = useState(false);
@@ -26,7 +26,6 @@ export default function AnswerInfo({ modelLabel, modelId, usage }) {
     ["모델", modelLabel],
     ["입력 토큰", count(usage?.input_tokens)],
     ["출력 토큰", count(usage?.output_tokens)],
-    ["LLM 호출", count(usage?.llm_calls)],
     ["응답 시간", seconds(usage?.latency_ms)],
   ].filter(([, value]) => value);
   if (rows.length === 0) return null;

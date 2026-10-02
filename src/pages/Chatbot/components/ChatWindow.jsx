@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { chatErrorMessage } from "../../../api/chatApi";
 import { ErrorCode } from "../../../api/apiError";
 import MessageBubble from "./MessageBubble";
-import SecurityNotice from "./SecurityNotice";
 import { RiRefreshLine } from "react-icons/ri";
 
 /**
@@ -71,7 +70,6 @@ export default function ChatWindow({
           {/* 에러 상태 */}
           {error && (
             <div className="my-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-center dark:border-rose-900/60 dark:bg-rose-950/40">
-              <SecurityNotice error={error} />
               <p className="mb-2 text-sm text-rose-700 dark:text-rose-300">{chatErrorMessage(error)}</p>
               {onRetry && error.code !== ErrorCode.REQUEST_INVALID && (
                 <button

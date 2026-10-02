@@ -18,7 +18,6 @@ export const ErrorCode = {
   CREDIT_INSUFFICIENT: "credit.insufficient",
   CREDIT_ERROR: "credit.error",
   CHAT_SESSION_NOT_FOUND: "chat.session_not_found",
-  POLICY_BLOCKED: "policy.blocked",
   LLM_RATE_LIMITED: "llm.rate_limited",
   LLM_UNAVAILABLE: "llm.unavailable",
   INTERNAL_ERROR: "internal.error",
