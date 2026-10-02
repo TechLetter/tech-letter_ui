@@ -2,7 +2,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { RiSparklingLine } from "react-icons/ri";
 import { displayName } from "../../../utils/modelName";
-import SecurityNotice from "./SecurityNotice";
 import SourceList from "./SourceList";
 import AnswerInfo from "./AnswerInfo";
 
@@ -38,7 +37,6 @@ export default function MessageBubble({ message, models = [] }) {
         <RiSparklingLine className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <SecurityNotice guard={message.guard} />
         {usedModelFallback && (
           <p className="mb-2 text-xs text-ink-3" role="status">
             고른 모델이 응답하지 않아{" "}

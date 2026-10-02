@@ -63,7 +63,6 @@ const buildMessageFromSession = (sessionId, msg, idx) => ({
   createdAt: msg.created_at,
   sources: msg.sources || [],
   agent: msg.agent || null,
-  guard: msg.guard || null,
 });
 
 export default function Chatbot() {
@@ -354,7 +353,6 @@ export default function Chatbot() {
         content: "",
         sources: [],
         agent: null,
-        guard: null,
         requestedModelId: requestedModelId || null,
         isStreaming: true,
         createdAt: new Date().toISOString(),
@@ -372,7 +370,6 @@ export default function Chatbot() {
           content: data.answer,
           sources: data.sources || [],
           agent: data.agent || null,
-          guard: data.guard || null,
           requestedModelId: requestedModelId || null,
           isStreaming: false,
           createdAt: new Date().toISOString(),
@@ -424,14 +421,7 @@ export default function Chatbot() {
           handleModelChange("");
         }
 
-        if (apiError.code === ErrorCode.POLICY_BLOCKED) {
-          setInputValue(query);
-          setMessages((prev) =>
-            prev.filter((m) => m.id !== userMsg.id && m.id !== botMessageId)
-          );
-        } else {
-          setMessages((prev) => prev.filter((m) => m.id !== botMessageId));
-        }
+        setMessages((prev) => prev.filter((m) => m.id !== botMessageId));
 
         setError(apiError);
       } finally {
