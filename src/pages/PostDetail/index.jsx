@@ -78,30 +78,35 @@ function Dot() {
   );
 }
 
-function OriginalLink({ href, large = false }) {
-  if (large) {
-    return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className="flex h-12 w-full items-center justify-center gap-1.5 rounded-xl bg-accent text-[15px] font-semibold text-accent-fg hover:opacity-90"
-      >
-        원문 보기
-        <RiExternalLinkLine className="h-4 w-4" aria-hidden="true" />
-      </a>
-    );
-  }
+/** 제목 옆 원문 아이콘. 텍스트 버튼 대신 아이콘만 두고 새 탭으로 연다. */
+function OriginalIconLink({ href }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      aria-label="원문 보기 (새 탭에서 열림)"
-      className="flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-accent-ink hover:bg-canvas"
+      aria-label="원문 (새 탭)"
+      title="원문"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-canvas hover:text-ink"
     >
-      원문 보기
-      <RiExternalLinkLine className="h-3.5 w-3.5" aria-hidden="true" />
+      <RiExternalLinkLine size={18} aria-hidden="true" />
+    </a>
+  );
+}
+
+/** 글 끝 출처 줄. 블로그 이름 자체가 원문 링크다 — 출처 표시는 남기되 "원문 보기" 버튼은 두지 않는다. */
+function SourceLink({ href, blogId, blogName }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`${blogName} 원문 (새 탭)`}
+      className="group/source mt-8 flex items-center gap-2 border-t border-line pt-5 text-sm font-semibold text-ink-2 hover:text-ink"
+    >
+      <BlogIcon blogId={blogId} name={blogName} size={20} />
+      <span className="min-w-0 truncate">{blogName}</span>
+      <RiExternalLinkLine className="h-4 w-4 shrink-0 text-ink-3 group-hover/source:text-ink" aria-hidden="true" />
     </a>
   );
 }
@@ -332,12 +337,9 @@ export default function PostDetail() {
           인용·코드 블록의 채움(역시 bg-canvas)이 묻혀 안 보였다. */}
       <div className="-mx-4 -mt-4 bg-surface px-4 pt-5 pb-8 sm:mx-auto sm:mt-0 sm:max-w-2xl sm:rounded-2xl sm:border sm:border-line sm:px-8 sm:py-7">
         <article>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <BlogIcon blogId={post.blog_id} name={post.blog_name} size={20} />
-              <span className="min-w-0 truncate text-sm font-semibold text-ink-2">{post.blog_name}</span>
-            </div>
-            <OriginalLink href={post.link} />
+          <div className="flex min-w-0 items-center gap-2">
+            <BlogIcon blogId={post.blog_id} name={post.blog_name} size={20} />
+            <span className="min-w-0 truncate text-sm font-semibold text-ink-2">{post.blog_name}</span>
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink-3">
             <span className="font-mono">{timeutils.formatLocalDate(post.published_at)}</span>
@@ -362,6 +364,7 @@ export default function PostDetail() {
             >
               {post.title}
             </h1>
+            <OriginalIconLink href={post.link} />
             <button
               type="button"
               aria-label="공유"
@@ -468,9 +471,7 @@ export default function PostDetail() {
           )}
 
           {explainerState !== "loading" && (
-            <div className="mt-8">
-              <OriginalLink href={post.link} large />
-            </div>
+            <SourceLink href={post.link} blogId={post.blog_id} blogName={post.blog_name} />
           )}
         </article>
       </div>
