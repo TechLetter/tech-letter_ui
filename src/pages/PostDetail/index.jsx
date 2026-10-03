@@ -78,7 +78,8 @@ function Dot() {
   );
 }
 
-/** 제목 옆 원문 아이콘. 텍스트 버튼 대신 아이콘만 두고 새 탭으로 연다. */
+/** 제목 끝에 붙는 원문 아이콘. 텍스트 버튼 대신 아이콘만 두고 새 탭으로 연다. 출처 표시는
+ *  제목 위의 블로그 아이콘·이름이 맡는다. */
 function OriginalIconLink({ href }) {
   return (
     <a
@@ -87,27 +88,26 @@ function OriginalIconLink({ href }) {
       rel="noreferrer"
       aria-label="원문 (새 탭)"
       title="원문"
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-canvas hover:text-ink"
+      className="ml-1 inline-flex h-7 w-7 items-center justify-center rounded-full align-[-0.25em] text-ink-3 hover:bg-canvas hover:text-ink"
     >
-      <RiExternalLinkLine size={18} aria-hidden="true" />
+      <RiExternalLinkLine size={17} aria-hidden="true" />
     </a>
   );
 }
 
-/** 글 끝 출처 줄. 블로그 이름 자체가 원문 링크다 — 출처 표시는 남기되 "원문 보기" 버튼은 두지 않는다. */
-function SourceLink({ href, blogId, blogName }) {
+/** 마지막 단어와 아이콘을 한 덩어리로 묶어, 아이콘만 다음 줄로 떨어지지 않게 한다. */
+function TitleWithIcon({ title, href }) {
+  const cut = title.lastIndexOf(" ");
+  const head = cut >= 0 ? title.slice(0, cut + 1) : "";
+  const last = cut >= 0 ? title.slice(cut + 1) : title;
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={`${blogName} 원문 (새 탭)`}
-      className="group/source mt-8 flex items-center gap-2 border-t border-line pt-5 text-sm font-semibold text-ink-2 hover:text-ink"
-    >
-      <BlogIcon blogId={blogId} name={blogName} size={20} />
-      <span className="min-w-0 truncate">{blogName}</span>
-      <RiExternalLinkLine className="h-4 w-4 shrink-0 text-ink-3 group-hover/source:text-ink" aria-hidden="true" />
-    </a>
+    <>
+      {head}
+      <span className="whitespace-nowrap">
+        {last}
+        <OriginalIconLink href={href} />
+      </span>
+    </>
   );
 }
 
@@ -362,9 +362,8 @@ export default function PostDetail() {
               tabIndex={-1}
               className="flex-1 text-xl leading-snug font-bold tracking-tight text-ink outline-none sm:text-2xl"
             >
-              {post.title}
+              <TitleWithIcon title={post.title} href={post.link} />
             </h1>
-            <OriginalIconLink href={post.link} />
             <button
               type="button"
               aria-label="공유"
@@ -470,9 +469,6 @@ export default function PostDetail() {
             </div>
           )}
 
-          {explainerState !== "loading" && (
-            <SourceLink href={post.link} blogId={post.blog_id} blogName={post.blog_name} />
-          )}
         </article>
       </div>
 
