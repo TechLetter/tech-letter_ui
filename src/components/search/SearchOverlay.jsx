@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RiChat3Line, RiCloseLine, RiFilter3Line, RiSearchLine } from "react-icons/ri";
-import postsApi from "../../api/postsApi";
-import { PATHS } from "../../routes/path";
+import { PATHS, postDetailPath } from "../../routes/path";
 import { useLoginGate } from "../../hooks/useLoginGate";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { useSearchSuggestions } from "../../hooks/useSearchSuggestions";
@@ -70,13 +69,10 @@ export default function SearchOverlay({ initialQuery = "", onClose }) {
         group: "글",
         label: post.title,
         post,
+        // 카드와 같다 — "쉽게 읽기" 상세로 이동한다. 조회수는 상세 페이지 진입 시 올린다.
         run: () => {
-          // 원문은 새 탭에서. 카드처럼 조회수를 올린다. 링크가 없으면 제목으로 검색.
-          if (!post.link) return goHome({ q: post.title });
-          postsApi.incrementViewCount(post.id);
-          window.open(post.link, "_blank", "noopener");
+          navigate(postDetailPath(post.id));
           onClose();
-          return undefined;
         },
       })
     );

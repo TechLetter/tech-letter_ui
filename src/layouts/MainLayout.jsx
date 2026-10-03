@@ -22,7 +22,8 @@ export default function MainLayout() {
       <AppHeader />
       <main
         className={`mx-auto w-full max-w-[1360px] flex-1 px-4 pt-(--tl-header-h) sm:px-6 lg:px-8 ${
-          isChatbot ? "" : "pb-24 lg:pb-10"
+          // 모바일 탭바 여백은 AppFooter 쪽에서 문서 맨 끝에 한 번만 둔다(중복 방지).
+          isChatbot ? "" : "lg:pb-10"
         }`}
       >
         <div className={isChatbot ? "" : "pt-4 lg:pt-6"}>

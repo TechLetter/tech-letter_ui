@@ -12,6 +12,8 @@ const postsApi = {
       params: { page, page_size, q, categories, blog_id, published_from, published_to },
     }),
   getPost: (id) => apiClient.get(`/api/v1/posts/${id}`),
+  // 아직 생성되지 않았으면 404(resource.not_found) — 호출부가 요약만 보여 주는 화면으로 갈무리한다.
+  getExplainer: (id) => apiClient.get(`/api/v1/posts/${id}/explainer`),
   incrementViewCount: (id) => apiClient.post(`/api/v1/posts/${id}/views`),
 };
 

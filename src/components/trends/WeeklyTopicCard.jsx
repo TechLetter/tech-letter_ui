@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { RiArrowRightSLine, RiExternalLinkLine } from "react-icons/ri";
-import { PATHS } from "../../routes/path";
+import { RiArrowRightSLine } from "react-icons/ri";
+import { PATHS, postDetailPath } from "../../routes/path";
 import timeutils from "../../utils/timeutils";
 import BlogIcon from "../common/BlogIcon";
 
@@ -55,11 +55,11 @@ export default function WeeklyTopicCard({ rank, item }) {
       {item.posts?.length > 0 && (
         <div className="mt-3 flex flex-col">
           {item.posts.map((post) => (
-            <a
+            // 원문 직행 아이콘을 없앴다 — "원문은 상세에서 연다" 결정과 겹치고, 상세를 거치지
+            // 않으면 조회수 집계도 비켜 간다. 행 전체가 상세로 간다.
+            <Link
               key={post.id}
-              href={post.link}
-              target="_blank"
-              rel="noreferrer"
+              to={postDetailPath(post.id)}
               className="group flex items-center gap-2.5 border-t border-line py-2.5"
             >
               <BlogIcon blogId={post.blog_id} name={post.blog_name} size={20} />
@@ -73,8 +73,7 @@ export default function WeeklyTopicCard({ rank, item }) {
                   <span className="font-mono">{timeutils.formatLocalDate(post.published_at)}</span>
                 </span>
               </span>
-              <RiExternalLinkLine className="h-4 w-4 shrink-0 text-ink-3 group-hover:text-accent-ink" />
-            </a>
+            </Link>
           ))}
         </div>
       )}

@@ -24,6 +24,8 @@ export default function ScrollToTopButton() {
   return (
     visible && (
       <button
+        type="button"
+        aria-label="맨 위로"
         onClick={scrollToTop}
         className="fixed z-30 bg-white cursor-pointer bottom-20 lg:bottom-4 right-4 w-[42px] h-[42px] rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 dark:shadow-slate-900/50"
       >
