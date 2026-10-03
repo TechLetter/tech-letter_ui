@@ -88,9 +88,10 @@ function OriginalIconLink({ href }) {
       rel="noreferrer"
       aria-label="원문 (새 탭)"
       title="원문"
-      className="ml-1 inline-flex h-7 w-7 items-center justify-center rounded-full align-[-0.25em] text-ink-3 hover:bg-canvas hover:text-ink"
+      // 크기·정렬을 제목 글자 크기(em) 기준으로 둔다 — 모바일 20px·데스크톱 24px 모두 글자 중심에 맞는다.
+      className="ml-1 inline-flex size-[1.3em] items-center justify-center rounded-full align-baseline text-ink-3 hover:bg-canvas hover:text-ink"
     >
-      <RiExternalLinkLine size={17} aria-hidden="true" />
+      <RiExternalLinkLine size="0.75em" aria-hidden="true" />
     </a>
   );
 }
