@@ -9,13 +9,12 @@ import { useAiSummary } from "../../hooks/useAiSummary";
 import { useLoginGate } from "../../hooks/useLoginGate";
 import { PATHS } from "../../routes/path";
 import BlogIcon from "../common/BlogIcon";
+import { CitationAnchor } from "../common/Citation";
+import { linkCitations } from "../../utils/citations";
 
 const CLAMP_LINES = 6;
 const SOURCE_LIMIT = 3;
 const BTN_TEXT = "flex h-8 items-center gap-1 px-1 text-[13px] font-semibold text-accent-ink hover:underline";
-
-/** 본문의 `[n]` 을 n 번째 참고 글로 가는 링크로 바꾼다. 마크다운이 그대로 렌더한다. */
-const linkCitations = (text) => text.replace(/\[(\d{1,2})\]/g, (match, n) => `[${n}](#src-${n})`);
 
 /** 검색 결과 맨 위 — AI 요약. 로그인해 있으면 바로 짧은 답변과 참고 글을 보여 준다. */
 export default function AiSummaryCard({ query, posts }) {
@@ -39,32 +38,7 @@ export default function AiSummaryCard({ query, posts }) {
   const sources = useMemo(() => result?.sources || [], [result]);
   const components = useMemo(
     () => ({
-      a: ({ href, children, ...props }) => {
-        const cite = /^#src-(\d+)$/.exec(href || "");
-        if (cite) {
-          const source = sources[Number(cite[1]) - 1];
-          const label = children;
-          if (!source?.link) return <sup className="mx-px font-mono text-[10px] text-accent-ink">{label}</sup>;
-          return (
-            <sup className="mx-px">
-              <a
-                href={source.link}
-                target="_blank"
-                rel="noreferrer"
-                title={source.title}
-                className="rounded-[3px] bg-accent-soft px-1 font-mono text-[10px] font-semibold text-accent-ink no-underline hover:underline"
-              >
-                {label}
-              </a>
-            </sup>
-          );
-        }
-        return (
-          <a href={href} target="_blank" rel="noreferrer" className="text-accent-ink hover:underline" {...props}>
-            {children}
-          </a>
-        );
-      },
+      a: (props) => <CitationAnchor {...props} sources={sources} />,
       p: ({ ...props }) => <p {...props} className="my-1.5 break-words [overflow-wrap:anywhere]" />,
       ul: ({ ...props }) => <ul {...props} className="my-1.5 list-disc pl-5" />,
       ol: ({ ...props }) => <ol {...props} className="my-1.5 list-decimal pl-5" />,

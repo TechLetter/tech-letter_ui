@@ -4,6 +4,8 @@ import { RiSparklingLine } from "react-icons/ri";
 import { displayName } from "../../../utils/modelName";
 import SourceList from "./SourceList";
 import AnswerInfo from "./AnswerInfo";
+import { CitationAnchor } from "../../../components/common/Citation";
+import { linkCitations } from "../../../utils/citations";
 
 /**
  * MessageBubble 컴포넌트
@@ -50,9 +52,8 @@ export default function MessageBubble({ message, models = [] }) {
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              a: ({ ...props }) => (
-                <a {...props} target="_blank" rel="noopener noreferrer" className="text-accent-ink hover:underline" />
-              ),
+              // 본문의 [n] 은 아래 참고한 글 n 번으로 연결한다.
+              a: (props) => <CitationAnchor {...props} sources={message.sources || []} />,
               h1: ({ ...props }) => <h1 {...props} className="mt-6 mb-4 text-xl font-bold" />,
               h2: ({ ...props }) => <h2 {...props} className="mt-5 mb-3 text-lg font-bold" />,
               h3: ({ ...props }) => <h3 {...props} className="mt-4 mb-2 text-base font-bold" />,
@@ -76,7 +77,7 @@ export default function MessageBubble({ message, models = [] }) {
               td: ({ ...props }) => <td {...props} className="border border-line px-2 py-1" />,
             }}
           >
-            {message.content}
+            {linkCitations(message.content)}
           </ReactMarkdown>
         </div>
         <SourceList sources={message.sources} />
