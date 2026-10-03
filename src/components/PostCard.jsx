@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import timeutils from "../utils/timeutils";
 import { GrView } from "react-icons/gr";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { showToast } from "../provider/toastModalBridge";
-import postsApi from "../api/postsApi";
+import { postDetailPath } from "../routes/path";
 import BookmarkToggleButton from "./bookmark/BookmarkToggleButton";
 import BlogIcon from "./common/BlogIcon";
 import Highlight from "./common/Highlight";
@@ -31,7 +32,6 @@ export default function PostCard({
   postSummary,
   postTags,
   postThumbnailUrl,
-  postUrl,
   postPublishedAt,
   postViewCount = 0,
   isBookmarked = false,
@@ -41,10 +41,9 @@ export default function PostCard({
   // 썸네일 주소가 깨졌으면 썸네일 없는 글처럼 블로그 아이콘을 보여 준다.
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
 
-  // 원문은 새 탭에서 연다. 조회수는 열 때 올린다.
-  const handleOpen = () => {
-    postsApi.incrementViewCount(post_id);
-  };
+  // 카드를 누르면 "쉽게 읽기" 상세로 간다. 원문은 상세 페이지에서 안내한다.
+  // 조회수는 상세 페이지 진입 시 올린다(여기서는 올리지 않는다 — 중복 호출 방지).
+  const detailPath = postDetailPath(post_id);
 
   const blogNameClass = "min-w-0 truncate text-[13px] font-semibold text-ink-2";
 
@@ -53,15 +52,7 @@ export default function PostCard({
       data-testid="post-card"
       className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-slate-300 dark:hover:border-slate-500"
     >
-      <a
-        href={postUrl}
-        target="_blank"
-        rel="noreferrer"
-        onClick={handleOpen}
-        tabIndex={-1}
-        aria-hidden="true"
-        className="block aspect-video overflow-hidden bg-canvas"
-      >
+      <Link to={detailPath} tabIndex={-1} aria-hidden="true" className="block aspect-video overflow-hidden bg-canvas">
         {postThumbnailUrl && !thumbnailFailed ? (
           <img
             src={postThumbnailUrl}
@@ -75,7 +66,7 @@ export default function PostCard({
             <BlogIcon blogId={blogId} name={blogName} size={44} />
           </span>
         )}
-      </a>
+      </Link>
 
       <div className="flex flex-1 flex-col gap-2.5 px-4 pt-3.5 pb-2.5">
         <div className="flex items-center gap-2">
@@ -97,9 +88,9 @@ export default function PostCard({
         </div>
 
         <h2 className="line-clamp-2 text-[17px] leading-snug font-semibold tracking-tight text-ink">
-          <a href={postUrl} target="_blank" rel="noreferrer" onClick={handleOpen} className="hover:text-accent-ink">
+          <Link to={detailPath} className="hover:text-accent-ink">
             <Highlight text={postTitle} terms={highlightTerms} />
-          </a>
+          </Link>
         </h2>
         <p className="line-clamp-3 text-sm leading-relaxed text-ink-2">
           <Highlight text={postSummary} terms={highlightTerms} />
@@ -132,7 +123,8 @@ export default function PostCard({
             aria-label="링크 복사"
             className="flex h-9 w-9 items-center justify-center rounded-full text-ink-3 hover:bg-canvas hover:text-ink"
             onClick={() => {
-              copyToClipboard(postUrl);
+              // 이제 글마다 상세 페이지가 있다 — 공유는 그 URL로(클릭 목적지와 같게).
+              copyToClipboard(`${window.location.origin}${detailPath}`);
               showToast("URL이 클립보드에 복사되었습니다.");
             }}
           >

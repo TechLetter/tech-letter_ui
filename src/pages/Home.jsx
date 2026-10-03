@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useNavigationType } from "react-router-dom";
 import postsApi from "../api/postsApi";
 import filtersApi from "../api/filtersApi";
 import trendsApi from "../api/trendsApi";
@@ -12,35 +13,31 @@ import { useLoginGate } from "../hooks/useLoginGate";
 import { PATHS } from "../routes/path";
 import { mergeUniqueByKey } from "../utils/arrayUtils";
 import { useUrlParams, useUrlState } from "../hooks/useUrlState";
-import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 12;
 const TREND_LIMIT = 5;
 
+// 라우트를 떠나도 살아 있고, 새로고침하면 사라진다. 뒤로가기(POP) 복원 전용 —
+// 필터가 바뀐 새 방문에는 쓰지 않는다(아래 feedKey 비교로 구분).
+let feedCache = null; // { feedKey, posts, page, hasMore, total, scrollY }
+
 export default function Home() {
-  const [posts, setPosts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [total, setTotal] = useState(null);
-  const [trends, setTrends] = useState(null);
-  const [topicGroups, setTopicGroups] = useState(null);
+  const navigate = useNavigate();
+  const navType = useNavigationType();
+  const gate = useLoginGate();
 
-  // Filter states
-  const [categoryFilters, setCategoryFilters] = useState([]);
-  const [blogFilters, setBlogFilters] = useState([]);
-
-  // URL 동기화되는 필터 상태
+  // URL 동기화되는 필터 상태. feedKey 계산에 쓰이므로 posts 등 목록 상태보다 먼저 둔다 —
+  // 뒤로가기 복원 때 첫 렌더부터 캐시된 값으로 그리려면 feedKey가 그 전에 확정돼야 한다.
   const [selectedGroup] = useUrlState("group", "");
   const [selectedCategory] = useUrlState("category", "");
   const [selectedBlogId] = useUrlState("blog", "");
   // 검색어. 있으면 관련순 결과, 없으면 최신 피드.
   const [searchQuery] = useUrlState("q", "");
   const { updateParams } = useUrlParams();
-  const navigate = useNavigate();
-  const gate = useLoginGate();
   const q = searchQuery.trim();
   const highlightTerms = useMemo(() => searchTerms(q), [q]);
+
+  const [topicGroups, setTopicGroups] = useState(null);
 
   const groupOfTopic = useCallback(
     (name) => (topicGroups || []).find((group) => group.topics.includes(name))?.id || "",
@@ -56,6 +53,25 @@ export default function Home() {
   const categoryKey = categoryParams.join("|");
   // 부모가 URL 에 있는데 묶음을 아직 못 받았으면 전체 글을 잠깐 보여 주지 않고 기다린다.
   const waitingForGroups = Boolean(selectedGroup && !selectedCategory && topicGroups === null);
+  const feedKey = `${categoryKey}\n${selectedBlogId}\n${q}`;
+
+  // 뒤로가기로 돌아왔고 직전에 떠난 피드와 같으면(필터·검색어 동일) 다시 받지 않고 첫 렌더부터
+  // 캐시로 그린다 — effect 에서 뒤늦게 채우면 "조건에 맞는 글 없음" 빈 상태가 한 프레임 보인다.
+  // waitingForGroups 조합(그룹만 선택해 feedKey가 아직 확정 전)은 복원하지 않고 새로 받는다 — 드문 경로라
+  // 여기서까지 다루면 복잡도만 늘어난다.
+  const canRestoreOnMount = !waitingForGroups && navType === "POP" && feedCache?.feedKey === feedKey;
+  const [restoredOnMount] = useState(canRestoreOnMount); // 마운트 시점 값으로 고정
+
+  const [posts, setPosts] = useState(() => (restoredOnMount ? feedCache.posts : []));
+  const [page, setPage] = useState(() => (restoredOnMount ? feedCache.page : 1));
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(() => (restoredOnMount ? feedCache.hasMore : true));
+  const [total, setTotal] = useState(() => (restoredOnMount ? feedCache.total : null));
+  const [trends, setTrends] = useState(null);
+
+  // Filter states
+  const [categoryFilters, setCategoryFilters] = useState([]);
+  const [blogFilters, setBlogFilters] = useState([]);
 
   const selectGroup = useCallback(
     (groupId) => updateParams({ group: groupId || null, category: null }),
@@ -172,17 +188,37 @@ export default function Home() {
     };
   }, []);
 
+  // 지금 보여 주는 목록이 어떤 feedKey 로 받은 것인지, 몇 쪽까지 받았는지. 복원이면 처음부터
+  // 캐시 값으로 채워 둬서 아래 effect 가 "새 방문"으로 오인해 다시 받지 않게 한다.
+  // 한 번 쓰고 버리는 플래그가 아니라 값 비교라서 StrictMode 의 effect 두 번 실행에도 안전하다.
+  const feedKeyRef = useRef(restoredOnMount ? feedKey : null);
+  const fetchedPageRef = useRef(restoredOnMount ? page : 1);
+  // 복원 직후 스크롤 복원 자체가 "바닥 근처" 조건을 건드려 무한 스크롤이 연쇄로 다음 쪽을
+  // 받지 않도록 짧게 억제한다.
+  const suppressAutoFetchRef = useRef(restoredOnMount);
+
+  // 뒤로가기 복원: 스크롤 위치만 되돌린다(카드는 이미 첫 렌더부터 그려져 있다).
   useEffect(() => {
-    if (page > 1) fetchPostsRef.current(page);
+    if (!restoredOnMount) return;
+    const savedScrollY = feedCache?.scrollY ?? 0;
+    const raf = requestAnimationFrame(() => window.scrollTo(0, savedScrollY));
+    const timer = setTimeout(() => {
+      suppressAutoFetchRef.current = false;
+    }, 300);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, [restoredOnMount]);
+
+  useEffect(() => {
+    if (page <= 1 || page === fetchedPageRef.current) return;
+    fetchedPageRef.current = page;
+    fetchPostsRef.current(page);
   }, [page]);
 
   // 필터·검색이 바뀌면 피드 맨 위로 먼저 올린다. 그대로 두면 짧아진 새 목록 끝에 걸려
   // 무한 스크롤까지 당겨져 엉뚱한 위치(바닥)에 선다. 첫 진입은 건드리지 않는다.
-  const feedKey = `${categoryKey}\n${selectedBlogId}\n${q}`;
-  const feedKeyRef = useRef(null);
-
-  // 뒤로/앞으로 때 브라우저가 옛 위치를 되살리면 1쪽만 다시 받은 목록에서 같은 일이 난다.
-  // 홈에 있는 동안만 수동으로 둔다.
   useEffect(() => {
     const prev = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
@@ -193,8 +229,10 @@ export default function Home() {
 
   useEffect(() => {
     if (waitingForGroups) return;
-    if (feedKeyRef.current !== null && feedKeyRef.current !== feedKey) window.scrollTo(0, 0);
+    if (feedKeyRef.current === feedKey) return; // 이미 이 조건으로 받은(또는 복원한) 목록이다
+    if (feedKeyRef.current !== null) window.scrollTo(0, 0);
     feedKeyRef.current = feedKey;
+    fetchedPageRef.current = 1;
     setPage(1);
     setHasMore(true);
     fetchPostsRef.current(1, true);
@@ -202,6 +240,7 @@ export default function Home() {
 
   useEffect(() => {
     const handleScroll = () => {
+      if (suppressAutoFetchRef.current) return;
       if (
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
         hasMore &&
@@ -213,6 +252,30 @@ export default function Home() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasMore, loading]);
+
+  // 나갈 때(카드 클릭 등) 스냅샷을 남긴다 — 뒤로가기 복원용. 새로고침하면 사라진다.
+  const latestFeedRef = useRef(null);
+  useEffect(() => {
+    latestFeedRef.current = { feedKey, posts, page, hasMore, total };
+  }, [feedKey, posts, page, hasMore, total]);
+
+  // 스크롤 위치는 스크롤할 때마다 적어 둔다. 언마운트 클린업 시점에는 이미 상세 페이지 DOM으로
+  // 바뀌어 문서가 짧아졌고, 브라우저가 scrollY를 그 높이로 깎아 놓았을 수 있다.
+  const lastScrollYRef = useRef(restoredOnMount ? (feedCache?.scrollY ?? 0) : 0);
+  useEffect(() => {
+    const remember = () => {
+      lastScrollYRef.current = window.scrollY;
+    };
+    window.addEventListener("scroll", remember, { passive: true });
+    return () => window.removeEventListener("scroll", remember);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (latestFeedRef.current) feedCache = { ...latestFeedRef.current, scrollY: lastScrollYRef.current };
+    },
+    []
+  );
 
   const sidebarProps = {
     topicGroups: topicGroups || [],

@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { RiChat3Line, RiCloseLine, RiMenuLine, RiSearchLine } from "react-icons/ri";
+import { RiArrowLeftLine, RiChat3Line, RiCloseLine, RiMenuLine, RiSearchLine } from "react-icons/ri";
 import { PATHS } from "../../routes/path";
 import { useAuth } from "../../hooks/useAuth";
 import { useChatbotEntry } from "../../hooks/useChatbotEntry";
@@ -25,7 +25,8 @@ export default function AppHeader() {
   const goChatbot = useChatbotEntry();
   const gate = useLoginGate();
   // 홈 결과 상태면 슬롯에 검색어를 보여 주고, 팔레트도 그 검색어로 연다.
-  const { pathname } = useLocation();
+  const { pathname, key: locationKey } = useLocation();
+  const isPostDetail = pathname.startsWith("/posts/");
   const [searchParams, setSearchParams] = useSearchParams();
   const currentQuery = pathname === PATHS.HOME ? (searchParams.get("q") || "").trim() : "";
   const clearQuery = () => {
@@ -46,6 +47,18 @@ export default function AppHeader() {
             className="-ml-2 -mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink hover:bg-canvas lg:hidden"
           >
             <RiMenuLine className="h-6 w-6" />
+          </button>
+        )}
+        {/* 모바일: 글 상세엔 뒤로가기 affordance가 없었다(브라우저 제스처뿐). 같은 슬롯을 쓴다.
+            앱 안에서 들어왔으면(히스토리 있음) 뒤로, 새 탭·직접 진입이면 홈으로. */}
+        {isPostDetail && (
+          <button
+            type="button"
+            aria-label="뒤로"
+            onClick={() => (locationKey !== "default" ? navigate(-1) : navigate(PATHS.HOME))}
+            className="-ml-2 -mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink hover:bg-canvas lg:hidden"
+          >
+            <RiArrowLeftLine className="h-6 w-6" />
           </button>
         )}
         <Logo />
