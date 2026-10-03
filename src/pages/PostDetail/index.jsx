@@ -331,13 +331,19 @@ export default function PostDetail() {
   }
 
   const hasExplainer = explainerState === "ready" && explainer;
+  const hasGlossary = Boolean(hasExplainer && explainer.glossary?.length > 0);
+  const hasRail = Boolean(hasExplainer && (showToc || hasGlossary));
 
   return (
-    <div className="mx-auto w-full xl:grid xl:max-w-[calc(42rem+15rem+3rem)] xl:grid-cols-[minmax(0,42rem)_15rem] xl:items-start xl:gap-12">
+    // 사이트 공통 본문 폭(MainLayout 1360px)을 그대로 쓴다. xl 이상에서 목차·용어가 있으면 오른쪽 레일을 둔다.
+    <div
+      className={`w-full ${hasRail ? "xl:grid xl:grid-cols-[minmax(0,1fr)_15rem] xl:items-start xl:gap-10" : ""}`}
+    >
       {/* 모바일은 헤더와 이어지는 전면 시트, sm 이상은 둥근 카드 — 회색 바탕(bg-canvas) 위에서는
           인용·코드 블록의 채움(역시 bg-canvas)이 묻혀 안 보였다. */}
-      <div className="-mx-4 -mt-4 bg-surface px-4 pt-5 pb-8 sm:mx-auto sm:mt-0 sm:max-w-2xl sm:rounded-2xl sm:border sm:border-line sm:px-8 sm:py-7">
-        <article>
+      <div className="-mx-4 -mt-4 bg-surface px-4 pt-5 pb-8 sm:mx-0 sm:mt-0 sm:rounded-2xl sm:border sm:border-line sm:px-8 sm:py-7 lg:px-10 lg:py-9">
+        {/* 한 줄이 너무 길면 읽기 힘들어 글 폭은 56rem까지만. 왼쪽에 붙여 헤더 선과 맞춘다. */}
+        <article className="max-w-[56rem]">
           <div className="flex min-w-0 items-center gap-2">
             <BlogIcon blogId={post.blog_id} name={post.blog_name} size={20} />
             <span className="min-w-0 truncate text-sm font-semibold text-ink-2">{post.blog_name}</span>
@@ -428,7 +434,7 @@ export default function PostDetail() {
           )}
 
           {hasExplainer && explainer.glossary?.length > 0 && (
-            <section className={`mt-6 overflow-hidden rounded-xl border border-line bg-surface ${showToc ? "xl:hidden" : ""}`}>
+            <section className={`mt-6 overflow-hidden rounded-xl border border-line bg-surface ${hasRail ? "xl:hidden" : ""}`}>
               <button
                 type="button"
                 onClick={() => setGlossaryOpen((prev) => !prev)}
@@ -473,12 +479,12 @@ export default function PostDetail() {
         </article>
       </div>
 
-      {showToc && (
+      {hasRail && (
         <aside
           aria-label="목차"
-          className="hidden xl:sticky xl:top-[calc(var(--tl-header-h)+1.5rem)] xl:block xl:self-start"
+          className="hidden xl:sticky xl:top-[calc(var(--tl-header-h)+1.5rem)] xl:block xl:max-h-[calc(100dvh-var(--tl-header-h)-3rem)] xl:self-start xl:overflow-y-auto"
         >
-          <nav>
+          {showToc && <nav className="mb-6">
             <ol className="border-l border-line text-[13px]">
               {sections.map((section) => (
                 <li key={section.id}>
@@ -497,9 +503,9 @@ export default function PostDetail() {
                 </li>
               ))}
             </ol>
-          </nav>
-          {hasExplainer && explainer.glossary?.length > 0 && (
-            <dl className="mt-6 space-y-2 text-[13px]">
+          </nav>}
+          {hasGlossary && (
+            <dl className="space-y-2 text-[13px]">
               {explainer.glossary.map((item, index) => (
                 <div key={index}>
                   <dt className="font-semibold text-ink">
