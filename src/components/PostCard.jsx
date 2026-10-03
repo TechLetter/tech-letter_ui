@@ -41,7 +41,8 @@ export default function PostCard({
   // 썸네일 주소가 깨졌으면 썸네일 없는 글처럼 블로그 아이콘을 보여 준다.
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
 
-  // 카드를 누르면 "쉽게 읽기" 상세로 간다. 원문은 상세 페이지에서 안내한다.
+  // 카드 어디를 눌러도 "쉽게 읽기" 상세로 간다(제목 링크를 카드 전체로 늘린다 — stretched link).
+  // 블로그·공유·북마크 버튼만 그 위(z-10)에 올려 따로 눌리게 한다. 원문은 상세 페이지에서 연다.
   // 조회수는 상세 페이지 진입 시 올린다(여기서는 올리지 않는다 — 중복 호출 방지).
   const detailPath = postDetailPath(post_id);
 
@@ -50,9 +51,9 @@ export default function PostCard({
   return (
     <article
       data-testid="post-card"
-      className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-slate-300 dark:hover:border-slate-500"
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-[border-color,box-shadow,transform] duration-150 [-webkit-tap-highlight-color:transparent] hover:border-slate-300 hover:shadow-[0_4px_16px_rgba(15,23,42,0.08)] has-[.card-link:active]:scale-[0.985] has-[.card-link:focus-visible]:outline-2 has-[.card-link:focus-visible]:outline-offset-2 has-[.card-link:focus-visible]:outline-accent dark:hover:border-slate-500 dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
     >
-      <Link to={detailPath} tabIndex={-1} aria-hidden="true" className="block aspect-video overflow-hidden bg-canvas">
+      <div className="block aspect-video overflow-hidden bg-canvas">
         {postThumbnailUrl && !thumbnailFailed ? (
           <img
             src={postThumbnailUrl}
@@ -66,7 +67,7 @@ export default function PostCard({
             <BlogIcon blogId={blogId} name={blogName} size={44} />
           </span>
         )}
-      </Link>
+      </div>
 
       <div className="flex flex-1 flex-col gap-2.5 px-4 pt-3.5 pb-2.5">
         <div className="flex items-center gap-2">
@@ -75,7 +76,7 @@ export default function PostCard({
             <button
               type="button"
               onClick={() => onSelectBlog(blogId)}
-              className={`${blogNameClass} hover:text-accent-ink`}
+              className={`${blogNameClass} relative z-10 hover:text-accent-ink`}
             >
               {blogName}
             </button>
@@ -88,7 +89,10 @@ export default function PostCard({
         </div>
 
         <h2 className="line-clamp-2 text-[17px] leading-snug font-semibold tracking-tight text-ink">
-          <Link to={detailPath} className="hover:text-accent-ink">
+          <Link
+            to={detailPath}
+            className="card-link outline-none group-hover:text-accent-ink after:absolute after:inset-0 after:content-['']"
+          >
             <Highlight text={postTitle} terms={highlightTerms} />
           </Link>
         </h2>
@@ -121,7 +125,7 @@ export default function PostCard({
           <button
             type="button"
             aria-label="링크 복사"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-3 hover:bg-canvas hover:text-ink"
+            className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full text-ink-3 hover:bg-canvas hover:text-ink"
             onClick={() => {
               // 이제 글마다 상세 페이지가 있다 — 공유는 그 URL로(클릭 목적지와 같게).
               copyToClipboard(`${window.location.origin}${detailPath}`);
@@ -130,7 +134,9 @@ export default function PostCard({
           >
             <IoShareSocialOutline size={18} />
           </button>
-          <BookmarkToggleButton postId={post_id} initialIsBookmarked={isBookmarked} />
+          <span className="relative z-10">
+            <BookmarkToggleButton postId={post_id} initialIsBookmarked={isBookmarked} />
+          </span>
         </div>
       </div>
     </article>
