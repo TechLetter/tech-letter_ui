@@ -30,10 +30,10 @@ import {
 } from "./AdminKit";
 import CreatePostModal from "./CreatePostModal";
 
-// 상태 탭 → 목록 API 조건. 요약 대기에는 영구 실패도 섞여 있다(실패 탭이 따로 있다).
+// 상태 탭 → 목록 API 조건. 해설 대기에는 영구 실패도 섞여 있다(실패 탭이 따로 있다).
 const STATES = [
   { id: "all", label: "전체", params: {} },
-  { id: "unsummarized", label: "요약 대기", tone: "slate", params: { summarized: false } },
+  { id: "unsummarized", label: "해설 대기", tone: "slate", params: { summarized: false } },
   { id: "unembedded", label: "임베딩 대기", tone: "amber", params: { embedded: false } },
   { id: "failed", label: "실패", tone: "rose", params: { failed: true } },
 ];
@@ -51,10 +51,10 @@ const DOT_TONES = { emerald: "bg-emerald-500", rose: "bg-rose-500", slate: "bg-s
 function summaryDot(post, modelName) {
   if (post.status?.summarized) {
     const s = post.ai_summary || {};
-    return <StatusDot tone="emerald" lines={["요약 완료", modelName(s.model_name), exactTime(s.generated_at)]} />;
+    return <StatusDot tone="emerald" lines={["해설 완료", modelName(s.model_name), exactTime(s.generated_at)]} />;
   }
-  if (post.status?.failed_reason) return <StatusDot tone="rose" lines={["요약 실패", post.status.failed_reason]} />;
-  return <StatusDot tone="slate" lines={["요약 대기"]} />;
+  if (post.status?.failed_reason) return <StatusDot tone="rose" lines={["해설 실패", post.status.failed_reason]} />;
+  return <StatusDot tone="slate" lines={["해설 대기"]} />;
 }
 
 function embeddingDot(post) {
@@ -98,7 +98,7 @@ export default function PostsTab() {
     [setSearchParams]
   );
 
-  // 요약 모델 id를 공식 이름으로 보여 주려고.
+  // 해설 모델 id를 공식 이름으로 보여 주려고.
   useEffect(() => {
     llmModelsApi
       .getModels()
@@ -162,7 +162,7 @@ export default function PostsTab() {
     setActionLoading({ id: post.id, action: "summarize" });
     try {
       await triggerSummarize(post.id);
-      showToast("AI 요약이 요청되었습니다.", "success");
+      showToast("해설 생성을 요청했습니다.", "success");
     } catch (error) {
       showToast(handleAdminError(error), "error");
     } finally {
@@ -212,7 +212,7 @@ export default function PostsTab() {
     },
     { key: "published_at", label: "발행", width: "84px", render: (iso) => <RelTime iso={iso} /> },
     { key: "created_at", label: "수집", width: "84px", render: (iso) => <RelTime iso={iso} /> },
-    { key: "summary", label: "요약", width: "48px", align: "center", render: (_, row) => summaryDot(row, modelName) },
+    { key: "summary", label: "해설", width: "48px", align: "center", render: (_, row) => summaryDot(row, modelName) },
     { key: "embedding", label: "임베딩", width: "56px", align: "center", render: (_, row) => embeddingDot(row) },
     {
       key: "actions",
@@ -224,7 +224,7 @@ export default function PostsTab() {
         const busy = actionLoading?.id === row.id;
         return (
           <div className="flex items-center justify-end gap-0.5">
-            <IconAction onClick={() => handleSummarize(row)} disabled={busy} label="요약 다시 하기" tone="amber">
+            <IconAction onClick={() => handleSummarize(row)} disabled={busy} label="해설 다시 만들기" tone="amber">
               <RiSparklingLine className="h-4 w-4" />
             </IconAction>
             <IconAction onClick={() => handleEmbed(row)} disabled={busy} label="임베딩 다시 하기" tone="blue">

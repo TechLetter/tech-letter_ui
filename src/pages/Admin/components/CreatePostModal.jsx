@@ -105,7 +105,7 @@ export default function CreatePostModal({ open, onClose, onCreated }) {
         link: formData.link.trim(),
       });
       showToast(
-        "포스트가 생성되었습니다. AI 요약이 자동으로 시작됩니다.",
+        "포스트가 생성되었습니다. 해설 생성이 자동으로 시작됩니다.",
         "success"
       );
       onCreated?.();

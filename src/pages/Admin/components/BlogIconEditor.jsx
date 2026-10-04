@@ -64,7 +64,7 @@ export default function BlogIconEditor({ blog, onChanged }) {
     setBusy(true);
     try {
       await refreshBlogIcon(blog.id, fromUrl);
-      // 요약 워커가 받아 온다. 보통 몇 초면 끝난다.
+      // summary-worker가 받아 온다. 보통 몇 초면 끝난다.
       setTimeout(bump, 6000);
     } catch (error) {
       showToast(handleAdminError(error), "error");

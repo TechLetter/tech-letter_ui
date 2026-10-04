@@ -19,7 +19,7 @@ import { exactTime, relativeTime, scheduleLabel } from "../adminFormat";
 import { Dot, IconAction, RefreshButton, RelTime, StateTabs, Toolbar } from "./AdminKit";
 
 /**
- * 운영 탭. 파이프라인(수집 → 요약 → 임베딩)이 멈췄는지, 멈췄다면 왜인지.
+ * 운영 탭. 파이프라인(수집 → 해설 → 임베딩)이 멈췄는지, 멈췄다면 왜인지.
  */
 
 const LISTS = [
@@ -29,8 +29,8 @@ const LISTS = [
 ];
 const TYPE_LABEL = {
   "content.fetch_requested": "본문 수집",
-  "summary.requested": "요약",
-  "summary.completed": "요약 저장",
+  "summary.requested": "해설",
+  "summary.completed": "해설 저장",
   "embedding.requested": "임베딩",
   "embedding.completed": "임베딩 저장",
   "embedding.delete_requested": "벡터 삭제",
@@ -219,7 +219,7 @@ export default function OpsTab() {
           ]}
         />
         <Stage
-          title="요약"
+          title="해설"
           value={`${(backfill?.unsummarized ?? 0).toLocaleString()}개 남음`}
           lines={[
             `대기 ${countOf(byType, STAGE_TYPES.summary, "pending")} · 실패 ${countOf(byType, STAGE_TYPES.summary, "dead")}`,
@@ -231,11 +231,11 @@ export default function OpsTab() {
                 withBusy(
                   "summary",
                   () => runSummaryBackfill({ limit: 50 }),
-                  (result) => `요약 ${result.enqueued}건을 걸었습니다.`
+                  (result) => `해설 ${result.enqueued}건을 걸었습니다.`
                 )
               }
             >
-              요약 백필
+              해설 백필
             </BackfillButton>
           }
         />
