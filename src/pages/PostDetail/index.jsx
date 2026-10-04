@@ -28,9 +28,10 @@ const MD_COMPONENTS = {
   p: ({ node, ...props }) => (
     <p {...props} className="my-4 text-[16px] leading-[1.8] text-ink-2 [overflow-wrap:anywhere] sm:text-[17px] sm:break-keep" />
   ),
-  ul: ({ node, ...props }) => <ul {...props} className="my-4 list-disc space-y-1.5 pl-5 text-ink-2" />,
+  ul: ({ node, ...props }) => <ul {...props} className="my-3 list-disc space-y-1 pl-5 text-ink-2" />,
   ol: ({ node, ...props }) => <ol {...props} className="my-4 list-decimal space-y-1.5 pl-5 text-ink-2" />,
-  li: ({ node, ...props }) => <li {...props} className="text-[16px] leading-[1.8] sm:text-[17px]" />,
+  // bullet은 2~3줄 문장이라 문단(1.8)보다 촘촘하게 둔다.
+  li: ({ node, ...props }) => <li {...props} className="text-[16px] leading-[1.65] sm:text-[17px]" />,
   strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-ink" />,
   blockquote: ({ node, ...props }) => (
     // italic은 지웠다 — index.css가 font-synthesis:none이고 본문 서체(IBM Plex Sans KR)엔
@@ -387,16 +388,16 @@ export default function PostDetail() {
           {explainerState !== "loading" && (
             <section aria-label="요약" className="mt-5 border-b border-line pb-5">
               {hasExplainer ? (
-                <>
+                // 한 줄 요약은 카드에서 이미 봤고 본문 개요와도 겹친다 — 상세에서는 핵심 3줄만 둔다.
+                explainer.points?.length > 0 ? (
+                  <ul className="list-disc space-y-1 pl-5 text-[16px] leading-[1.65] font-medium text-ink marker:text-accent sm:text-[17px]">
+                    {explainer.points.map((point, index) => (
+                      <li key={index}>{point}</li>
+                    ))}
+                  </ul>
+                ) : (
                   <p className="text-[17px] leading-relaxed font-bold text-ink sm:text-lg">{explainer.one_liner}</p>
-                  {explainer.points?.length > 0 && (
-                    <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[15px] leading-relaxed text-ink-2 marker:text-accent">
-                      {explainer.points.map((point, index) => (
-                        <li key={index}>{point}</li>
-                      ))}
-                    </ul>
-                  )}
-                </>
+                )
               ) : (
                 <div className="flex items-start justify-between gap-3">
                   {post.summary && <p className="text-[15px] leading-relaxed text-ink-2">{post.summary}</p>}
