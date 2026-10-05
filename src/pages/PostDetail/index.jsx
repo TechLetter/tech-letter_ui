@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigationType, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { RiArrowDownSLine, RiExternalLinkLine, RiRefreshLine } from "react-icons/ri";
+import { RiExternalLinkLine, RiRefreshLine } from "react-icons/ri";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { GrView } from "react-icons/gr";
 import postsApi from "../../api/postsApi";
@@ -148,7 +148,6 @@ export default function PostDetail() {
   const [explainerState, setExplainerState] = useState("loading");
   const [explainerRetry, setExplainerRetry] = useState(0);
 
-  const [glossaryOpen, setGlossaryOpen] = useState(false);
   const viewedRef = useRef(null);
 
   // 상세→상세(관련 글·태그) 이동이 생기면 의미가 커진다. 뒤로가기(POP) 복귀는 기존 스크롤
@@ -230,11 +229,6 @@ export default function PostDetail() {
       document.title = prevTitle;
     };
   }, [post]);
-
-  // 용어 접힘은 글이 바뀌면 초기화 — 이전 글에서 펼쳐 둔 상태가 새 글로 이어지지 않게.
-  useEffect(() => {
-    setGlossaryOpen(false);
-  }, [id]);
 
   const sections = useTocSections(explainer?.body_md);
   const showToc = sections.length >= TOC_MIN_SECTIONS;
@@ -436,19 +430,10 @@ export default function PostDetail() {
 
           {hasExplainer && explainer.glossary?.length > 0 && (
             <section className={`mt-6 overflow-hidden rounded-xl border border-line bg-surface ${hasRail ? "xl:hidden" : ""}`}>
-              <button
-                type="button"
-                onClick={() => setGlossaryOpen((prev) => !prev)}
-                aria-expanded={glossaryOpen}
-                aria-controls="glossary-panel"
-                className="flex h-12 w-full items-center justify-between px-4 text-left text-sm font-semibold text-ink"
-              >
-                <span>
-                  용어 <span className="font-mono text-ink-3">({explainer.glossary.length})</span>
-                </span>
-                <RiArrowDownSLine className={`h-4 w-4 text-ink-3 transition-transform ${glossaryOpen ? "rotate-180" : ""}`} />
-              </button>
-              <dl id="glossary-panel" hidden={!glossaryOpen} className="space-y-3 border-t border-line px-4 py-4">
+              <h2 className="flex h-12 items-center px-4 text-sm font-semibold text-ink">
+                용어 <span className="ml-1 font-mono text-ink-3">({explainer.glossary.length})</span>
+              </h2>
+              <dl className="space-y-3 border-t border-line px-4 py-4">
                 {explainer.glossary.map((item, index) => (
                   <div key={index}>
                     <dt className="text-sm font-semibold text-ink">
