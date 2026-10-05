@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RiArrowRightSLine, RiCloseLine, RiSearchLine } from "react-icons/ri";
+import { RiArrowRightSLine, RiCloseLine, RiFilterOffLine, RiSearchLine } from "react-icons/ri";
 import { bindMobileFilterHandler, unbindMobileFilterHandler } from "../../provider/mobileFilterBridge";
 import BlogIcon from "../common/BlogIcon";
 import FilterDrawer from "./FilterDrawer";
@@ -65,7 +65,7 @@ export default function HomeFilterSection({
 
   return (
     <section className="mb-4 flex flex-col gap-3">
-      {/* 모바일: 현재 주제를 글로 · 고른 출처 · 초기화 */}
+      {/* 모바일: 현재 주제를 글로 · 고른 출처 · 필터 초기화 */}
       {!searchQuery && (
         <div className="flex flex-wrap items-center gap-2 lg:hidden">
           <h1 className="flex min-w-0 items-center gap-1 text-base font-bold tracking-tight text-ink">
@@ -84,13 +84,7 @@ export default function HomeFilterSection({
             </span>
           )}
           {hasActive && (
-            <button
-              type="button"
-              onClick={onClearFilters}
-              className="ml-auto h-8 rounded-lg px-2 text-[13px] font-semibold text-ink-3 hover:text-ink"
-            >
-              초기화
-            </button>
+            <ClearFiltersButton onClick={onClearFilters} className="ml-auto" />
           )}
         </div>
       )}
@@ -135,13 +129,7 @@ export default function HomeFilterSection({
           </span>
         )}
         {hasActive && (
-          <button
-            type="button"
-            onClick={onClearFilters}
-            className="h-8 rounded-lg px-2.5 text-[13px] font-semibold text-ink-3 hover:bg-canvas hover:text-ink"
-          >
-            초기화
-          </button>
+          <ClearFiltersButton onClick={onClearFilters} />
         )}
         {searchQuery && (
           <button
@@ -163,5 +151,20 @@ export default function HomeFilterSection({
         {...sidebarProps}
       />
     </section>
+  );
+}
+
+/** 필터 초기화. 글자 대신 "필터 끄기" 아이콘을 쓴다. (x)는 옆 출처 칩의 "출처 해제"와 헷갈린다. */
+function ClearFiltersButton({ onClick, className = "" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="필터 초기화"
+      title="필터 초기화"
+      className={`flex h-8 w-8 items-center justify-center rounded-lg text-ink-3 hover:bg-canvas hover:text-ink ${className}`}
+    >
+      <RiFilterOffLine className="h-4 w-4" aria-hidden="true" />
+    </button>
   );
 }
