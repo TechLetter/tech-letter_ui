@@ -113,6 +113,12 @@ function TitleWithIcon({ title, href }) {
   );
 }
 
+// 원어가 용어와 같으면(예: "Appender (Appender)") 괄호를 붙이지 않는다.
+function glossaryOriginal(item) {
+  const original = item.original?.trim();
+  return original && original.toLowerCase() !== item.term?.trim().toLowerCase() ? original : "";
+}
+
 function TldrSkeleton() {
   return (
     <section aria-busy="true" className="mt-5 flex flex-col gap-2.5 border-b border-line pb-5">
@@ -438,7 +444,7 @@ export default function PostDetail() {
                   <div key={index}>
                     <dt className="text-sm font-semibold text-ink">
                       {item.term}
-                      {item.original && <span className="ml-1.5 font-normal text-ink-3">({item.original})</span>}
+                      {glossaryOriginal(item) && <span className="ml-1.5 font-normal text-ink-3">({glossaryOriginal(item)})</span>}
                     </dt>
                     <dd className="mt-0.5 text-sm leading-relaxed text-ink-2">{item.explanation}</dd>
                   </div>
@@ -496,7 +502,7 @@ export default function PostDetail() {
                 <div key={index}>
                   <dt className="font-semibold text-ink">
                     {item.term}
-                    {item.original && <span className="ml-1 font-normal text-ink-3">({item.original})</span>}
+                    {glossaryOriginal(item) && <span className="ml-1 font-normal text-ink-3">({glossaryOriginal(item)})</span>}
                   </dt>
                   <dd className="text-ink-2 leading-snug">{item.explanation}</dd>
                 </div>
