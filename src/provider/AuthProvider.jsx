@@ -13,11 +13,15 @@ import {
 } from "../utils/authToken";
 import { AuthContext } from "./AuthContext";
 
+// 크레딧은 UTC 자정 기준이다. 날짜가 바뀐 뒤 처음 보는 순간 `/me`가 일일 크레딧을 준다.
+const utcDay = () => new Date().toISOString().slice(0, 10);
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState(null);
   const hasLoadedProfileRef = useRef(false);
+  const profileDayRef = useRef(utcDay());
 
   useEffect(() => {
     if (hasLoadedProfileRef.current) return;
@@ -59,6 +63,24 @@ export function AuthProvider({ children }) {
       throw err;
     }
   }, []);
+
+  // 탭을 열어 둔 채 날이 바뀌면, 다시 볼 때 프로필을 새로 받아 일일 크레딧을 반영한다.
+  const isLoggedIn = !!user;
+  useEffect(() => {
+    if (!isLoggedIn) return undefined;
+    const refreshOnNewDay = async () => {
+      if (document.visibilityState !== "visible" || profileDayRef.current === utcDay()) return;
+      profileDayRef.current = utcDay();
+      try {
+        const response = await authApi.getProfile();
+        setUser(response.data);
+      } catch {
+        // 401은 onSessionExpired가 처리한다. 나머지는 다음 기회에 다시 받는다.
+      }
+    };
+    document.addEventListener("visibilitychange", refreshOnNewDay);
+    return () => document.removeEventListener("visibilitychange", refreshOnNewDay);
+  }, [isLoggedIn]);
 
   const logout = useCallback(() => {
     clearAccessToken();
