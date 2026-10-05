@@ -6,7 +6,6 @@ import trendsApi from "../api/trendsApi";
 import HomeFilterSection from "../components/home/HomeFilterSection";
 import HomePostListSection from "../components/home/HomePostListSection";
 import HomeSidebar from "../components/home/HomeSidebar";
-import TrendStrip from "../components/home/TrendStrip";
 import AiSummaryCard from "../components/search/AiSummaryCard";
 import { searchTerms } from "../utils/searchTerms";
 import { useLoginGate } from "../hooks/useLoginGate";
@@ -172,7 +171,7 @@ export default function Home() {
     };
   }, []);
 
-  // 이번 주 흐름은 한 번만. 실패하면 카드·스트립을 비워 둔다.
+  // 이번 주 흐름은 한 번만(데스크톱 사이드바 카드용). 실패하면 카드를 비워 둔다.
   useEffect(() => {
     let ignore = false;
     trendsApi
@@ -306,7 +305,6 @@ export default function Home() {
           searchTotal={q ? total : null}
           onCloseSearch={closeSearch}
         />
-        {!q && <TrendStrip trends={trends} onSelectCategory={selectCategory} />}
         {q && posts.length > 0 && <AiSummaryCard query={q} posts={posts} />}
         <HomePostListSection
           posts={posts}
