@@ -27,12 +27,10 @@ export default function ScrollToTopButton() {
         type="button"
         aria-label="맨 위로"
         onClick={scrollToTop}
-        className="fixed z-30 bg-white cursor-pointer bottom-20 lg:bottom-4 right-4 w-[42px] h-[42px] rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 dark:shadow-slate-900/50"
+        // 모바일은 하단 탭바(4rem + 아이폰 홈 인디케이터 여백) 위에 띄운다 — 여백을 빼면 탭바와 겹쳤다.
+        className="fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 flex h-[42px] w-[42px] cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-ink shadow-lg transition hover:bg-canvas lg:bottom-4"
       >
-        <FaArrowUp
-          size={14}
-          className="text-slate-900 dark:text-slate-200"
-        />
+        <FaArrowUp size={14} aria-hidden="true" />
       </button>
     )
   );
